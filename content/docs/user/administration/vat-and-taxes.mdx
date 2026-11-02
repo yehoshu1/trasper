@@ -1,0 +1,59 @@
+---
+title: VAT and taxes
+description: VAT rate, registration, rounding unit and reusable optional tax presets.
+---
+
+**Settings → VAT and taxes** defines the agency's tax rules. VAT is calculated on the service fee
+(markup) only, never on the supplier cost and never on other taxes.
+
+## VAT
+
+| Field | Notes |
+| --- | --- |
+| VAT rate (%) | Entered as a percentage (for example `16.5`); stored as basis points (`1650`). |
+| VAT registration number | Printed when tax rows are shown and on explicit-VAT pro formas. |
+| VAT/GST label | Customer-facing name, for example VAT, GST or Sales tax. |
+| Rounding unit (minor units) | Totals are rounded once at the end. `1` = smallest unit, `100` = nearest whole currency unit. |
+
+VAT is enabled or disabled per quotation: inherit, force on or force off. The agency switch is the
+default.
+
+## Optional tax presets
+
+Presets are reusable across quotations. A single option may enable several at once.
+
+| Field | Notes |
+| --- | --- |
+| Name | Printed on itemised tax layouts. |
+| Kind | `fixed` (amount) or `percent` (basis points). |
+| Value | Minor units for fixed, basis points for percent. |
+| Enabled | Disabled presets are ignored by the calculation. |
+| Percentage base | `cost`, `markup` (service fee) or `subtotal` (cost + markup). |
+
+Examples: hotel service tax on cost, airport fee as a fixed amount, city tax on the subtotal.
+
+## Calculation order
+
+1. Convert each cost line at the option's stored rate.
+2. Sum the converted costs.
+3. Calculate markup (percentage of cost, or lump sum).
+4. Calculate VAT on the markup only.
+5. Add enabled optional taxes on their configured base.
+6. Total = cost + markup + VAT + optional taxes.
+7. Round once to the rounding unit.
+8. Allocate the rounded total back over the lines proportional to cost; the last line absorbs the
+   remainder.
+
+VAT is never charged on cost or on another tax. See [pricing rules](/docs/user/reference/pricing) for the
+full invariants and worked examples.
+
+## Presentation
+
+Tax rows appear only according to the [tax layout](/docs/user/administration/pricing-presentation). The
+calculation base is independent of whether the customer sees a tax row. Internal views always show
+cost, markup, VAT, taxes, total and profit.
+
+## Permission and audit
+
+`manageSettings` is required. Every change is audited; presets are stored in `TaxPreset` and copied
+into an option's `TaxLine` rows when used.

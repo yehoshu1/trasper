@@ -1,0 +1,36 @@
+# Development image. The compose file bind-mounts the repository over /app so
+# Next.js hot reload works; node_modules lives in a named volume.
+FROM node:24-bookworm-slim
+
+WORKDIR /app
+
+ENV NODE_ENV=development \
+    NEXT_TELEMETRY_DISABLED=1 \
+    APP_VERSION=dev
+
+# ca-certificates for npm and outbound HTTPS; the rest of the stack is pure
+# JavaScript or WebAssembly, so no compiler toolchain is needed.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# The named volumes inherit this ownership on first use, so the non-root user
+# can create the development database, uploads and backups.
+RUN mkdir -p /data/uploads /backups \
+  && chown -R node:node /app /data /backups
+
+# Install as node so node_modules is writable by the dev server (Next's SWC
+# fallback creates a directory there). postinstall needs ./scripts.
+COPY --chown=node:node package.json package-lock.json .npmrc ./
+COPY --chown=node:node scripts ./scripts
+USER node
+RUN npm ci \
+  && sha256sum package-lock.json | cut -d' ' -f1 > node_modules/.dev-lock-hash
+
+# The bind mount replaces the source at runtime; this copy keeps the image
+# usable on its own and gives the named node_modules volume its initial files.
+COPY --chown=node:node . .
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

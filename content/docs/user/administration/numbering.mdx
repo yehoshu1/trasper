@@ -1,0 +1,66 @@
+---
+title: Numbering
+description: Document number formats, placeholders, sequences and revision numbers.
+---
+
+**Settings → Numbering** controls the format of quotation, itinerary and pro forma numbers.
+
+## Defaults
+
+| Document | Format | Example |
+| --- | --- | --- |
+| Quotation | `QT-{BRANCH}-{SEQ:4}` | `QT-01-0001` |
+| Itinerary | `IT-{YYYY}-{SEQ:4}` | `IT-2026-0001` |
+| Pro forma | `PF-{YYYY}-{SEQ:4}` | `PF-2026-0001` |
+
+## Placeholders
+
+| Placeholder | Value |
+| --- | --- |
+| `{BRANCH}` | Two-digit branch code. |
+| `{YYYY}` | Four-digit year in the agency time zone. |
+| `{YY}` | Two-digit year. |
+| `{MM}` | Two-digit month. |
+| `{DD}` | Two-digit day. |
+| `{SEQ}` | Sequence number, default width 4. |
+| `{SEQ:n}` | Sequence padded to `n` digits (1–12). |
+
+Every format must contain `{SEQ`. A format without a sequence would allow duplicate numbers and is
+rejected.
+
+## Allocation
+
+Numbers come from the `Sequence` table **inside the same transaction** that writes the document. A
+failed or rolled-back write does not consume a number. Numbers are never reused, even after
+cancellation or deletion of an unsent draft.
+
+Sequence keys include only the context that makes the number unique, for example `quotation:01` or
+`itinerary:2026`; the settings page shows the allocated sequences so operators can see the current
+values.
+
+## Revisions
+
+A revised quotation keeps its base number and gains `-R2`, `-R3` and so on:
+
+```text
+QT-01-0001
+QT-01-0001-R2
+QT-01-0001-R3
+```
+
+Revisions do not consume a new sequence number. The previous revision is marked `superseded` and
+remains readable.
+
+## Time zone
+
+The date placeholders use the configured agency time zone. Changing the time zone changes the
+calendar date used for new numbers, not existing ones.
+
+<Callout type="warn" title="Changing formats">
+  Changing a format affects new documents only. Existing documents keep their numbers forever.
+  Choose a format that is unique across branches and years.
+</Callout>
+
+## Permission and audit
+
+`manageSettings` is required. Changes are audited with before and after formats.

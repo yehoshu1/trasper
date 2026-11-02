@@ -1,0 +1,157 @@
+---
+title: Troubleshooting
+description: Common installation, sign-in, pricing, document and deployment problems.
+---
+
+## Installation and build
+
+### `npm install` warns about the Node engine
+
+The project requires Node 24 or later. Check with `node --version` and switch runtimes (for example
+with `nvm use 24`). Use npm scripts so the intended runtime is used.
+
+### Prisma client is missing
+
+Run:
+
+```bash
+npm run db:generate
+```
+
+The client is generated into `src/generated/prisma`, not `node_modules`.
+
+### The database has no tables
+
+Apply migrations:
+
+```bash
+npm run db:deploy
+npm run db:seed
+```
+
+### Build fails on SWC
+
+The Docker build uses the WebAssembly SWC package. Locally, ensure `npm ci` completed and that
+`postinstall` did not remove the wrong package. The build command is `next build --webpack`.
+
+## Sign-in
+
+| Symptom | Likely cause |
+| --- | --- |
+| Cannot find the sign-in form | `/` is the public landing page; choose **Staff sign in** or open `/login` directly. |
+| "Invalid email or password" | Wrong credentials, or the seeded password was changed. |
+| Redirected to `/enrol-2fa` forever | The role requires 2FA and enrolment was not completed. |
+| Password reset email not sent | `RESEND_API_KEY` missing or the sender domain is not verified. |
+| Session ends quickly | Sessions expire after 8 hours; re-authenticate. |
+| Too many attempts | Rate limits apply to sign-in, reset and 2FA. Wait for the window. |
+
+## Quotations and pricing
+
+### "No saved exchange rate"
+
+Sending blocks when a foreign cost currency has no rate. Add a dated rate under
+**Settings → Currencies**, or change the option to the quotation currency.
+
+### "This quotation has been sent and is locked"
+
+A sent quotation cannot be edited. Use **Revise** to create the next revision.
+
+### Total does not match the sum of line prices
+
+This should be impossible by construction. Record:
+
+- the option inputs (rates, margin, taxes, rounding unit);
+- the presentation layout;
+- the expected and actual totals.
+
+The pricing engine allocates the last line's remainder and has table-driven tests for the invariant;
+a mismatch is a bug.
+
+### VAT looks wrong
+
+VAT is charged on **markup only**, never on cost or other taxes. A tax layout that hides tax does not
+change the amount. See [pricing rules](/docs/user/reference/pricing).
+
+### Negative margin is refused
+
+Only an administrator can send a negative margin, and a reason is required.
+
+## Documents
+
+### "The accepted option could not be found"
+
+The quotation may have been revised or its option deleted by a revision. Open the current revision,
+accept an option, then issue the document.
+
+### Pro forma cannot be created
+
+- The quotation must be accepted.
+- Only one active pro forma per quotation option is allowed.
+- Cancel the existing pro forma first.
+
+### PDF returns 422
+
+The route returns 422 when a snapshot cannot be rendered. Check the app log for the specific error.
+Quotations without a snapshot are built live; itineraries and pro formas require a saved snapshot.
+
+### Word export is missing
+
+The internal Word export requires both `viewDocuments` and `viewCosts`. It is not a customer
+deliverable.
+
+### Logo or letterhead does not appear
+
+- Check the image is PNG or JPEG and under 2 MB.
+- Confirm the document header mode: picture letterhead or company details.
+- A missing letterhead falls back to company details.
+- Issued documents keep the snapshot taken at issue time.
+
+## Payments
+
+| Symptom | Cause |
+| --- | --- |
+| "A payment cannot be dated in the future" | Use today or earlier in the agency time zone. |
+| "That would overpay" | The amount exceeds the outstanding balance. |
+| "That payment has already been reversed" | Each payment can be reversed once. |
+| "A reversing entry cannot itself be reversed" | Record a new payment instead. |
+| Status did not change | Run the cron route or reload the pro forma; status is derived. |
+
+## AI and PNR
+
+- The deterministic parser runs first; AI is optional.
+- "AI is switched off" means enable it in Settings → AI.
+- "Provider URL is not allowed" means use HTTPS and a public host, or set
+  `AI_ALLOW_PRIVATE_BASE_URL=1` deliberately.
+- Unreadable lines are reported in `unparsed`; enter the itinerary manually rather than guessing.
+
+## Operations
+
+### `/api/cron` returns 401
+
+Send `Authorization: Bearer $CRON_SECRET`. The secret must be at least 16 characters in production.
+Query strings are not accepted.
+
+### `/api/health` is OK but pages fail
+
+Health does not query SQLite. Check the database file, permissions, migrations and application logs.
+The response also includes the running `version`, useful when reporting an issue.
+
+### Backups fail
+
+- `DATABASE_URL` must point at an existing SQLite file.
+- `VACUUM INTO` needs free disk space and write permission on `BACKUP_DIR`.
+- `gzip` and `tar` must be available (they are in the Docker image).
+
+### Uploads disappear after redeploy
+
+`UPLOAD_DIR` is not on a persistent volume. Move it to the mounted data volume and restart.
+
+## Getting help
+
+Include:
+
+- Trasper version or commit;
+- Node version and deployment method;
+- the exact error and the route or action;
+- relevant log lines with secrets and customer data redacted;
+- steps to reproduce.

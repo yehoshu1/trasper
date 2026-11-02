@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 220" width="1200" height="220" role="img" aria-label="Sample travel agency letterhead">
+  <rect width="1200" height="220" fill="#ffffff"/>
+  <rect x="0" y="0" width="1200" height="10" fill="#0f766e"/>
+  <circle cx="100" cy="110" r="56" fill="#0f766e"/>
+  <text x="100" y="124" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="36" font-weight="700" fill="#ffffff">NT</text>
+  <text x="190" y="92" font-family="Helvetica, Arial, sans-serif" font-size="48" font-weight="700" fill="#0a0a0a" letter-spacing="2">NORTHWIND TRAVEL</text>
+  <text x="192" y="130" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#475569">1 Example Street, London, United Kingdom</text>
+  <text x="192" y="161" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#475569">+44 20 7946 0000 · hello@northwind.example · www.northwind.example</text>
+  <text x="1130" y="92" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#0f766e" letter-spacing="2">QUOTATIONS</text>
+  <text x="1130" y="120" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="18" fill="#64748b" letter-spacing="1">ITINERARIES · PRO FORMA</text>
+  <rect x="0" y="210" width="1200" height="3" fill="#0f766e"/>
+</svg>

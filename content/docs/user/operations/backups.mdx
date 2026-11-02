@@ -1,0 +1,71 @@
+---
+title: Backups and restore
+description: Consistent SQLite snapshots, uploads archives, retention and a restore drill.
+---
+
+Backups contain the database, uploads and therefore password hashes, customer data and encrypted
+settings. Protect them accordingly.
+
+## Create a backup
+
+```bash
+npm run backup
+# or, in the production stack:
+docker compose -f docker-compose.prod.yml exec -T app npm run backup
+```
+
+The script:
+
+1. opens the SQLite database read-only and runs `VACUUM INTO` for a transactionally consistent
+   snapshot while the app is running;
+2. gzips it as `app-YYYYMMDD-HHMMSS.sqlite3.gz`;
+3. archives `uploads/` as `uploads-YYYYMMDD-HHMMSS.tar.gz`;
+4. sets file mode `0600` where the filesystem supports it;
+5. optionally copies both files to `BACKUP_REMOTE`;
+6. prunes old copies using the daily, weekly and monthly retention counts.
+
+Defaults: 14 daily, 8 weekly, 12 monthly. Override with `BACKUP_KEEP_DAILY`,
+`BACKUP_KEEP_WEEKLY` and `BACKUP_KEEP_MONTHLY`.
+
+## Schedule
+
+Run the backup from host cron, a systemd timer or the container scheduler. A common pattern:
+
+```text
+15 2 * * * cd /srv/trasper && docker compose -f docker-compose.prod.yml exec -T app npm run backup
+```
+
+Check that the job actually produces new files and that the destination is not the same disk as the
+database.
+
+## Restore drill
+
+1. Stop the app.
+2. Gunzip the newest `app-*.sqlite3.gz`.
+3. Replace `/data/app.db` (or the path in `DATABASE_URL`) with the restored file.
+4. Remove stale `-wal` and `-shm` files if present.
+5. Restore `uploads-*.tar.gz` into `UPLOAD_DIR`.
+6. Start the app.
+7. Check sign-in, one quotation preview, one PDF and `/api/health`.
+
+<Callout type="warn" title="Test restores">
+  A backup you have never restored is only a hope. Run the drill on a staging copy and record how
+  long it takes.
+</Callout>
+
+## Off-server copies
+
+`BACKUP_REMOTE` can point at a mounted drive or a synced folder. For real protection, keep at least
+one copy off the application host and encrypt it at rest.
+
+## What is not backed up
+
+- TLS certificates (Caddy manages them; reissue if lost).
+- Environment secrets (store them in a password manager or secret manager).
+- External services such as Resend or the AI provider.
+
+## Retention notes
+
+The script keeps the newest daily copies, the newest copy for each of the last weekly buckets and
+the newest copy for each monthly bucket, then removes the rest. Review retention against the
+agency's legal and tax obligations.

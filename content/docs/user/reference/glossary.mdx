@@ -1,0 +1,38 @@
+---
+title: Glossary
+description: Terms used across Trasper, the documentation and the agency workflow.
+---
+
+| Term | Meaning |
+| --- | --- |
+| **Option** | One fare proposal inside a quotation. A quotation can compare several options. |
+| **PNR** | Passenger Name Record; the booking record locator from a GDS or airline. Optional on a quotation: it is recorded when a booking exists. |
+| **Segment** | One flight leg with airline, flight number, route and local times. |
+| **Fare line** | A traveller cost in the option's cost currency. It can name one passenger or count an unnamed group of one type. |
+| **Service line** | A non-flight cost such as a hotel, transfer, visa or insurance. |
+| **Cost currency** | The supplier currency of an option's costs. |
+| **Quotation currency** | The currency the customer is quoted in. The rate converts cost to quotation currency. |
+| **rateMicro** | Exchange rate × 1,000,000, stored as an integer. |
+| **Basis point (bps)** | One hundredth of a percent. 10% = 1,000 bps. |
+| **Markup / margin** | The agency's charge on top of cost. Profit equals markup. |
+| **VAT** | Tax calculated on the markup only. A liability, not profit. |
+| **Optional tax** | An additional fixed or percentage tax on cost, markup or subtotal. |
+| **Rounding unit** | The minor-unit increment used for the single final rounding step. |
+| **Presentation** | The customer-facing layout of already-calculated amounts. |
+| **Snapshot** | Frozen JSON of a document at send/issue time. |
+| **Frozen totals** | The option's stored rate, margin, VAT and totals at send time. |
+| **Pro forma** | A request for payment before ticketing, derived from an accepted option. |
+| **Itinerary** | A travel document with flights and passengers; linked or standalone. |
+| **Standalone itinerary** | An itinerary with no quotation, option, prices or pro forma. |
+| **Revision** | A new draft copied from a non-draft quotation; the old one is superseded. |
+| **Superseded** | Replaced by a newer revision or reissued itinerary; kept for history. |
+| **Reversal** | A negative payment entry linked to the original payment. |
+| **Aged debtor** | An outstanding pro forma balance classified by days past due. |
+| **Capability** | A named permission such as `viewCosts` or `manageQuotations`. |
+| **Role** | A named set of capabilities stored in the `Role` table. |
+| **Viewer** | Read-only role that never receives cost or profit data. |
+| **Branch** | Two-digit office code used in document numbers and reports. |
+| **TIN** | Tax identification number printed on documents. |
+| **WAL** | SQLite write-ahead logging, enabled for concurrency. |
+| **CSP** | Content-Security-Policy; the app uses a per-request nonce. |
+| **TOTP** | Time-based one-time password used by authenticator apps. |

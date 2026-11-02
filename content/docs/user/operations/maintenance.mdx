@@ -1,0 +1,85 @@
+---
+title: Scheduled maintenance
+description: Quotation expiry, pro forma status rollups, cron secrets and health monitoring.
+---
+
+## What the scheduled job does
+
+`GET /api/cron` runs two idempotent steps:
+
+1. **Expire overdue quotations** — sent quotations whose validity has passed become `expired`.
+2. **Roll up pro forma statuses** — recalculate `unpaid`, `part_paid` or `paid` from the payment
+   ledger for every non-cancelled pro forma.
+
+Each change is audited with a null user, representing the system. The job never allocates document
+numbers and never alters frozen documents.
+
+Quotation expiry also runs on page loads that need it, and payment actions recalculate their pro
+forma inside the transaction, so a missed cron run does not leave statuses permanently stale. The
+route is safe to call repeatedly and overlapping runs are harmless.
+
+## Authentication
+
+The route requires:
+
+```http
+Authorization: Bearer <CRON_SECRET>
+```
+
+`CRON_SECRET` is mandatory in production, at least 16 characters and not an example value. Query
+parameter secrets are not accepted.
+
+## Callers
+
+- **Docker Compose** — the `cron` container calls `http://app:3000/api/cron` every 15 minutes.
+- **Host cron** — `npm run cron` calls `CRON_URL` (or `APP_URL`, then localhost) once, then every
+  `CRON_INTERVAL_SECONDS` while the process runs.
+- **External scheduler** — any scheduler that can set the bearer header.
+
+Example host cron entry:
+
+```text
+*/15 * * * * cd /srv/trasper && CRON_URL=http://127.0.0.1:3000 CRON_SECRET=... npm run cron
+```
+
+## Response
+
+```json
+{
+  "ok": true,
+  "expiredQuotations": 2,
+  "statusesChecked": 14,
+  "statusesChanged": 1,
+  "ranAt": "2026-11-02T06:15:00.000Z"
+}
+```
+
+A failure returns HTTP 500 with an error message. Failures are logged by the cron caller; check the
+app logs for the underlying exception.
+
+## Health endpoint
+
+`GET /api/health` returns:
+
+```json
+{ "ok": true, "time": "2026-11-02T06:15:00.000Z", "version": "1.2.3" }
+```
+
+It confirms the HTTP server is answering and reports the version baked into the image, but does not
+query SQLite. For a deeper check, use a synthetic sign-in or a read-only page. Docker's health check
+uses this endpoint to gate the other services.
+
+## Logs
+
+The app writes to stdout. Collect container logs or point a process manager at them. Caddy logs only
+errors so password-reset tokens in URLs do not reach the access log.
+
+## Monitoring checklist
+
+- HTTP health endpoint responds and reports the expected version;
+- sign-in works;
+- database file size and disk space;
+- uploads directory grows and is writable;
+- backups appear on schedule;
+- cron response is `ok: true`;
+- certificate expiry (Caddy renews automatically).

@@ -1,0 +1,72 @@
+---
+title: Pricing presentation
+description: Choose how customers see prices, service fees and taxes without changing the calculation.
+---
+
+**Settings → Pricing presentation** controls the default customer-facing layout. Each quotation can
+override the price and tax layouts.
+
+<Callout type="info" title="Presentation only">
+  Layouts never change the calculation. Cost is converted, markup and VAT are calculated, the total
+  is rounded once, and the rows are a view of that result. Every layout must sum to the same total.
+</Callout>
+
+## Price layouts
+
+| Layout | Customer sees | Best for |
+| --- | --- | --- |
+| `lump_sum` | One all-inclusive amount per flight or service. | Traditional quotations. |
+| `net_plus_fee` | Supplier price per line plus one labelled service fee. | Agencies that quote a transparent fee. |
+| `itemised` | Supplier cost, service fee and each tax as separate rows. | Tax-invoice-style documents. |
+| `per_person` | All-inclusive lines plus a per-traveller price. | Packages and group trips. |
+| `total_only` | A single package total with no line prices. | Tours and cruises that hide components. |
+
+The service fee is derived as the difference between the displayed rows and the total. It is not a
+separate calculation and cannot drift from the total.
+
+## Tax layouts
+
+| Layout | Customer sees |
+| --- | --- |
+| `included` | No tax row; line prices contain tax. VAT stays inside the lump sum. |
+| `note` | Included, with a sentence confirming it. |
+| `summary` | Line prices exclude tax; one combined taxes row before the total. |
+| `itemised` | VAT and every enabled optional tax listed by name, rate and base. |
+
+VAT is **always** calculated on markup only, regardless of the tax layout. The itemised tax layout
+does not move VAT onto cost.
+
+If you choose the itemised **price** layout but taxes are marked `included` or `note`, the tax layout
+is promoted to `summary` so the service-fee row cannot silently absorb the tax.
+
+## Editable labels
+
+| Label | Default | Used by |
+| --- | --- | --- |
+| Service fee | Service fee | `net_plus_fee`, `itemised` |
+| Combined tax | Taxes | `summary` |
+| VAT/GST | VAT | `itemised` tax rows |
+| Total | Total | All layouts |
+| Per-person | Price per person | `per_person` |
+| Tax note | Empty | `note` and `itemised` |
+
+Labels are customer-facing, so use the agency's own terminology. Keep them short enough for the
+document table.
+
+## Overrides
+
+A quotation can choose its own price and tax layouts. `null` means "follow the agency default" and
+is resolved when the document is built. The override is stored on the quotation and frozen into the
+snapshot when sent.
+
+## Accommodation lines
+
+Unit-priced services show the quantity and unit, and an optional per-unit amount. The calculation
+still uses the total cost; the unit amount is display metadata. See
+[quotation editor](/docs/user/guide/quotation-editor#fares-and-services).
+
+## Related
+
+- [Pricing rules](/docs/user/reference/pricing)
+- [VAT and taxes](/docs/user/administration/vat-and-taxes)
+- [Documents and snapshots](/docs/user/reference/documents)

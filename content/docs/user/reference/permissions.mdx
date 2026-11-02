@@ -1,0 +1,94 @@
+---
+title: Permissions
+description: The capability model, built-in matrix, server enforcement and cost redaction.
+---
+
+Roles are rows in the `Role` table. A role stores a JSON array of capabilities. The built-in matrix
+is the fallback and the seed for a fresh database.
+
+## Capabilities
+
+| Capability | Grants |
+| --- | --- |
+| `manageUsers` | Users, roles, invites. |
+| `manageSettings` | Company, pricing, tax, templates, numbering, banks, currencies, branches, airlines, AI. |
+| `manageContacts` | Create/edit customers and passengers, import, merge, archive, link. |
+| `viewContacts` | See customers. |
+| `manageQuotations` | Create, edit, send, accept, decline, revise, duplicate, cancel, delete drafts. |
+| `manageDocuments` | Issue/cancel itineraries and pro formas, standalone itineraries. |
+| `recordPayments` | Record and reverse payments. |
+| `viewDocuments` | View documents and download PDFs. |
+| `viewCosts` | See cost, markup, VAT, taxes and profit; download Word exports and attachments. |
+| `viewAudit` | Read the audit log. |
+| `viewPaymentLedger` | Read the payment ledger. |
+| `viewReports` | Read reports and export report CSV. |
+| `exportContacts` | Download the customer CSV. |
+
+## Built-in matrix
+
+| Capability | Admin | Agent | Accountant | Viewer |
+| --- | :-: | :-: | :-: | :-: |
+| `manageUsers` | ✓ |  |  |  |
+| `manageSettings` | ✓ |  |  |  |
+| `manageContacts` | ✓ | ✓ |  |  |
+| `viewContacts` | ✓ | ✓ | ✓ |  |
+| `manageQuotations` | ✓ | ✓ |  |  |
+| `manageDocuments` | ✓ | ✓ | ✓ |  |
+| `recordPayments` | ✓ |  | ✓ |  |
+| `viewDocuments` | ✓ | ✓ | ✓ | ✓ |
+| `viewCosts` | ✓ | ✓ | ✓ |  |
+| `viewAudit` | ✓ |  | ✓ |  |
+| `viewPaymentLedger` | ✓ |  | ✓ |  |
+| `viewReports` | ✓ |  | ✓ |  |
+| `exportContacts` | ✓ |  | ✓ |  |
+
+The `admin` role always keeps every capability and cannot be deactivated. `accountant` can issue
+documents as well as record payments.
+
+## Server enforcement
+
+Checks happen at every entry point:
+
+- **Pages** call `requireUser` and `requireCapableUser`; unauthorised users are redirected.
+- **Server actions** call `actionUser(capability)` before validation or writes.
+- **API routes** call `getCurrentUser` / `requireCapableUser` and check the capability.
+- **Downloads** (`PDF`, `Word`, `CSV`, attachments, uploads) check the same rules.
+- **Navigation** hides links for convenience, but never as the control.
+
+## Cost redaction
+
+Roles without `viewCosts` never receive cost-bearing data from the server. The helpers in
+`src/lib/permissions.ts`:
+
+- `redactOption` removes `rateMicro` and `marginValue`;
+- `redactPricedLine` returns only `priceMinor`;
+- `redactAuditValue` removes cost, rate, margin, VAT, tax, profit and secret keys from audit diffs
+  shown to a role without `viewCosts`.
+
+Additional gates:
+
+- Attachments require `viewDocuments` **and** `viewCosts`.
+- Word export requires `viewDocuments` **and** `viewCosts`.
+- Report profit columns require `viewCosts`.
+- Overdue-payment notifications require `viewCosts`.
+- Customer and passenger searches require `viewContacts` / `manageContacts`.
+
+## Custom roles
+
+Custom roles are built from capabilities under **Settings → Roles**. Rules:
+
+- only an administrator can change roles;
+- a manager cannot grant a capability they do not hold;
+- a manager cannot modify a user with capabilities they do not hold;
+- deactivating a role removes its capabilities from its users.
+
+If the role row exists, its active flag and capability list decide; an inactive role grants no
+capabilities. If no row exists, the built-in matrix for the role key is used.
+
+## Two-factor policy
+
+A role can be listed in the mandatory 2FA policy. A user in that role is redirected to enrolment
+before any page or action. The check also applies to API routes and downloads.
+
+See [roles administration](/docs/user/administration/roles) and
+[security](/docs/user/administration/security-2fa).

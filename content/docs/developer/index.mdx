@@ -1,0 +1,72 @@
+---
+title: Developer guide
+description: Architecture, conventions, data, HTTP routes and tests.
+---
+
+This is the developer side of the documentation. It explains how the application is structured, the
+rules that must not be broken, where the data lives and how to verify a change.
+
+## Start here
+
+<Cards>
+  <Card title="Architecture" href="/docs/developer/architecture">
+    Layers, request flow and the pure/effect boundary.
+  </Card>
+  <Card title="Code standards" href="/docs/developer/code-standards">
+    TypeScript, money, schemas, server actions and naming.
+  </Card>
+  <Card title="Data model" href="/docs/developer/data-model">
+    Prisma models, relationships and structural invariants.
+  </Card>
+  <Card title="Testing" href="/docs/developer/testing">
+    The unit suite, Playwright flows and the coverage rules.
+  </Card>
+</Cards>
+
+## Reference
+
+| Topic | Page |
+| --- | --- |
+| HTTP routes and server actions | [HTTP routes](/docs/developer/http-routes) |
+| Database changes and migrations | [Database](/docs/developer/database) |
+| Fumadocs site wiring | [The docs site](/docs/developer/docs-site) |
+| Contribution workflow | [Contributing](/docs/developer/contributing) |
+| Pricing engine and presentation | [Pricing rules](/docs/user/reference/pricing) |
+| Frozen documents | [Documents and snapshots](/docs/user/reference/documents) |
+| Capabilities and redaction | [Permissions](/docs/user/reference/permissions) |
+| PNR parser grammar | [PNR formats](/docs/user/reference/pnr-formats) |
+
+## Non-negotiables
+
+- Money is `BigInt` minor units. Rates are integers scaled by 1,000,000. Margins, VAT and taxes are
+  basis points.
+- The pricing engine is pure, and VAT is calculated on markup only.
+- Line prices add up exactly to the total in every presentation layout.
+- Issued documents are frozen snapshots.
+- Payments are append-only; corrections are reversing entries.
+- Every write is a server action: capability check, Zod validation, write and audit in one
+  transaction.
+- Contacts and passengers are archived, never deleted once referenced.
+- Passport data is never stored.
+
+## Working on the app
+
+```bash
+npm install
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+npm run dev
+```
+
+Then:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+See [testing](/docs/developer/testing) and [contributing](/docs/developer/contributing) for the full
+workflow.

@@ -1,0 +1,69 @@
+---
+title: User guide
+description: For agency staff, administrators and operators.
+---
+
+This is the user side of the documentation. It covers the screens staff use every day, the settings
+administrators manage, deployment and maintenance, and the rules that explain what the system does.
+
+## Staff
+
+<Cards>
+  <Card title="The workflow" href="/docs/user/guide/workflow">
+    Customer and passengers, quotation options, acceptance, documents and payments.
+  </Card>
+  <Card title="Quotation editor" href="/docs/user/guide/quotation-editor">
+    Flights, named or unnamed travellers, services, rate, margin, taxes and presentation.
+  </Card>
+  <Card title="Pro formas and payments" href="/docs/user/guide/proformas">
+    Issue, print, cancel and reconcile.
+  </Card>
+  <Card title="Reports" href="/docs/user/guide/reports">
+    Sales, payments and profit by period, customer, branch and airline.
+  </Card>
+</Cards>
+
+## Administrators
+
+<Cards>
+  <Card title="Company settings" href="/docs/user/administration/company">
+    Identity, header, logo, letterhead, time zone and defaults.
+  </Card>
+  <Card title="Pricing presentation" href="/docs/user/administration/pricing-presentation">
+    Five customer layouts and four tax layouts.
+  </Card>
+  <Card title="VAT and taxes" href="/docs/user/administration/vat-and-taxes">
+    VAT on markup, optional taxes and rounding.
+  </Card>
+  <Card title="Users and roles" href="/docs/user/administration/users">
+    Staff accounts, capabilities and two-factor policy.
+  </Card>
+</Cards>
+
+## Operators
+
+<Cards>
+  <Card title="Configuration" href="/docs/user/operations/configuration">
+    Environment variables, email, cron and backups.
+  </Card>
+  <Card title="Docker deployment" href="/docs/user/operations/docker">
+    App, Caddy and cron containers.
+  </Card>
+  <Card title="Backups" href="/docs/user/operations/backups">
+    Consistent SQLite snapshots and a restore drill.
+  </Card>
+  <Card title="Troubleshooting" href="/docs/user/operations/troubleshooting">
+    Common installation, pricing, document and deployment problems.
+  </Card>
+</Cards>
+
+## Behaviour reference
+
+- [Pricing rules](/docs/user/reference/pricing) — calculation order, rounding and the line-total
+  invariant.
+- [Documents and snapshots](/docs/user/reference/documents) — what is frozen and when.
+- [Document lifecycle](/docs/user/reference/lifecycle) — statuses, locks and cancellations.
+- [Permissions](/docs/user/reference/permissions) — the capability matrix and redaction.
+- [PNR formats](/docs/user/reference/pnr-formats) — supported parser grammar.
+
+Looking for the code? Start with the [developer guide](/docs/developer).

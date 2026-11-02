@@ -1,0 +1,44 @@
+---
+title: Bank accounts
+description: Accounts printed on quotations and pro formas, defaults and frozen details.
+---
+
+**Settings → Bank accounts** manages the accounts customers can pay into. Trasper does not connect to
+a bank; the details are printed on documents.
+
+## Fields
+
+| Field | Notes |
+| --- | --- |
+| Label | Staff-facing name, for example `Stanbic MWK`. |
+| Currency | The account's currency. |
+| Bank name | Printed. |
+| Branch name | Printed. |
+| Account name | Printed. |
+| Account number | Printed. |
+| SWIFT code | Optional. |
+| Sort code | Optional. |
+| Payment instructions | Printed beneath the account details. |
+| Sort order | Order in pickers. |
+| Default | Exactly one account should be the default; it is preselected on new documents. |
+
+## Defaults and selection
+
+- New quotations and pro formas preselect the default account.
+- The user issuing the document can choose another active account.
+- Archived accounts are hidden from pickers but remain on existing frozen documents.
+
+## Freezing
+
+The chosen account's details are copied into the document snapshot when the quotation is sent or the
+pro forma is issued. Changing an account later never changes an issued document. This is important
+for audit and for customers paying against an old document.
+
+## Permissions and audit
+
+`manageSettings` is required. Creating, editing and removing accounts is audited.
+
+<Callout type="info" title="No seed bank accounts">
+  A fresh database has no bank accounts. Add the agency's own accounts here before issuing customer
+  documents.
+</Callout>

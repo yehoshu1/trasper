@@ -1,0 +1,184 @@
+---
+title: Architecture
+description: Frontend, backend, public landing page, docs and deployment shape.
+---
+
+Trasper is one Next.js App Router application. The public landing page, the authenticated staff
+workspace, the documentation site and the HTTP endpoints run in the same process and ship in the
+same container.
+
+```text
+src/app/             routes: landing, staff shell, auth, docs and API
+  page.tsx           public landing page at /
+  (staff)/           authenticated staff routes; dashboard at /dashboard
+  login/, enrol-2fa/ authentication and forced 2FA enrolment
+  docs/              public Fumadocs site at /docs
+  api/               health, auth, search, PDF/Word, uploads and cron
+src/components/      shared UI components (client and server)
+src/documents/       A4 print templates
+src/server/          auth, actions, database, documents, PDF, jobs
+src/lib/             pure domain helpers
+content/docs/        MDX source for the docs site
+prisma/              schema, migrations and reference data
+public/              static assets, screenshots and generated docs CSS
+deploy/Caddyfile     production reverse proxy
+Dockerfile           production image
+Dockerfile.dev       development image with hot reload
+docker-compose.*.yml deployment stacks
+```
+
+## Surfaces
+
+### Public landing page
+
+`/` is the public product landing page. It is implemented in `src/app/page.tsx` with scoped styles
+in `src/app/landing.module.css` and product screenshots in `public/screenshots/`. It is marketing
+content: it does not read customer data or the database, and it links to `/login`, `/docs` and the
+project's [GitHub repository](https://github.com/yehoshu1/trasper).
+
+The authenticated dashboard is **`/dashboard`**. Do not treat `/` as the staff home; the two routes
+have different access rules and layouts. The landing page is the only route at `/`; the dashboard
+was moved so it could have its own protected URL inside the staff shell.
+
+### Staff frontend
+
+- `src/app/(staff)/layout.tsx` is the authenticated shell. It calls `requireUser`, loads navigation,
+  notifications and company branding, and renders the sidebar and command palette.
+- `(staff)` is a route group, so staff screens keep top-level URLs such as `/quotations`,
+  `/customers`, `/itineraries`, `/proformas`, `/payments`, `/reports` and `/settings`. Only the home
+  screen is named `/dashboard`.
+- Pages call `requireUser` or `requireCapableUser`; capability checks are repeated in server actions
+  and API routes. Viewers receive redacted data from the server, never hidden fields in the browser.
+- `src/components/` holds the shared UI. `src/documents/` holds the A4 print templates used by both
+  the preview and the PDF renderer.
+
+### Backend
+
+- `src/server/actions/` contains every write as a `"use server"` action: capability check, Zod
+  validation, domain checks, then a transaction containing the write and its audit row.
+- `src/server/auth.ts`, `guard.ts` and `src/lib/permissions.ts` implement Better Auth sessions,
+  two-factor policy, roles and capability checks.
+- `src/server/db.ts` owns the Prisma client and the BigInt-safe helpers. SQLite runs from a
+  persistent file with WAL mode and a busy timeout.
+- `src/server/documents.ts`, `pdf.ts` and `word.ts` build frozen document data and render it.
+- `src/server/jobs.ts` and the guarded `/api/cron` route handle quotation expiry and pro forma status
+  rollups.
+- `src/app/api/` contains the read, upload, download, authentication, health and cron endpoints.
+  There is no separate backend service or external database.
+
+### Documentation
+
+`/docs` is the public Fumadocs site. The MDX source is in `content/docs`, split into a user guide and
+a developer guide. It is compiled into the same Next.js build and served by the same application
+process. See [the docs site](/docs/developer/docs-site).
+
+## Layers
+
+### `src/lib` — pure domain
+
+- `pricing/` — the calculation engine and presentation.
+- `pnr/` — deterministic parsing and normalisation.
+- `quotation.ts` — editor shapes, validation, totals.
+- `documents.ts` — snapshot interfaces and helpers.
+- `permissions.ts` — capabilities and redaction.
+- `money.ts`, `dates.ts`, `time/` — integer money and time-zone helpers.
+- `schemas.ts` — shared Zod input schemas.
+- `reports.ts`, `aged-debtors.ts`, `followups.ts` — pure reporting logic.
+
+No database, file system or network access. The pricing and PNR cores have no implicit clock; the
+time-zone helpers resolve the configured agency zone through the settings layer rather than the
+server's local zone.
+
+### `src/server` — effects
+
+- `auth.ts`, `guard.ts` — Better Auth integration, session user, capability guards.
+- `actions/` — `"use server"` entry points for every write.
+- `db.ts` — Prisma client and BigInt-safe JSON helpers.
+- `documents.ts`, `pdf.ts`, `word.ts` — snapshot building and rendering.
+- `settings.ts`, `numbering.ts`, `audit.ts` — typed settings, sequence allocation, audit.
+- `jobs.ts` — scheduled expiry and status rollup.
+- `quotations.ts`, `reports.ts`, `search.ts`, `notifications.ts` — read models.
+
+### `src/app` — routes
+
+- `page.tsx` is the public landing page at `/`.
+- `(staff)` is the authenticated shell; its dashboard is `/dashboard`.
+- Auth pages (`login`, `login/2fa`, `login/forgot`, `login/reset`, `enrol-2fa`) sit outside the
+  staff shell.
+- `/docs` is the public documentation site.
+- `api/` contains read, upload, download, health and cron routes.
+
+### `src/documents` — print
+
+React A4 templates shared by the live preview and the PDF route. The PDF layer draws the same data
+with `pdf-lib`; it does not run a browser.
+
+## Request flow
+
+```text
+Browser
+  │  form / server action
+  ▼
+Server action
+  │  1. actionUser(capability)  → session + 2FA + capability
+  │  2. Zod parse
+  │  3. read + validate domain
+  │  4. transaction: write + audit
+  │  5. revalidate paths
+  ▼
+Prisma / SQLite
+```
+
+Reads go through server components. A page calls `requireUser` or `requireCapableUser`, loads only
+the data the role may see, and renders with the shared components.
+
+## Deployment shape
+
+The production image is a multi-stage Docker build on Node 24. It builds the Next.js standalone
+output, then runs migrations, the idempotent seed and `.next/standalone/server.js` on start. The
+application, docs and landing page are all served by that one process.
+
+The production Compose stack has three services:
+
+| Service | Role |
+| --- | --- |
+| `app` | Pulls the versioned GHCR image, applies migrations, seeds a fresh database and serves the app. |
+| `cron` | Calls `/api/cron` every 15 minutes with the guarded bearer token. |
+| `caddy` | Terminates HTTPS and renews certificates. |
+
+SQLite, uploads and backups live on persistent volumes; the container itself is disposable. The
+development Compose stack builds from source with a bind mount and hot reload. See
+[Docker deployment](/docs/user/operations/docker) for commands and the production checklist.
+
+## Money
+
+All money is `BigInt` minor units. Across the server-action boundary it travels as decimal strings,
+because JSON has no BigInt. It is converted back before any calculation. Rates are scaled integers;
+margins, VAT and taxes are basis points.
+
+## Documents
+
+A quotation freezes on send; itineraries and pro formas freeze on issue. The snapshot is the only
+source for preview and PDF. Templates are selected by id and stored in the snapshot.
+
+## Time
+
+- Document dates: UTC midnight, displayed in the agency time zone.
+- Flight times: local wall-clock strings, never converted.
+- Durations and layovers: Luxon with IANA zones.
+- Reports and deadlines: agency time zone.
+
+## Security boundaries
+
+- Browser never writes directly; every write is a server action.
+- Capability checks are server-side.
+- Viewers receive redacted records.
+- Downloads re-check capability.
+- CSP nonce and hardening headers are applied in `src/proxy.ts`.
+- Secrets are encrypted or environment-only.
+
+## Why this shape
+
+The pure core makes the money rules testable without a database. The server layer owns effects and
+transactions. The route layer is thin. The print templates share one data shape, so the preview and
+PDF cannot diverge.

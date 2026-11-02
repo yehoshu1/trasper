@@ -1,0 +1,48 @@
+---
+title: History and files
+description: Activity timelines, follow-ups, notes and attachments on quotations and customers.
+---
+
+## Activity timeline
+
+Every quotation and customer has a timeline of sales activity:
+
+| Type | Use |
+| --- | --- |
+| Called | A phone call |
+| Emailed | An email sent outside the app |
+| WhatsApp | A messaging conversation |
+| Note | A general internal note |
+| Meeting | An in-person or online meeting |
+
+Each entry stores the body, when it happened and an optional next follow-up date. The author and
+timestamp are shown; entries are audited.
+
+The **next follow-up** date feeds the dashboard priority score and the notifications page. A
+follow-up due today or earlier raises a notification.
+
+<Callout type="info" title="No customer mailbox">
+  The in-app mail client is not part of this build. "Emailed" records that an email was sent
+  elsewhere. Transactional system mail is limited to 2FA, recovery, password reset and staff invites.
+</Callout>
+
+## Attachments
+
+Attachments can be added to quotations and pro formas:
+
+- maximum 10 MB; allowed types are PDF, PNG/JPEG/WebP, text, CSV, EML, Word, Excel and ZIP, with the
+  extension checked against the declared MIME type;
+- files are stored under `UPLOAD_DIR`, outside `public/`;
+- downloads go through `/api/attachments/[id]`, which requires `viewDocuments` **and** `viewCosts`;
+- archiving hides an attachment but leaves the stored file on disk;
+- attachment metadata and actions are audited.
+
+Attachments may contain supplier costs, which is why viewers never receive them.
+
+## Auditing
+
+Every write creates an `AuditLog` row in the same transaction as the change. Staff with `viewAudit`
+can open **Settings → Audit log**. Cost-bearing fields and secrets are redacted for roles without
+the relevant capability.
+
+See [audit log](/docs/user/administration/audit).

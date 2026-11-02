@@ -1,0 +1,524 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------- People and access ----------
+// Better Auth owns the identity columns (id, name, email, emailVerified,
+// image) and the Session/Account tables. Role and active remain app-owned.
+model User {
+  id               String           @id
+  email            String           @unique
+  name             String
+  emailVerified    Boolean          @default(false)
+  image            String?
+  role             String // admin | agent | accountant | viewer
+  branch           String           @default("01") // two-digit branch code used in document numbers
+  active           Boolean          @default(true)
+  twoFactorEnabled Boolean          @default(false)
+  lastLoginAt      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  sessions         Session[]
+  accounts         Account[]
+  quotations       Quotation[]
+  payments         Payment[]
+  audits           AuditLog[]
+  itineraries      Itinerary[]
+  proformas        Proforma[]
+  exchangeRates    ExchangeRate[]
+  activities       Activity[]
+  savedViews       SavedTableView[]
+  attachments      Attachment[]
+  twoFactors       TwoFactor[]
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  @@index([userId])
+  @@index([secret])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ---------- Customers and travellers ----------
+model Contact {
+  id              String      @id @default(cuid())
+  name            String
+  type            String // organisation | individual
+  attention       String?
+  poBox           String?
+  city            String?
+  country         String?
+  physicalAddress String?
+  email           String?
+  phone           String?
+  notes           String?
+  archivedAt      DateTime?
+  version         Int         @default(1)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  passengers      Passenger[]
+  quotations      Quotation[]
+  itineraries     Itinerary[]
+  activities      Activity[]
+
+  @@index([name])
+}
+
+model Passenger {
+  id         String     @id @default(cuid())
+  title      String?
+  firstName  String
+  lastName   String
+  type       String // adult | child | infant
+  archivedAt DateTime?
+  version    Int        @default(1)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  contacts   Contact[]
+  fares      FareLine[]
+
+  @@index([lastName, firstName])
+}
+
+// ---------- Quotations ----------
+model Quotation {
+  id               String        @id @default(cuid())
+  number           String        @unique
+  revision         Int           @default(1)
+  supersedesId     String?
+  referenceNo      String?
+  contactId        String
+  contact          Contact       @relation(fields: [contactId], references: [id])
+  status           String        @default("draft") // draft | sent | accepted | declined | expired | superseded
+  branch           String        @default("01") // branch this quotation is issued from
+  currency         String
+  issueDate        DateTime
+  validUntil       DateTime
+  vatOverride      Boolean? // null = follow the global VAT setting
+  pricingDisplay   String? // null = follow the agency default presentation
+  taxDisplay       String? // null = follow the agency default tax presentation
+  acceptedOptionId String?
+  bankAccountId    String? // account whose details print on this document
+  bankAccount      BankAccount?  @relation(fields: [bankAccountId], references: [id])
+  heading          String? // printed heading above the options ("QUOTATION")
+  notes            String?
+  cancelledReason  String?
+  cancelledAt      DateTime?
+  snapshot         String? // full document snapshot taken when sent
+  sentAt           DateTime?
+  lockedAt         DateTime?
+  version          Int           @default(1)
+  createdById      String
+  createdBy        User          @relation(fields: [createdById], references: [id])
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  options          QuoteOption[]
+  itineraries      Itinerary[]
+  proformas        Proforma[]
+  activities       Activity[]
+  attachments      Attachment[]
+
+  @@index([contactId])
+  @@index([status, validUntil])
+}
+
+model QuoteOption {
+  id                String        @id @default(cuid())
+  quotationId       String
+  quotation         Quotation     @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  position          Int           @default(0)
+  label             String // Option A
+  optionType        String        @default("flight") // flight | accommodation | package | tour | cruise | other
+  pnr               String?
+  ticketingDeadline DateTime?
+  costCurrency      String
+  rateMicro         BigInt // quotation currency per 1 cost currency, x 1,000,000
+  marginKind        String // percent | lump
+  marginValue       BigInt // basis points when percent, minor units when lump
+  frozenTotals      String? // JSON text saved when the quotation is sent
+  segments          Segment[]
+  fares             FareLine[]
+  services          ServiceLine[]
+  taxes             TaxLine[]
+
+  @@index([quotationId])
+}
+
+model Segment {
+  id          String      @id @default(cuid())
+  optionId    String
+  option      QuoteOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  position    Int
+  airline     String // IATA code
+  flightNo    String
+  fromIata    String
+  toIata      String
+  departLocal      String // local wall-clock text, e.g. 2026-10-31T06:20
+  arriveLocal      String
+  cabin            String?
+  operatingCarrier String?
+
+  @@index([optionId])
+}
+
+model FareLine {
+  id            String      @id @default(cuid())
+  optionId      String
+  option        QuoteOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  // A named passenger, or empty when the travellers are still to be named.
+  passengerId   String?
+  passenger     Passenger?  @relation(fields: [passengerId], references: [id])
+  passengerType String      @default("adult") // adult | child | infant
+  quantity      Int         @default(1) // travellers covered when no name is linked
+  costMinor     BigInt // total for the line, in the option's cost currency
+
+  @@index([optionId])
+  @@index([passengerId])
+}
+
+model ServiceLine {
+  id          String      @id @default(cuid())
+  optionId    String
+  option      QuoteOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  category    String // hotel | visa | insurance | transfer | tour | cruise | car_hire | rail | activity | other
+  description String
+  costMinor   BigInt
+  quantity    Int         @default(1) // nights, rooms, people, packages...
+  unit        String      @default("unit") // unit | night | day | room | room_night | person | person_night | package
+  unitCostMinor BigInt? // optional per-unit cost in the option's cost currency
+  details     String? // room type, board basis, supplier reference
+
+  @@index([optionId])
+}
+
+model TaxLine {
+  id       String      @id @default(cuid())
+  optionId String
+  option   QuoteOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  name     String
+  kind     String // fixed | percent
+  value    BigInt
+  enabled  Boolean     @default(true)
+  base     String      @default("cost") // cost | markup | subtotal
+
+  @@index([optionId])
+}
+
+// ---------- Issued documents ----------
+model Itinerary {
+  id           String    @id @default(cuid())
+  number       String    @unique
+  // Linked itineraries come from a quotation option. Standalone itineraries
+  // have no quotation or option and never carry prices.
+  quotationId  String?
+  quotation    Quotation? @relation(fields: [quotationId], references: [id])
+  optionId     String?
+  contactId    String?
+  contact      Contact?  @relation(fields: [contactId], references: [id])
+  branch       String    @default("01")
+  referenceNo  String?
+  snapshot     String // JSON of exactly what was printed
+  issuedAt     DateTime  @default(now())
+  createdById  String
+  createdBy    User      @relation(fields: [createdById], references: [id])
+  supersededAt DateTime?
+  supersededBy String?
+
+  @@index([quotationId])
+  @@index([contactId])
+}
+
+model Proforma {
+  id              String         @id @default(cuid())
+  number          String         @unique
+  quotationId     String
+  quotation       Quotation      @relation(fields: [quotationId], references: [id])
+  optionId        String
+  bankAccountId   String?
+  bankAccount     BankAccount?   @relation(fields: [bankAccountId], references: [id])
+  referenceNo     String?
+  status          String         @default("unpaid") // unpaid | part_paid | paid | cancelled
+  currency        String
+  totalMinor      BigInt
+  issueDate       DateTime
+  dueDate         DateTime?
+  terms           String?
+  showVat         Boolean        @default(false)
+  snapshot        String
+  cancelledReason String?
+  cancelledAt     DateTime?
+  createdById     String
+  createdBy       User           @relation(fields: [createdById], references: [id])
+  createdAt       DateTime       @default(now())
+  lines           ProformaLine[]
+  payments        Payment[]
+  instalments     Instalment[]
+  attachments     Attachment[]
+
+  @@index([quotationId])
+  @@index([status])
+}
+
+model ProformaLine {
+  id          String   @id @default(cuid())
+  proformaId  String
+  proforma    Proforma @relation(fields: [proformaId], references: [id], onDelete: Cascade)
+  position    Int
+  description String
+  amountMinor BigInt
+
+  @@index([proformaId])
+}
+
+model Payment {
+  id           String   @id @default(cuid())
+  proformaId   String
+  proforma     Proforma @relation(fields: [proformaId], references: [id])
+  paidOn       DateTime
+  amountMinor  BigInt
+  method       String // cash | bank_transfer | mobile_money | cheque | card
+  reference    String?
+  // A payment can be reversed at most once. SQLite allows multiple NULLs,
+  // so ordinary payments are unaffected.
+  reversesId   String?  @unique
+  recordedById String
+  recordedBy   User     @relation(fields: [recordedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([proformaId])
+  @@index([paidOn])
+}
+
+// ---------- Reference data, settings, numbering, audit ----------
+model Branch {
+  code      String   @id
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  key          String   @id
+  name         String
+  capabilities String // JSON array of capability names
+  system       Boolean  @default(false)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Airline {
+  iata     String  @id
+  name     String
+  logoPath String?
+}
+
+model Airport {
+  iata    String @id
+  name    String
+  city    String
+  country String
+  tz      String // IANA zone, e.g. Africa/Blantyre
+}
+
+model Currency {
+  code   String  @id
+  name   String
+  symbol String
+  active Boolean @default(true)
+}
+
+model ExchangeRate {
+  id            String   @id @default(cuid())
+  fromCcy       String
+  toCcy         String
+  rateMicro     BigInt
+  effectiveFrom DateTime
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
+  createdAt     DateTime @default(now())
+
+  @@index([fromCcy, toCcy, effectiveFrom])
+}
+
+model BankAccount {
+  id                  String      @id @default(cuid())
+  label               String // e.g. "Stanbic MWK", "Standard Bank USD"
+  bankName            String
+  branchName          String?
+  accountName         String
+  accountNumber       String
+  swiftCode           String?
+  sortCode            String?
+  currency            String // "MWK", "USD", ...
+  paymentInstructions String? // free text shown beneath the details
+  isDefault           Boolean     @default(false)
+  isArchived          Boolean     @default(false)
+  sortOrder           Int         @default(0)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  quotations          Quotation[]
+  proformas           Proforma[]
+
+  @@index([isArchived, sortOrder])
+}
+
+// ---------- Sales activity, saved views, help ----------
+model Activity {
+  id             String     @id @default(cuid())
+  type           String // called | emailed | whatsapp | note | meeting
+  body           String
+  occurredAt     DateTime
+  nextFollowUpAt DateTime?
+  quotationId    String?
+  quotation      Quotation? @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  contactId      String?
+  contact        Contact?   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User       @relation(fields: [userId], references: [id])
+  createdAt      DateTime   @default(now())
+
+  @@index([quotationId, occurredAt])
+  @@index([contactId, occurredAt])
+  @@index([nextFollowUpAt])
+}
+
+model SavedTableView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listKey   String // quotations | customers | proformas | payments
+  state     String // JSON: globalFilter, sorting, filters, visibility
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, listKey])
+}
+
+// The companion FTS5 index lives in data/help-fts.db, outside the
+// Prisma-managed database, so schema diffs never see virtual/shadow tables.
+// It is rebuildable from this table at any time.
+// ---------- Documents: attachments, instalments, email ----------
+model Attachment {
+  id           String     @id @default(cuid())
+  quotationId  String?
+  quotation    Quotation? @relation(fields: [quotationId], references: [id])
+  proformaId   String?
+  proforma     Proforma?  @relation(fields: [proformaId], references: [id])
+  filename     String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  storedPath   String
+  uploadedById String
+  uploadedBy   User       @relation(fields: [uploadedById], references: [id])
+  archivedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([quotationId])
+  @@index([proformaId])
+}
+
+model Instalment {
+  id          String   @id @default(cuid())
+  proformaId  String
+  proforma    Proforma @relation(fields: [proformaId], references: [id], onDelete: Cascade)
+  position    Int
+  label       String
+  dueDate     DateTime
+  amountMinor BigInt
+  createdAt   DateTime @default(now())
+
+  @@index([proformaId])
+}
+
+model TaxPreset {
+  id      String  @id @default(cuid())
+  name    String
+  kind    String // fixed | percent
+  value   BigInt
+  enabled Boolean @default(true)
+  base    String  @default("cost") // cost | markup | subtotal
+}
+
+model Setting {
+  key   String @id
+  value String
+}
+
+model Sequence {
+  key   String @id // e.g. QT-2026
+  value Int
+}
+
+model AuditLog {
+  id       String   @id @default(cuid())
+  at       DateTime @default(now())
+  userId   String?
+  user     User?    @relation(fields: [userId], references: [id])
+  action   String
+  entity   String
+  entityId String
+  diff     String // JSON before/after
+
+  @@index([entity, entityId])
+  @@index([at])
+}

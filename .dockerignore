@@ -1,0 +1,14 @@
+node_modules
+.next
+.test-dist
+data
+backups
+uploads
+*.log
+.env
+.git
+.github
+tests
+playwright-report
+test-results
+coverage

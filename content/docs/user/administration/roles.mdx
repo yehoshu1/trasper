@@ -1,0 +1,68 @@
+---
+title: Roles and permissions
+description: Built-in roles, the capability matrix and custom capability sets.
+---
+
+**Settings → Roles and permissions** shows every role and lets an administrator build custom roles
+from capabilities. The checks are enforced on every page, server action, API route and download.
+
+<Callout type="warn" title="Hiding a button is not access control">
+  Capabilities are checked again on the server. A viewer who guesses a URL still cannot read cost or
+  edit a record.
+</Callout>
+
+## Built-in roles
+
+| Role | Capabilities |
+| --- | --- |
+| Admin | Everything, including users, roles and settings. |
+| Agent | Contacts, passengers, quotations, itineraries, pro formas, costs. |
+| Accountant | Read documents, record/reverse payments, contacts, audit, reports, CSV export. |
+| Viewer | Read documents only; cost, rate, margin, VAT and profit are removed server-side. |
+
+## Capabilities
+
+| Capability | Grants |
+| --- | --- |
+| `manageUsers` | Create and edit users, roles and invites. |
+| `manageSettings` | Company, pricing, tax, templates, numbering, banks, currencies, branches, airlines, AI. |
+| `manageContacts` | Create/edit customers and passengers, import, merge, archive. |
+| `viewContacts` | See customers. |
+| `manageQuotations` | Create, edit, send, accept, decline, revise, duplicate and cancel quotations. |
+| `manageDocuments` | Issue/cancel itineraries and pro formas, including standalone itineraries. |
+| `recordPayments` | Record and reverse payments. |
+| `viewDocuments` | View quotations, itineraries and pro formas and download PDFs. |
+| `viewCosts` | See cost, markup, VAT, taxes and profit. |
+| `viewAudit` | Read the audit log. |
+| `viewPaymentLedger` | Read the payment ledger. |
+| `viewReports` | Read reports and export report CSV. |
+| `exportContacts` | Download the customer CSV. |
+
+## Custom roles
+
+Create a role with a lowercase key (for example `sales_manager`), a display name and a set of
+capabilities. The role becomes available in the user form immediately.
+
+Rules:
+
+- the `admin` role always keeps every capability and cannot be deactivated;
+- only an administrator can change roles;
+- a manager cannot grant a capability they do not hold;
+- deactivating a role removes its capabilities from its users but keeps the rows for history.
+
+## Viewers and cost redaction
+
+The server never sends cost-bearing fields to a viewer. This covers:
+
+- quotation options (`rateMicro`, `marginValue`);
+- priced lines (`costMinor`, markup/VAT/tax shares);
+- cost, markup, VAT, tax and profit;
+- attachments that may contain supplier costs;
+- audit/diff fixtures for cost keys.
+
+The rule is applied in `src/lib/permissions.ts` and used by pages, actions and export routes. See
+[permissions reference](/docs/user/reference/permissions).
+
+## Permission and audit
+
+Role changes require an administrator and are audited with the full before/after capability list.

@@ -1,0 +1,5 @@
+{
+  "title": "Operations",
+  "description": "Deploy, configure, back up and monitor the installation.",
+  "pages": ["configuration", "docker", "backups", "maintenance", "security", "troubleshooting"]
+}

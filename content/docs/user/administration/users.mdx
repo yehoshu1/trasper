@@ -1,0 +1,53 @@
+---
+title: Users
+description: Create staff accounts, assign roles and branches, reset passwords and send invites.
+---
+
+**Settings → Users** manages staff accounts. Sign-up is disabled; only an administrator creates
+accounts.
+
+## Create an account
+
+| Field | Rules |
+| --- | --- |
+| Name | Shown in the sidebar and against audit entries. |
+| Email | Unique; used to sign in. |
+| Role | Must be an active role. |
+| Branch | Must be an active branch; copied into document numbers. |
+| Temporary password | At least 10 characters, with a letter and a number. |
+
+Passwords are hashed by Better Auth and are never shown or recoverable.
+
+## Edit an account
+
+Administrators can change the role, branch and active flag. Safeguards:
+
+- you cannot deactivate yourself;
+- the last active administrator cannot be demoted or deactivated;
+- a non-admin manager cannot modify an admin account;
+- a manager cannot grant capabilities they do not hold themselves.
+
+Deactivating an account ends its access but preserves its audit history and document authorship.
+
+## Reset a password
+
+Use **Reset password** on the user row. The new password is temporary and should be changed by the
+user. Password reset tokens are single-use and expire after one hour; using a reset link revokes
+existing sessions.
+
+## Send a staff invite
+
+**Send invite** emails a sign-in link using the system mail configuration (Resend). If
+`RESEND_API_KEY` is not configured, the action reports that system email is unavailable and records
+no invite. Invites are audited.
+
+## Two-factor policy
+
+Two-factor is managed per user on the **Security** page and optionally required per role under
+[Security settings](/docs/user/administration/security-2fa). An administrator cannot disable another
+user's authenticator; each user manages their own.
+
+## Permission
+
+`manageUsers` is required. Creating and changing users is audited with before/after role, branch and
+active state.

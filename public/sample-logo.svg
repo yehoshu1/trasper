@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" width="240" height="120" role="img" aria-label="Sample travel agency logo">
+  <rect width="240" height="120" fill="#ffffff"/>
+  <circle cx="48" cy="60" r="32" fill="#0f766e"/>
+  <text x="48" y="69" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">NT</text>
+  <text x="94" y="55" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#0f172a">NORTHWIND</text>
+  <text x="94" y="76" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="2" fill="#64748b">TRAVEL</text>
+</svg>

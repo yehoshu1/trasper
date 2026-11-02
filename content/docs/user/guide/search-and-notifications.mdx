@@ -1,0 +1,55 @@
+---
+title: Search and notifications
+description: Global search, the command palette, saved views and derived notifications.
+---
+
+## Global search
+
+The search page and command palette share one server implementation. It searches only the record
+types the signed-in role may see:
+
+| Record | Matching fields | Capability |
+| --- | --- | --- |
+| Quotations | Number, reference, customer, PNR, passenger names | `viewDocuments` |
+| Itineraries | Number, reference, customer, quotation number | `viewDocuments` |
+| Pro formas | Number, reference, quotation, customer | `viewDocuments` |
+| Customers | Name, attention, email, phone, city | `viewContacts` |
+| Passengers | First and last name | `manageContacts` |
+
+The query is trimmed and capped at 100 characters. Results are capped per type, and the API is rate
+limited per user.
+
+`GET /api/search?q=` returns JSON for the command palette. The same capability checks run before any
+data is read, so a viewer never receives customer or passenger results.
+
+## Command palette
+
+Press the search shortcut or use the sidebar search to open the palette. It offers global record
+search grouped by record type, plus a link to the full search page for the current query. It does
+not maintain a separate recent-records list.
+
+## Saved views
+
+List pages (quotations, customers, pro formas and payments) store a per-user view:
+
+- global filter;
+- sorting;
+- column filters;
+- column visibility.
+
+The view is saved in `SavedTableView` keyed by user and list. Resetting restores the default.
+
+## Notifications
+
+Notifications are **derived**, not stored. The bell count and the notifications page are built from:
+
+| Kind | Source |
+| --- | --- |
+| Ticketing deadline | Option deadlines inside the configured warning window. |
+| Expiring quotation | Sent quotations whose validity ends within three days. |
+| Overdue pro forma | Non-cancelled pro formas past due with a positive balance. |
+| Follow-up | Activities whose next follow-up is due today or earlier. |
+
+Cost-bearing notifications (overdue pro formas) are hidden from roles without `viewCosts`.
+Customer follow-ups are hidden without `viewContacts`. Because everything is derived, there is no
+read/unread state to drift from the records.

@@ -1,0 +1,49 @@
+# Development stack: builds Dockerfile.dev, bind-mounts the repository for hot
+# reload, and keeps the database, uploads and backups in named volumes.
+#
+#   cp .env.example .env
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# The app is on http://localhost:3000. Reset local data with:
+#   docker compose -f docker-compose.dev.yml down -v
+name: trasper-dev
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: trasper:dev
+    init: true
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: development
+      APP_VERSION: dev
+      DATABASE_URL: "file:/data/app.db"
+      UPLOAD_DIR: "/data/uploads"
+      BACKUP_DIR: "/backups"
+      APP_URL: "http://localhost:${APP_PORT:-3000}"
+      # Docker Desktop file events are unreliable; polling keeps hot reload
+      # working consistently across Linux, macOS and Windows.
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - dev-data:/data
+      - dev-backups:/backups
+    command: ["sh", "scripts/dev-start.sh"]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    stop_grace_period: 10s
+
+volumes:
+  node_modules:
+  dev-data:
+  dev-backups:

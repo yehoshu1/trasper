@@ -1,0 +1,122 @@
+---
+title: The workflow
+description: How an enquiry becomes a locked quotation, an itinerary, a pro forma and a payment ledger — with or without a booking.
+---
+
+Trasper follows the real sequence of an agency sale. A quotation can start from a pasted PNR or from
+a blank page; the booking reference is optional throughout. Each step writes an auditable record, and
+once a document is sent or issued its snapshot is frozen.
+
+## The end-to-end flow
+
+```text
+Customer + travellers
+        │
+        ▼
+Draft quotation ── save / edit ──► Send (locks + freezes)
+        │                              │
+        │                              ├── Accept option ──► Itinerary (frozen)
+        │                              │                  └─► Pro forma (frozen)
+        │                              └── Decline / expire
+        │
+        └── Revise ──► new revision (old one superseded)
+```
+
+## 1. Prepare the people
+
+A **customer** is the paying contact. A **passenger** is a traveller. Passengers can be linked to
+many customers, and a named fare references a passenger rather than a contact.
+
+- Customers are archived, never deleted, once referenced by a document.
+- Passengers are archived in the same way.
+- A fare can also be an **unnamed traveller group** (`2 Adults`, `1 Child`) when the names are not
+  known yet. Groups are quoted normally and replaced with named fares when the names arrive.
+- CSV import and merge tools exist for cleaning up duplicates.
+
+See [customers](/docs/user/guide/customers) and [passengers](/docs/user/guide/passengers).
+
+## 2. Create a quotation
+
+Choose the customer, branch, currency, issue date and validity date. The branch is copied into the
+document number. A quotation starts as **draft** with one default option.
+
+No booking is needed at this point. Quoting before the PNR exists is a supported path, not an
+exception.
+
+## 3. Build options
+
+Each option is an independent fare proposal with its own:
+
+- flights — entered by hand, or imported from a pasted PNR or itinerary;
+- an optional PNR and ticketing deadline;
+- named passenger fares or unnamed traveller groups, plus service lines;
+- cost currency and exchange rate;
+- margin, optional taxes and customer-facing presentation.
+
+The editor recalculates as you type. Internal views show cost, markup, VAT, taxes, total and profit;
+customer views show only the chosen presentation rows.
+
+## 4. Send
+
+**Send** runs the draft validation, takes a document snapshot and locks the quotation. From that
+point the quotation is a customer-facing record. Later changes to settings, exchange rates,
+airline names or templates do not alter it.
+
+Sending can require confirmation:
+
+- zero fares need an explicit confirmation;
+- a negative margin is allowed only for an administrator with a reason;
+- a missing exchange rate for a foreign cost currency blocks sending;
+- warnings such as an old rate, a placeholder flight number or a broken connection are shown but do
+  not block sending.
+
+## 5. Accept or decline
+
+Only a **sent** quotation can be accepted or declined. Accepting records the chosen option;
+pro formas and linked itineraries are built from that accepted option. A declined or expired
+quotation cannot produce documents.
+
+## 6. Issue documents
+
+- **Itinerary** — linked to the accepted quotation option, or standalone with no quotation and no
+  prices.
+- **Pro forma** — requires an accepted quotation option. It copies the frozen total and lines, the
+  bank details and the terms.
+
+Both freeze their data when issued. Re-issuing an itinerary supersedes the previous copy; a pro forma
+can be cancelled but not edited.
+
+## 7. Record payments
+
+Payments are append-only. The pro forma status is derived from the ledger, never typed:
+
+| Paid total | Status |
+| --- | --- |
+| Nothing | `unpaid` |
+| More than zero but below the total | `part_paid` |
+| At or above the total | `paid` |
+| Cancelled document | `cancelled` |
+
+A reversal is a new negative entry linked to the original payment. It cannot itself be reversed.
+Future-dated payments and overpayments are rejected.
+
+## Status reference
+
+| Entity | Statuses | How it changes |
+| --- | --- | --- |
+| Quotation | `draft`, `sent`, `accepted`, `declined`, `expired`, `cancelled`, `superseded` | Actions and the scheduled expiry job |
+| Pro forma | `unpaid`, `part_paid`, `paid`, `cancelled` | Derived from payments, or cancellation |
+| Itinerary | No typed status | `supersededAt` / `supersededBy` mark reissues |
+
+The complete state rules are in [document lifecycle](/docs/user/reference/lifecycle).
+
+## Roles in the flow
+
+| Role | Typical work |
+| --- | --- |
+| Administrator | Everything, including users, roles and settings |
+| Agent | Customers, passengers, quotations, itineraries, pro formas, costs |
+| Accountant | Read documents, record/reverse payments, audit, reports, exports |
+| Viewer | Read documents only; costs are removed server-side |
+
+Custom roles can be built from individual capabilities. See [permissions](/docs/user/reference/permissions).

@@ -1,0 +1,64 @@
+---
+title: Reports
+description: Sales, payment and profit reporting by period, customer, branch and airline.
+---
+
+Reports are available to roles with `viewReports`. Cost and profit columns are additionally gated
+by `viewCosts`. Amounts are grouped by currency and never summed across currencies.
+
+## Periods and grouping
+
+| Period | Range |
+| --- | --- |
+| Today | The current day in the agency time zone. |
+| This week | Start of the current week |
+| This month | Start of the current month |
+| This quarter | Start of the current quarter |
+| This year | Start of the current year |
+| Last year | The previous calendar year |
+| Last 3 years / Last 5 years | Rolling calendar-year ranges |
+| Custom | Explicit from/to ISO dates |
+
+Grouping options are day, week, month, quarter and year. A sensible default is chosen from the
+range length.
+
+## Summary figures
+
+| Metric | Definition |
+| --- | --- |
+| Quotations created | Rows created in the period. |
+| Quotations sent | Rows with `sentAt` in the period. |
+| Quotations accepted | First `acceptOption` audit event in the period. |
+| Pro formas issued | Pro formas with an issue date in the period. |
+| Accepted value | Frozen total of the accepted option, by currency. |
+| Pro forma value | Pro forma totals issued in the period. |
+| Payments received | Receipts in the period, net of reversals. |
+| Outstanding | Balance at period end for pro formas issued before the end. |
+| Gross profit | Frozen markup, by currency, for roles that may see costs. |
+
+If an accepted quotation has no frozen totals (for example data created before snapshots), the
+report warns that some accepted quotations were not valued rather than inventing a figure.
+
+## Breakdowns
+
+- **By customer** — accepted quotation count, accepted value and profit.
+- **By branch** — the same figures attributed to the issuing branch.
+- **By airline** — attributed to the first outbound flight of the accepted option.
+- **Period breakdown** — created, sent, accepted, pro formas, accepted value, payments net and
+  profit for each bucket.
+
+## CSV export
+
+`GET /api/reports/export?period=&from=&to=&grain=` exports the selected report. The capability is
+`viewReports`; profit columns appear only with `viewCosts`. The filename includes the company name
+and period.
+
+## Aged debtors
+
+The separate [aged debtors report](/docs/user/guide/payments#aged-debtors) focuses on outstanding pro
+forma balances and exports from `/api/reports/aged-debtors`.
+
+## Time zone
+
+Report boundaries and labels use the configured agency time zone. Document dates are stored at UTC
+midnight, so a report for "today" means today in the agency's zone, not the server's local zone.

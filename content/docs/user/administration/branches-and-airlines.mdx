@@ -1,0 +1,51 @@
+---
+title: Branches and airlines
+description: Office codes used in document numbers and the airline/logo reference data.
+---
+
+## Branches
+
+**Settings → Branches** manages the offices used in document numbers and reporting.
+
+| Field | Notes |
+| --- | --- |
+| Code | Two digits, for example `01` or `02`. Used by `{BRANCH}`. |
+| Name | Staff-facing office name. |
+| Active | Inactive branches are hidden from new documents. |
+
+At least one branch must remain active. Staff users are assigned a branch; the quotation copies the
+issuer's branch unless another active branch is chosen.
+
+Branch names appear in report breakdowns. Branch codes are frozen into issued document numbers and
+snapshots.
+
+## Airlines
+
+**Settings → Airlines and logos** manages the airline reference table used to name flights and show
+logos.
+
+| Field | Notes |
+| --- | --- |
+| IATA code | Two or three letters, for example `ET`. |
+| Name | Full airline name. |
+| Logo | Optional PNG stored under `uploads/airlines/`. |
+
+### Logos
+
+- Upload a logo from the airline row (PNG or JPEG, max 2 MB).
+- The repository includes `npm run logos:fetch`, which searches Wikimedia Commons for airline logos
+  and downloads missing ones into `uploads/airlines/`. Use `--force` to re-download all.
+- The logo path is copied into an issued document snapshot, so replacing a logo later does not alter
+  old documents.
+
+Airline and airport data is factual reference data. It is not affiliated with any carrier.
+
+## Airports
+
+Airports are seeded reference data with IATA code, name, city, country and IANA time zone. The time
+zone is used for durations and layovers. Airport records are managed by the seed and the database,
+not a dedicated settings page.
+
+## Permission and audit
+
+`manageSettings` is required for branches and airlines. Both actions are audited.

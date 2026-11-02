@@ -1,0 +1,20 @@
+{
+  "title": "Administration",
+  "description": "Branding, pricing rules, users and agency-wide defaults.",
+  "pages": [
+    "company",
+    "pricing-presentation",
+    "vat-and-taxes",
+    "templates",
+    "numbering",
+    "banks",
+    "currencies",
+    "branches-and-airlines",
+    "users",
+    "roles",
+    "security-2fa",
+    "audit",
+    "ai",
+    "themes"
+  ]
+}

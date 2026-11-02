@@ -1,0 +1,94 @@
+---
+title: Testing
+description: The unit suite, Playwright flows, fixtures and the coverage rules.
+---
+
+## Commands
+
+```bash
+npm test          # compile and run the unit suite
+npm run test:e2e  # Playwright against a production build
+npm run typecheck
+npm run lint
+```
+
+The unit suite is compiled with `tsconfig.test.json` into `.test-dist` and run by Node's built-in test
+runner. Tests use plain `node:test`, `node:assert/strict` and table-driven cases.
+
+## Unit suite
+
+| File | Covers |
+| --- | --- |
+| `pricing.test.ts` | Rounding, conversion, margins, VAT, taxes, invariants, validation. |
+| `presentation.test.ts` | Every price/tax layout, service fee, unit pricing, multiple taxes. |
+| `pnr.test.ts` | Amadeus, Sabre, Galileo and group-booking fixtures; never-guess rules. |
+| `pnr-convert.test.ts` | Free-form conversion, ISO dates, overnight arrivals, AI proposal validation. |
+| `documents.test.ts` | Header mode selection. |
+| `pdf.test.ts` | Real PDF output, all templates, header modes, long documents, itemised layouts. |
+| `permissions.test.ts` | Matrix, unknown roles fail closed, cost redaction. |
+| `rules.test.ts` | Send readiness, VAT switch, numbering, derived status, CSV parsing. |
+| `post-launch.test.ts` | Locking, secrets, aged debtors, bank defaults, saved views, revision diff. |
+| `reports.test.ts` | Periods, buckets, gross margin. |
+| `security-hardening.test.ts` | CSV injection, download headers, image signatures, rate limits, env checks, AI URL guard, AI key redaction. |
+| `settings-secrets.test.ts` | AES-GCM round-trip and tamper rejection. |
+| `standalone-itinerary.test.ts` | Standalone input and snapshot without a quotation. |
+| `themes.test.ts` | Palette ids, contrast, custom theme cookies, CSS tokens. |
+| `time.test.ts` | Overnight, daylight-saving, date-line, layovers, local display. |
+| `dates.test.ts` | Agency time zone formatting, UTC-midnight document dates, expiry. |
+| `money.test.ts` | Parsing, formatting, rates, percentages without floats. |
+| `nav-active.test.ts` | Sidebar active matching. |
+| `docs.test.ts` | Fumadocs content tree, sidebar metadata, internal links and screenshots. |
+
+## Domain rules to test
+
+Every rule in [pricing](/docs/user/reference/pricing), [documents](/docs/user/reference/documents),
+[lifecycle](/docs/user/reference/lifecycle), [permissions](/docs/user/reference/permissions) and
+[PNR formats](/docs/user/reference/pnr-formats) should have an automated test. When you fix a PNR bug, add
+the failing input as a fixture. When you add a pricing case, assert the line sum equals the total.
+
+## Playwright
+
+The browser suite covers:
+
+- the public landing page at `/` and its sign-in/docs links;
+- the `/dashboard` sign-in redirect for signed-out visitors;
+- sign-in;
+- customer and passenger creation and linking;
+- a quotation with two options;
+- send and accept;
+- itinerary issue;
+- pro forma issue and two-part payment;
+- payment ledger entries;
+- PDF download;
+- agent internal pricing visibility;
+- viewer denial of settings and ledger;
+- a non-default bank account frozen into the PDF.
+
+Playwright uses `npm run build && npm run start` against a scratch database. Set `E2E_BASE_URL` to
+reuse an existing server. The default browser time zone is UTC; the app's agency time zone is
+independent.
+
+## Test data safety
+
+- Never use real customer data, passport data or production dumps in tests.
+- Use fixtures and neutral names.
+- The smoke scripts and E2E suite are development-only.
+- Reset the database with `npm run db:reset` only on a local development install.
+
+## Time-sensitive tests
+
+Cover at least:
+
+- an overnight regional flight;
+- a spring and autumn daylight-saving change;
+- a date-line crossing where arrival is earlier in local time;
+- a connection that departs before the previous flight lands.
+
+Use IANA zone names through Luxon; never hand-write DST offsets.
+
+## CI
+
+CI runs install, migrate, seed, typecheck, lint, unit tests, build and a backup check on every push
+and pull request. It validates that `package.json` is valid SemVer, and on a `v*` tag that the tag
+matches that version. On `main` and `v*` tags it also runs Playwright, then builds the Docker image
+and publishes it to GHCR. See `.github/workflows/ci.yml`.

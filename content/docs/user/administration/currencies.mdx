@@ -1,0 +1,46 @@
+---
+title: Currencies and rates
+description: Base currency, dated exchange rates, rate precision and warning thresholds.
+---
+
+**Settings → Currencies and exchange rates** manages reference currencies and dated rates.
+
+## Currencies
+
+A currency has a code, name, symbol and active flag. The base currency is chosen on
+[Company settings](/docs/user/administration/company). Inactive currencies are hidden from new quotations
+but remain on existing records.
+
+## Exchange rates
+
+A rate is stored as an integer scaled by 1,000,000:
+
+```text
+rateMicro = rate × 1,000,000
+```
+
+For example, `1750.5` becomes `1750500000`. This avoids floating-point money errors.
+
+Each rate row records:
+
+- from currency;
+- to currency;
+- the scaled rate;
+- effective-from date;
+- who entered it and when.
+
+The latest effective rate as of the save is used. A quotation copies the rate onto each option when
+it is saved, so a later rate change does not silently reprice a draft or a sent document.
+
+## Warnings
+
+If the saved rate is older than the configured **Warn when a rate is older than** threshold, the
+editor and the send action show a warning. The warning does not block sending.
+
+Sending **does** block when a foreign cost currency has no saved rate at all. Add the rate before
+sending.
+
+## Permission and audit
+
+`manageSettings` is required for rates. Every rate entry is audited with the source and target
+currency and the scaled value.

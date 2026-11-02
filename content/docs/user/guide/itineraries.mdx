@@ -1,0 +1,72 @@
+---
+title: Itineraries
+description: Quotation-linked and standalone itineraries, reissues, previews and PDFs.
+---
+
+An itinerary is a frozen travel document. It can come from an accepted quotation option, or stand
+alone with no quotation, prices or pro forma.
+
+## Quotation-linked itinerary
+
+Requirements:
+
+- the quotation is **accepted**;
+- the accepted option exists and has flights;
+- the user has the `manageDocuments` capability.
+
+The itinerary copies the option's flights, passengers, PNR and reference into a snapshot, with the
+standard itinerary notes. It is issued from the quotation page. A second itinerary for the same quotation and option supersedes
+the first; the old document remains available for history.
+
+## Standalone itinerary
+
+Use **Itineraries → New standalone itinerary** when no quotation or price is involved.
+
+Fields:
+
+| Field | Notes |
+| --- | --- |
+| Customer | Required, active customer. |
+| Reference | Optional customer or booking reference. |
+| Booking reference (PNR) | Optional short record locator printed on the document. |
+| Issue branch | Two digits, used in the itinerary number. |
+| Flights | Add segments by hand with **+ Add flight** — airline, flight number, airports and local times. At least one flight is required unless pasted text is supplied. |
+| Or paste a PNR or itinerary | Optional. Parsed deterministically and never guessed. Ignored when manual flights are present. |
+| Passengers | Optional selection from the passenger list. |
+| Travel notes | Blank uses the standard itinerary notes. |
+
+Either the manual flight rows or the pasted text must produce at least one segment. Adding the
+flights by hand is the path for an itinerary that has no booking text yet.
+
+The standalone snapshot has its own contact, passengers and flights. It has no quotation, option,
+prices, payments or pro forma. It cannot be converted into a quotation later; create a quotation if
+pricing is needed.
+
+## Reissue
+
+**Reissue** creates a new itinerary with a new number, copies the current data, and marks the old
+document `superseded`. A linked itinerary can be reissued only while its quotation is still
+accepted. A standalone itinerary is reissued from its own frozen snapshot.
+
+## Customer fields
+
+The printed document includes the customer's name, attention line, address, city, country, email and
+phone, plus the travellers and the flight table. Flight times are local wall-clock values at each
+airport; durations and layovers are calculated with IANA time zones through Luxon.
+
+## Preview and PDF
+
+The on-screen preview and `/api/pdf/itinerary/[id]` render the same frozen snapshot. The PDF is
+produced with `pdf-lib`; no headless browser is required at runtime. Users need `viewDocuments` to
+download a document.
+
+## What is frozen
+
+- company identity, logo/letterhead and footer;
+- customer and passenger names;
+- flights, airline names and logos;
+- notes and reference;
+- template choice;
+- document number and issue date.
+
+Later changes to templates, airlines, airports or company settings never alter an issued itinerary.

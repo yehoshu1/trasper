@@ -1,0 +1,35 @@
+---
+title: Themes and appearance
+description: Colour palettes, the custom theme builder and light/dark/system mode.
+---
+
+**Settings → Themes** is a personal appearance preference, available to every signed-in user.
+
+## Presets
+
+The application ships with eleven colour palettes. A palette changes accent and surface tints
+across the page, sidebar, cards, tables, charts and hover states while keeping the layout the same.
+The choice is stored in a cookie for the browser, not in the database or the user record.
+
+## Custom theme builder
+
+The custom palette lets a user pick accent colours and see a live preview. The result is stored in a
+browser cookie and applied through CSS variables. An invalid or missing custom theme falls
+back to the classic palette rather than rendering an empty token set.
+
+## Light, dark and system
+
+The theme toggle offers light, dark and system. The preference is applied by `next-themes` with the
+`class` attribute. The root layout also applies a nonce-protected inline script so the correct
+palette is present before paint and does not flash.
+
+## Print documents
+
+Themes and dark mode affect the application shell only. Printed quotations, itineraries and pro
+formas use the document template and company branding, not the staff colour palette. The preview is
+always the customer document, even when the staff application is in dark mode.
+
+## Accessibility
+
+All palettes keep the same contrast structure. If you add a custom theme, check body text, muted text
+and status badges in both light and dark modes before relying on it.

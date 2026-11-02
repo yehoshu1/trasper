@@ -1,0 +1,6 @@
+{
+  "title": "User guide",
+  "description": "For agency staff, administrators and operators.",
+  "root": true,
+  "pages": ["index", "getting-started", "guide", "administration", "operations", "reference"]
+}

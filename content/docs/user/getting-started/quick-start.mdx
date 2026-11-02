@@ -1,0 +1,83 @@
+---
+title: Quick start
+description: Sign in, complete the agency profile and issue a first quotation.
+---
+
+This page assumes the app is installed and seeded. If it is not, start with
+[installation](/docs/user/getting-started/installation).
+
+## 1. Sign in
+
+Open the app at `http://localhost:3000`, choose **Staff sign in**, and use the administrator
+credentials from `.env`. The public landing page is `/`; after sign-in the staff dashboard opens at
+`/dashboard`. On first sign-in:
+
+- Change the password under **Settings → Profile**.
+- If the account or role requires two-factor authentication, you are redirected to
+  `/enrol-2fa` before any other staff page opens. See
+  [two-factor authentication](/docs/user/administration/security-2fa).
+
+## 2. Complete the agency profile
+
+Open **Settings → Company** and fill in:
+
+- company name, address, email, phone, website and TIN;
+- the time zone used for document dates, deadlines and reports;
+- the document header: picture letterhead or typed company details with the logo;
+- footer and internal notes.
+
+Then set the commercial defaults on the same page: base currency, default margin, quotation
+validity, exchange-rate warning age and ticketing warning window.
+
+## 3. Configure tax and presentation
+
+- **Settings → VAT and taxes**: turn VAT on if registered, enter the rate in percent, the
+  registration number and the rounding unit in minor units.
+- **Settings → Pricing presentation**: choose the default price layout (lump sum, price plus service
+  fee, itemised, per person or single total) and the default tax layout.
+- **Settings → Bank accounts**: add the account(s) printed on quotations and pro formas.
+
+## 4. Add a customer and travellers
+
+Create a customer under **Customers → New customer**, then add travellers under **Passengers** and
+link them to the customer. See [customers](/docs/user/guide/customers) and
+[passengers](/docs/user/guide/passengers).
+
+## 5. Create the quotation
+
+1. Open **Quotations → New quotation**.
+2. Choose the customer, branch, currency, issue date and validity date.
+3. Leave **VAT** on **Use agency default** unless this quotation needs an override.
+4. Create the quotation. The editor opens.
+
+## 6. Build an option
+
+In the editor:
+
+- Add flights with **+ Add flight**, or paste a PNR under **Already booked? Import the PNR or
+  itinerary** and choose **Read / convert** to fill the segments and passenger names.
+- Add a named passenger fare, or a traveller group such as **2 Adults** when the names are not known
+  yet, plus any services (hotel, transfer, visa, insurance and so on).
+- Confirm the exchange rate, margin and optional taxes.
+- Watch the internal total, cost, markup, VAT and profit update as you type.
+
+See the [quotation editor](/docs/user/guide/quotation-editor) for every field.
+
+## 7. Send and accept
+
+- **Send** validates the draft, freezes the totals and company snapshot, and locks the quotation.
+- When the customer chooses, mark the quotation **accepted** with the chosen option.
+- Issue the [itinerary](/docs/user/guide/itineraries) and [pro forma](/docs/user/guide/proformas) from the
+  accepted option.
+
+## 8. Record payments
+
+Open the pro forma and record a receipt. The status is derived from the payment ledger: unpaid,
+part-paid, paid or cancelled. Mistakes are corrected with a reversing entry, never by editing or
+deleting a payment. See [payments](/docs/user/guide/payments).
+
+<Callout type="info" title="Itineraries without a quotation">
+  If no price is involved, create a **standalone itinerary** from **Itineraries → New standalone
+  itinerary**. It has its own customer, passengers and frozen flight snapshot, but no quotation,
+  prices or pro forma.
+</Callout>

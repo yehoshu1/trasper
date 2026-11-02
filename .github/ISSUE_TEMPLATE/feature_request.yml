@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest an improvement to the quotation system
+title: "[Feature]: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project deliberately stays focused on staff quotations,
+        itineraries, pro forma invoices and payments. Features outside that
+        workflow (live PNR lookup, final invoices, customer email, reports
+        beyond the built-in ones) are usually out of scope.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the workflow that is difficult today, not just the UI you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Quotation editor and pricing
+        - Customers and passengers
+        - PNR conversion
+        - Documents and templates
+        - Payments and pro formas
+        - Reports
+        - Settings and administration
+        - Deployment
+        - Documentation
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and pull requests.
+          required: true
+        - label: This does not require storing passport data.
+          required: true

@@ -1,0 +1,86 @@
+---
+title: Documents and snapshots
+description: What is frozen, when, and how previews and PDFs stay identical.
+---
+
+Issued documents are immutable. A quotation freezes when it is sent; an itinerary or pro forma
+freezes when it is issued. The frozen JSON is the only source for the preview and the PDF.
+
+## Snapshot types
+
+| Document | Stored on | Key contents |
+| --- | --- | --- |
+| Quotation | `Quotation.snapshot` | Company, contact, passengers, flights, every option's lines and totals, presentation, notes, bank. |
+| Itinerary | `Itinerary.snapshot` | Company, contact, passengers, flights, PNR, reference, notes, template, standalone flag. |
+| Pro forma | `Proforma.snapshot` | Company, contact, passengers, flights, lines, presentation, totals, VAT, bank, terms, quotation number. |
+
+Passengers in a snapshot can be named travellers or unnamed groups such as `2 Adults` when the
+names were not known at issue. The group and its count are frozen exactly as printed.
+
+Frozen option totals also live in `QuoteOption.frozenTotals` with the rate, margin, VAT settings,
+lines, passengers, services, taxes and segments used when the quotation was sent. Reports read these
+frozen totals rather than recalculating history.
+
+## When freezing happens
+
+- **Quotation** — `sendQuotationAction` builds the snapshot and writes it in the same transaction
+  that changes the status to `sent` and locks the record.
+- **Itinerary** — `createItineraryAction` or `createStandaloneItineraryFormAction` builds it before
+  the row is created.
+- **Pro forma** — `createProformaAction` builds it and copies the lines and total into the row.
+
+A quotation's live preview for a draft is built on demand. Once sent, the snapshot is used.
+
+## What changes do not affect
+
+Changing any of these later never alters an issued document:
+
+- company name, address, logo, letterhead, footer or time zone;
+- document template defaults;
+- bank account details;
+- exchange rates;
+- airline names or logos;
+- airport names;
+- tax rates or presets;
+- pricing presentation defaults;
+- numbering formats.
+
+A revision or a reissued itinerary takes a new snapshot from the current data.
+
+## Rendering
+
+The on-screen preview is rendered by the React templates in `src/documents/`. The PDF route draws
+the same data with `pdf-lib`; both consume the same frozen snapshot and template id:
+
+```text
+frozen snapshot ──► React A4 template ──► on-screen preview
+                └─► pdf-lib renderer  ──► PDF route
+```
+
+The PDF route is `/api/pdf/[type]/[id]`. It requires `viewDocuments`, rate limits the request and
+returns `no-store` with `application/pdf`. It never re-reads current settings to style a document.
+
+## Word export
+
+The internal Word export (`/api/word/[type]/[id]`) is for staff who can see costs. It requires both
+`viewDocuments` and `viewCosts`. It is not a customer deliverable.
+
+## Templates
+
+Five designs are available: Classic, Modern, Minimal, Executive and Vivid. The template id is part of
+the snapshot, so an issued document keeps its look. See
+[document templates](/docs/user/administration/templates).
+
+## Flight data
+
+Flights freeze airline code and name, logo path, airport names and cities, local departure/arrival
+strings, computed duration, layover after the flight, cabin and operating carrier.
+
+Times are local wall-clock values at each airport and are never converted between zones. Durations
+and layovers are computed with Luxon using the airports' IANA zones. This keeps overnight flights,
+date-line crossings and daylight-saving changes correct.
+
+## Numbering
+
+Numbers are allocated inside the same transaction as the document and are never reused. See
+[numbering](/docs/user/administration/numbering).

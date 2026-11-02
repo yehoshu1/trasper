@@ -1,0 +1,123 @@
+---
+title: PNR formats
+description: The parser grammar, supported line shapes, warnings and fixtures.
+---
+
+The deterministic parser is in `src/lib/pnr/index.ts`. It reads what it recognises and reports
+everything else; it never guesses a segment or a name.
+
+## Segment lines
+
+### Amadeus / Sabre with day-of-week
+
+```text
+1  ET 873  Y 31OCT 6 LLWLUN HK1  0620 0910  31OCT  E0/332
+5  ET XXX  Y 01NOV DARADD HK3  1845 2125
+7  ET XXX  Y 07NOV VIEADD HK3  2230 0630+1
+```
+
+Fields:
+
+| Field | Pattern |
+| --- | --- |
+| Line number | 1–2 digits, optional `.` or `)`. |
+| Airline | 2 alphanumeric characters. |
+| Flight | 1–4 alphanumeric characters, including `XXX`. |
+| Cabin | One letter. |
+| Date | Day number + three-letter month. |
+| Day of week | One digit (optional in the Galileo form). |
+| Route | Two three-letter IATA codes. |
+| Status | Two letters plus an optional digit (`HK1`, `HK3`, ...). |
+| Times | Four-digit local departure and arrival. |
+| Next day | Optional `+1` after arrival. |
+| Arrival date | Optional day + month after arrival. |
+
+### Galileo without day-of-week
+
+```text
+1 ET 873 Y 31OCT LLWLUN HK1 0620 0910
+```
+
+The same fields without the day-of-week digit or arrival date.
+
+## Continuation lines
+
+```text
+  4 ET 031 Y 31OCT LLWDAR HK3 1600 2010
+    OPERATED BY MALAWIAN AIRLINES
+```
+
+`OPERATED BY ...` attaches the operating carrier to the segment above it.
+
+## Passenger names
+
+```text
+1 BANDA/JOHN MR
+2 PHIRI/MARY MS
+3 CHIRWA/GRACE CHD
+4 MWALE/PETER INF
+```
+
+- Surname/first-name order.
+- Optional title: `MR`, `MRS`, `MS`, `MISS`, `DR`, `MSTR`, `PROF`.
+- `CHD` or `CNN` marks a child; `INF` marks an infant; otherwise adult.
+- Names are uppercased in the source and title-cased by the document layer where appropriate.
+
+## Ticketing deadline
+
+Recognised prefixes:
+
+```text
+TK TL31OCT/1200
+TK TL 31OCT26/1200
+TKT/TIME LIMIT - 30OCT/1700
+TKTG 29OCT/1600
+```
+
+The deadline is stored as a local wall-clock string in the agency time zone. A two-digit year is
+read as `20xx`. Without a year, the quotation reference year is used; a month far behind the issue
+date rolls into the next year.
+
+## Reference year and time zone
+
+`parsePnr(text, { referenceYear, agencyTz })`:
+
+- `referenceYear` fills dates without a year (usually the quotation year);
+- `agencyTz` controls the ticketing deadline zone; it defaults to the configured agency zone.
+
+## Warnings and unparsed lines
+
+Warnings:
+
+| Warning | Meaning |
+| --- | --- |
+| No flight segments recognised | The text is not a segment block or uses an unsupported shape. |
+| No passenger names recognised | Names are missing or not in `SURNAME/NAME` form. |
+| Duplicate segment numbers | Possibly two PNRs pasted together. |
+| Segment starts elsewhere | The route is discontinuous. |
+| Arrival time is not after departure | Possible overnight flight without a `+1` marker. |
+| Placeholder flight number | `XXX` (or similar) must be replaced later. |
+| Segment from an airport to itself | Ignored rather than guessed. |
+
+Unused lines are returned in `unparsed`. The editor shows them for manual handling. They are never
+silently discarded.
+
+## Overnight and date-line rules
+
+- An explicit `+1` marker is trusted.
+- An explicit arrival date is trusted and can roll into the next year.
+- Without either, an arrival time earlier than departure produces a warning and keeps the same day.
+  The staff member decides.
+- Flight times remain local wall-clock strings; no conversion is applied.
+
+## Fixtures
+
+| Fixture | Covers |
+| --- | --- |
+| `amadeus.txt` | Amadeus with day-of-week, explicit arrival dates, child, ticketing limit. |
+| `sabre.txt` | Sabre segments and `TKT/TIME LIMIT`. |
+| `galileo.txt` | Galileo short segments and an infant. |
+| `group-booking.txt` | Group names, `OPERATED BY`, repeated `XXX`, `+1`, two-digit-year deadline. |
+
+Every new real-world failure should become a fixture under `src/lib/pnr/fixtures/`. The test suite
+must keep the parser deterministic and honest.

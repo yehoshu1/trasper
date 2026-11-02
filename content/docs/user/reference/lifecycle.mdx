@@ -1,0 +1,118 @@
+---
+title: Document lifecycle
+description: Quotation and pro forma status transitions, locks, revisions and cancellations.
+---
+
+## Quotation states
+
+```text
+draft ──send──► sent ──accept──► accepted
+  │               │
+  │               ├──decline──► declined
+  │               └──expire───► expired
+  │
+  ├──cancel──► cancelled
+  └──delete──► (gone, draft only)
+
+any non-draft ──revise──► new draft revision
+old record ──► superseded
+```
+
+| State | Editable? | Documents allowed? | How reached |
+| --- | --- | --- | --- |
+| `draft` | Yes | No | Created or revised. |
+| `sent` | No (locked) | No (accept first) | Send action. |
+| `accepted` | No | Yes | Accept an option. |
+| `declined` | No | No | Decline action. |
+| `expired` | No | No | Validity passed; cron or page load. |
+| `cancelled` | No | No | Cancel action (draft or sent only). |
+| `superseded` | No | No | A revision was created. |
+
+## Sending
+
+`sendQuotationAction`:
+
+1. checks `manageQuotations`;
+2. validates the draft (errors block, warnings do not);
+3. requires a zero-fare confirmation when needed;
+4. restricts negative margins to administrators with a reason;
+5. requires a saved exchange rate for every foreign cost currency;
+6. builds the frozen snapshot;
+7. claims the exact version, then writes the snapshot, status, `sentAt` and `lockedAt` in one
+   transaction;
+8. audits the change.
+
+A concurrent save between validation and freeze makes the send return a stale-version message rather
+than freezing half-old data.
+
+## Accepting
+
+Only a `sent` quotation can be accepted. The action claims `status = sent` with an atomic
+`updateMany`; a concurrent accept or decline loses with a friendly message. Accepting stores
+`acceptedOptionId`.
+
+## Declining
+
+Only a `sent` quotation can be declined. A reason is optional. The record stays readable.
+
+## Expiring
+
+A sent quotation whose validity has passed becomes `expired`. The check runs in the scheduled job and
+on page loads. Expiry is idempotent and audited with a null user.
+
+## Cancelling
+
+A draft or sent quotation can be cancelled with a reason. Accepted, declined, expired and superseded
+quotations cannot be cancelled. Cancellation does not delete the record and does not release its
+number.
+
+## Deleting
+
+Only a draft that was never sent and has no issued documents can be deleted. The action audits the
+deleted identifiers. Everything else is retained.
+
+## Revising
+
+**Revise** works on any non-draft quotation:
+
+- creates a new draft with the next revision number (`-R2`, `-R3`, ...);
+- copies every option, segment, fare, service and tax;
+- sets `supersedesId` to the old record;
+- marks the old record `superseded`;
+- resets the new issue date and validity to the agency defaults;
+- audits both ids.
+
+The old revision's snapshot, documents and payments remain intact.
+
+## Duplicating
+
+**Duplicate** creates a fresh draft with a new number (revision 1) and copies the options. It does
+not supersede the source. Use it for a similar trip, not for a correction.
+
+## Pro forma states
+
+| State | Meaning | Can pay? | Can reverse? | Can cancel? |
+| --- | --- | --- | --- | --- |
+| `unpaid` | No net payments | Yes | Yes (if a positive payment exists) | Yes, if net payments are zero |
+| `part_paid` | Some payment below total | Yes, up to balance | Yes | Only after reversing to zero |
+| `paid` | Payments at or above total | No (would overpay) | Yes | Only after reversing to zero |
+| `cancelled` | Cancelled | No | No | No |
+
+Status is derived from the sum of payments, including negative reversals. It is recalculated on
+every payment action and by the scheduled rollup.
+
+Cancelling a pro forma requires a zero net balance. Reverse the payments first. A cancelled pro forma
+keeps its number and snapshot.
+
+## Optimistic locking
+
+Editable records carry a `version`. The editor sends the version it loaded; the write compares it in
+the same transaction. A mismatch returns:
+
+> Someone else changed this record after you opened it. Reload to see their changes, then try again.
+
+This prevents silent lost updates between two staff members.
+
+## Audit
+
+Every transition writes an audit entry in the same transaction. The audit log is append-only.

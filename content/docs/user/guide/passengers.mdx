@@ -1,0 +1,57 @@
+---
+title: Passengers
+description: Travellers, passenger types, linking, merging and archiving.
+---
+
+A passenger is a traveller. Passengers are reusable across quotations and are not tied to a single
+customer record.
+
+## Passenger fields
+
+| Field | Notes |
+| --- | --- |
+| Title | Optional (Mr, Mrs, Ms and so on). |
+| First name | Required. |
+| Last name | Required. |
+| Type | Adult, child or infant. |
+
+Trasper never stores passport numbers or passport data. Collect and check travel documents outside
+the system.
+
+## Unnamed traveller groups
+
+You do not need a passenger record to price a trip. In a quotation option, **+ Add traveller group**
+adds a count of adults, children or infants, for example `2 Adults`. Groups are priced like any other
+fare, count towards the per-person layout, and print as `2 Adults — names to be advised`. Replace a
+group with named passengers when the names arrive; if the quotation has already been sent, use
+**Revise** so the old document stays frozen.
+
+## Create and edit
+
+Use **Passengers → New passenger**, or create one while working on a quotation. Each save is
+audited, and updates use optimistic locking.
+
+## Link to customers
+
+Linking a passenger to a customer makes them available for that customer's quotations. The relation
+is many-to-many; the merge tools move links rather than copying people.
+
+## Merge duplicates
+
+**Passengers → Merge duplicates** combines two records into one and archives the duplicate.
+Quotations that already reference the archived passenger keep their frozen snapshots.
+
+<Callout type="warn" title="Fares and merges">
+  If merging would change the money (for example two fare rows for the same passenger in one
+  option), the merge is refused. Edit the fares first, then merge.
+</Callout>
+
+## Archive and restore
+
+Passengers referenced by a document are archived, never deleted. Archived passengers do not appear
+in new quotation pickers and can be restored.
+
+## Permissions
+
+`manageContacts` covers passengers (create, edit, merge and archive). `viewContacts` alone allows
+customers to be seen but not passengers.

@@ -1,0 +1,5 @@
+{
+  "title": "Reference",
+  "description": "The rules behind pricing, documents, permissions and PNRs.",
+  "pages": ["pricing", "documents", "lifecycle", "permissions", "pnr-formats", "glossary"]
+}

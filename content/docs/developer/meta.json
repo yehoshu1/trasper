@@ -1,0 +1,16 @@
+{
+  "title": "Developer guide",
+  "description": "Architecture, conventions, data, HTTP routes and tests.",
+  "root": true,
+  "pages": [
+    "index",
+    "architecture",
+    "code-standards",
+    "data-model",
+    "database",
+    "http-routes",
+    "testing",
+    "docs-site",
+    "contributing"
+  ]
+}

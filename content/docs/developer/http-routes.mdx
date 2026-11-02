@@ -1,0 +1,98 @@
+---
+title: HTTP routes
+description: Page routes, API endpoints, capabilities, methods and rate limits.
+---
+
+All browser writes go through server actions. The HTTP routes below are pages, reads, uploads,
+authentication or scheduled maintenance. Protected routes check the session on the server, and
+document, export and upload routes check the capability and 2FA policy described below.
+
+## Page routes
+
+| Route | Access | Purpose |
+| --- | --- | --- |
+| `/` | Public | Product landing page; links to staff sign-in and the documentation. |
+| `/dashboard` | Signed in | Staff dashboard and the post-sign-in landing screen. |
+| `/login`, `/login/forgot`, `/login/reset`, `/login/2fa` | Public | Authentication pages. |
+| `/enrol-2fa` | Signed in | Forced two-factor enrolment when the role policy requires it. |
+| `/docs` and `/docs/...` | Public | User and developer documentation. |
+| `/docs/api/search` | Public | Full-text documentation search endpoint. |
+
+Every other staff screen is rendered by the authenticated `(staff)` layout. These routes keep
+top-level URLs and each page checks its own capability:
+
+`/quotations`, `/customers`, `/passengers`, `/itineraries`, `/proformas`, `/payments`, `/reports`,
+`/search`, `/notifications`, `/tools/pnr` and `/settings/...`.
+
+A signed-out request to a staff page redirects to `/login`; a signed-in user without the required
+capability redirects to `/dashboard?denied=1`.
+
+## Public API
+
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/api/health` | GET | Uptime check; returns `{ ok, time, version }`. |
+| `/api/company-logo` | GET | Public logo for the sign-in screen. Other uploads stay staff-only. |
+| `/api/auth/[...all]` | GET, POST | Better Auth handler (sign-in, sign-out, reset, 2FA). |
+
+## Authenticated staff API
+
+| Route | Method | Capability | Rate limit |
+| --- | --- | --- | --- |
+| `/api/search?q=` | GET | `viewDocuments` / `viewContacts` / `manageContacts` per result type | 300/min |
+| `/api/pdf/[type]/[id]` | GET | `viewDocuments` | 120/hour |
+| `/api/word/[type]/[id]` | GET | `viewDocuments` + `viewCosts` | 60/hour |
+| `/api/attachments/[id]` | GET | `viewDocuments` + `viewCosts` | 200/hour |
+| `/api/export/customers.csv` | GET | `exportContacts` | 60/hour |
+| `/api/reports/export` | GET | `viewReports` (profit also needs `viewCosts`) | 60/hour |
+| `/api/reports/aged-debtors` | GET | `viewReports` | 60/hour |
+| `/api/upload/avatar` | POST | Signed in, same origin | 10/hour |
+| `/api/upload/logo` | POST | `manageSettings`, same origin | 30/hour |
+| `/uploads/[...filename]` | GET | Signed in | — |
+
+Document route types are `quotation`, `itinerary` and `proforma`. The PDF route accepts
+`?inline=1` for an inline response; otherwise it is an attachment.
+
+## Scheduled
+
+| Route | Method | Auth |
+| --- | --- | --- |
+| `/api/cron` | GET, POST | `Authorization: Bearer $CRON_SECRET` |
+
+The cron route is idempotent and returns counts for expired quotations and rolled-up pro forma
+statuses.
+
+## Server actions
+
+Writes are grouped under `src/server/actions/`:
+
+| Module | Area |
+| --- | --- |
+| `auth.ts` | Sign-in, sign-out, password change, password reset, 2FA login. |
+| `two-factor.ts` | Enrolment, recovery codes, session revocation, role policy. |
+| `contacts.ts` | Customers, passengers, links, CSV import. |
+| `quotations.ts` | Create, save, send, accept, decline, cancel, revise, duplicate, PNR parse. |
+| `itineraries.ts` | Linked and standalone itineraries, reissue. |
+| `proformas.ts` | Create and cancel. |
+| `payments.ts` | Record and reverse. |
+| `instalments.ts` | Instalment schedule. |
+| `activities.ts` | Timeline and follow-ups. |
+| `attachments.ts` | Upload and archive. |
+| `merge.ts` | Customer and passenger merges. |
+| `bulk.ts` | Bulk duplicate/cancel/archive. |
+| `views.ts` | Saved table views. |
+| `settings.ts` | Company, pricing, tax, templates, numbering, banks, currencies, branches, airlines, users, roles, invites. |
+| `pnr.ts` | Standalone converter action. |
+
+Every domain write action validates with Zod, checks the capability, writes and audits in one
+transaction, and revalidates affected paths. Authentication helpers such as 2FA setup may instead
+write their audit entry immediately after the Better Auth call.
+
+## Error behaviour
+
+- Unauthenticated staff page requests redirect to `/login`; API requests return `401`.
+- Missing capability redirects pages to `/dashboard?denied=1`; API requests return `403`.
+- Unknown or malformed IDs return `404`.
+- Overpayment, stale versions and invalid document data return `409` or `422` with a message.
+- Rate limits return `429`.
+- Responses that contain private data use `Cache-Control: no-store`.

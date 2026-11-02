@@ -1,0 +1,148 @@
+/* Small bridges between the application shell and Fumadocs UI. */
+
+.docs-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+#nd-docs-layout {
+  --fd-layout-width: 1500px;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* The root layout owns the page background; let Fumadocs paint its own. */
+body:has(#nd-docs-layout) {
+  background: var(--color-fd-background);
+}
+
+/* Screenshots in the staff guide should read like product captures. */
+.docs-shot {
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-block: 1rem 1.5rem;
+}
+
+.docs-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Fumadocs typography lives in CSS layers, while the app's Tailwind 3
+   preflight is unlayered and therefore wins on docs pages. Restore the
+   intended prose rhythm here, scoped to the docs layout. */
+#nd-docs-layout #nd-page h1 {
+  font-size: 1.75em;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+#nd-docs-layout #nd-page .prose {
+  font-size: 1rem;
+  line-height: 1.75rem;
+}
+
+#nd-docs-layout #nd-page .prose h2,
+#nd-docs-layout #nd-page .prose h3,
+#nd-docs-layout #nd-page .prose h4,
+#nd-docs-layout #nd-page .prose h5,
+#nd-docs-layout #nd-page .prose h6 {
+  font-weight: 600;
+}
+
+#nd-docs-layout #nd-page .prose h2 {
+  margin: 3rem 0 1.5rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+#nd-docs-layout #nd-page .prose h3 {
+  margin: 2rem 0 1rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+#nd-docs-layout #nd-page .prose h4 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+#nd-docs-layout #nd-page .prose h5,
+#nd-docs-layout #nd-page .prose h6 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1rem;
+  line-height: 1.75rem;
+}
+
+#nd-docs-layout #nd-page .prose p {
+  margin: 1.25em 0;
+}
+
+#nd-docs-layout #nd-page .prose ul,
+#nd-docs-layout #nd-page .prose ol {
+  margin: 1.25em 0;
+  padding-inline-start: 1rem;
+}
+
+#nd-docs-layout #nd-page .prose ol {
+  padding-inline-start: 1.625rem;
+}
+
+#nd-docs-layout #nd-page .prose ul ul,
+#nd-docs-layout #nd-page .prose ul ol,
+#nd-docs-layout #nd-page .prose ol ul,
+#nd-docs-layout #nd-page .prose ol ol {
+  margin: 0.75em 0;
+}
+
+#nd-docs-layout #nd-page .prose li {
+  margin: 0.5em 0;
+}
+
+#nd-docs-layout #nd-page .prose blockquote {
+  margin: 1.5em 0;
+  border-inline-start: 2px solid var(--color-fd-border);
+  padding-inline-start: 1rem;
+  font-style: italic;
+}
+
+#nd-docs-layout #nd-page .prose hr {
+  margin: 3em 0;
+  border-top: 1px solid var(--color-fd-border);
+}
+
+/* Fumadocs uses `prose-no-margin` inside callouts, tables and code blocks.
+   Do not add prose margins to those wrappers or their direct children. */
+#nd-docs-layout #nd-page .prose .prose-no-margin {
+  margin-block: 0;
+}
+
+#nd-docs-layout #nd-page .prose .prose-no-margin > * {
+  margin-block: 0;
+}
+
+#nd-docs-layout #nd-page .prose > .prose-no-margin:has(> table) {
+  margin-block: 1.5rem;
+}
+
+#nd-docs-layout #nd-page .prose > :first-child {
+  margin-top: 0;
+}
+
+#nd-docs-layout #nd-page .prose > :last-child {
+  margin-bottom: 0;
+}
+
+/* The app's Tailwind 3 utilities load after Fumadocs' prebuilt stylesheet, so
+   the generated `max-xl:hidden` on the desktop TOC can lose to `.flex`. Hide it
+   explicitly at the same breakpoint; the mobile TOC popover remains available. */
+@media (width < 80rem) {
+  #nd-docs-layout #nd-toc {
+    display: none;
+  }
+}

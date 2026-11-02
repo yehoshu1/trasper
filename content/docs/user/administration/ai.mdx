@@ -1,0 +1,64 @@
+---
+title: AI settings
+description: Optional OpenAI-compatible fallback for free-form itinerary conversion.
+---
+
+**Settings → AI** configures the optional AI fallback. AI is limited to PNR/itinerary conversion; it
+never prices, totals or validates a quotation.
+
+## How it is used
+
+1. The deterministic parser reads booking-system output and free-form text.
+2. If the text cannot be converted, and AI is enabled and configured, the app asks the model for a
+   structured proposal.
+3. The proposal is validated with Zod.
+4. The final PNR text is re-parsed deterministically before use.
+
+If AI is off or fails, the staff member sees the error and can enter the itinerary manually. The
+parser never guesses.
+
+## Configuration
+
+| Field | Notes |
+| --- | --- |
+| Enable AI conversion | Off by default. |
+| API base URL | OpenAI or any OpenAI-compatible endpoint, for example `https://api.openai.com/v1`. |
+| Model | Exact model ID accepted by the provider. |
+| API key | Encrypted at rest; leave blank to keep the current key. |
+
+The database settings are the source of truth. `OPENAI_API_KEY` is used as a fallback only when no
+encrypted key has been saved; the URL and model always come from Settings → AI.
+
+## Security
+
+The API key is encrypted with AES-256-GCM using a key derived from `SETTINGS_SECRET` or
+`AUTH_SECRET`. Without the environment secret the ciphertext in SQLite is useless.
+
+The provider URL is validated:
+
+- only `http://` or `https://`;
+- no embedded credentials;
+- `https://` required in production;
+- private and link-local hostnames blocked in production unless
+  `AI_ALLOW_PRIVATE_BASE_URL=1` is deliberately set for a local model server.
+
+## Prompt boundaries
+
+The model is told that text inside `<itinerary>` tags is untrusted data, not instructions. It must
+not invent flights, airports, dates or passengers. Output is limited to 30 segments and 60
+passengers and validated against the schema.
+
+## Troubleshooting
+
+| Symptom | Check |
+| --- | --- |
+| "AI conversion is switched off" | Enable it and save the settings. |
+| "Add an AI API key" | Save a key; blank does not clear an existing key. |
+| "Provider URL is not allowed" | Use HTTPS and a public hostname, or set the private-URL flag deliberately. |
+| "Response did not match the flight schema" | Try the converter or enter the itinerary manually. |
+| AI conversion failed | Check provider status, model ID and outbound network access. |
+
+<Callout type="info" title="No AI pricing">
+  The model is never asked to compute prices, margins, VAT or totals. Those remain deterministic and
+  server-side.
+</Callout>

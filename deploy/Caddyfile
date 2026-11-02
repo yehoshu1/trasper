@@ -1,0 +1,33 @@
+# HTTPS termination in front of the Next.js app.
+# Set APP_DOMAIN (e.g. quotes.example.com) and ACME_EMAIL in .env; Caddy
+# fetches and renews the Let's Encrypt certificate automatically. For a LAN
+# trial use localhost and http://.
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$APP_DOMAIN:localhost} {
+	encode gzip
+
+	# The app serves the documents and the PDF route.
+	reverse_proxy app:3000
+
+	# Long-lived caching is wrong here: every page is role-filtered.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+	}
+
+	log {
+		output stdout
+		format console
+		# Password-reset tokens live in the URL. Only log errors so a normal
+		# request (and its query string) is not written to the access log.
+		level ERROR
+	}
+}

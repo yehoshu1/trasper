@@ -1,0 +1,79 @@
+---
+title: Customers
+description: Create, import, merge, archive and export paying customers.
+---
+
+A customer is the paying contact; travellers are separate passenger records. Quotations and
+linked itineraries always point at a customer.
+
+## Customer fields
+
+| Field | Notes |
+| --- | --- |
+| Name | Organisation or individual name. |
+| Type | `organisation` or `individual`. |
+| Attention | Optional contact person. |
+| PO Box, city, country | Printed address parts. |
+| Physical address | Street address. |
+| Email, phone | Contact details. |
+| Notes | Internal notes; never printed. |
+
+## Create and edit
+
+Use **Customers → New customer** or open a row to edit. Every save is audited with a before/after
+diff, and updates use optimistic concurrency (`version`) so two editors cannot silently overwrite
+each other.
+
+## Link passengers
+
+Open a customer to link or unlink travellers. Linking does not copy the passenger; it creates the
+many-to-many relationship used by quotations and documents.
+
+## Import from CSV
+
+**Customers → Import** has a preview-first workflow:
+
+1. Paste or upload CSV text.
+2. Review parsed rows, unknown columns and errors.
+3. Confirm whether possible duplicates should be imported.
+4. Import the valid rows.
+
+Columns follow the export format:
+
+```text
+name,type,attention,poBox,city,country,physicalAddress,email,phone,notes
+```
+
+Common aliases such as `customer name`, `organisation`, `address`, `town` and `p.o. box` are
+accepted. Invalid rows are skipped and reported individually.
+
+## Merge duplicates
+
+**Customers → Merge duplicates** suggests duplicates by name, email or phone. Choose the survivor
+and the duplicate:
+
+- quotations, passengers, activities and notes move to the survivor;
+- the duplicate is archived, never deleted;
+- both ids are audited;
+- issued documents keep their frozen snapshots.
+
+## Archive and restore
+
+Archiving preserves history. An archived customer:
+
+- cannot be used for a new quotation;
+- cannot receive new documents;
+- can be viewed in the archived list and restored.
+
+## Export
+
+Roles with `exportContacts` can download `/api/export/customers.csv`. Export neutralises spreadsheet
+formula injection by prefixing dangerous cells.
+
+ ## Permissions
+
+| Capability | Allows |
+| --- | --- |
+| `viewContacts` | See customer records |
+| `manageContacts` | Create, edit, import, merge, archive and link |
+| `exportContacts` | Download the CSV |

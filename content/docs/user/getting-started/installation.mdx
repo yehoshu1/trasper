@@ -1,0 +1,115 @@
+---
+title: Installation
+description: Requirements, environment variables, database setup and running Trasper locally.
+---
+
+## Requirements
+
+| Requirement | Notes |
+| --- | --- |
+| Node.js 24 or later | The Prisma SQLite adapter in this project requires Node 24. |
+| npm | All project commands run through npm so the intended Node runtime is used. |
+| A persistent disk | SQLite and `uploads/` must survive restarts. Serverless hosts are not supported. |
+| Docker (optional) | For the bundled production stack with Caddy and the cron container. |
+
+Optional services:
+
+- **Resend** for two-factor, password-reset and staff-invite email.
+- **An OpenAI-compatible endpoint** for the AI fallback that converts free-form itineraries. The
+  deterministic PNR parser always runs first.
+
+## Install
+
+```bash
+git clone https://github.com/yehoshu1/trasper.git
+cd trasper
+cp .env.example .env
+```
+
+Set at least these values in `.env`:
+
+```dotenv
+AUTH_SECRET="<openssl rand -base64 48>"
+ADMIN_EMAIL="you@agency.example"
+ADMIN_PASSWORD="<a strong password>"
+APP_TIMEZONE="Europe/London"
+BASE_CURRENCY="GBP"
+```
+
+Then install, generate the Prisma client, apply migrations and seed:
+
+```bash
+npm install
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the public landing page, choose **Staff sign
+in**, and use `ADMIN_EMAIL` and `ADMIN_PASSWORD`. After sign-in the staff dashboard opens at
+`/dashboard`.
+
+<Callout type="warn" title="Change the seeded password">
+  Sign in, open **Settings → Profile**, and change the password. The seed values are only intended
+  to create the first account.
+</Callout>
+
+## What the seed does
+
+`npm run db:seed` is idempotent. On a fresh database it creates:
+
+- the first administrator;
+- the four built-in roles and their capability sets;
+- the base currency and the currencies used by the reference data;
+- airlines and airports;
+- the first branch (`01`);
+- neutral company settings, pricing defaults and tax configuration.
+
+It does **not** create bank accounts. Add the agency's accounts under
+[Settings → Bank accounts](/docs/user/administration/banks).
+
+## First-run configuration checklist
+
+1. [Settings → Company](/docs/user/administration/company): name, address, TIN, logo, footer and time
+   zone.
+2. [Settings → VAT and taxes](/docs/user/administration/vat-and-taxes): VAT rate, registration number
+   and rounding unit.
+3. [Settings → Pricing presentation](/docs/user/administration/pricing-presentation): default price and
+   tax layouts.
+4. [Settings → Numbering](/docs/user/administration/numbering): document-number formats.
+5. [Settings → Bank accounts](/docs/user/administration/banks): at least one account.
+6. [Settings → Users](/docs/user/administration/users) and
+   [Roles](/docs/user/administration/roles): staff accounts and permissions.
+7. [Settings → Templates](/docs/user/administration/templates): quotation, itinerary and pro forma
+   designs.
+
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Development server with webpack (`next dev --webpack`). |
+| `npm run build` | Production build (`next build --webpack`). |
+| `npm start` | Serve the production build. |
+| `npm run typecheck` | TypeScript strict check (`tsc --noEmit`). |
+| `npm run lint` | ESLint 9 flat config. |
+| `npm test` | Compile and run the unit suite with Node's test runner. |
+| `npm run test:e2e` | Playwright browser suite. |
+| `npm run db:migrate` | Create and apply a development migration. |
+| `npm run db:deploy` | Apply migrations in CI or production. |
+| `npm run db:seed` | Seed reference data and the first administrator. |
+| `npm run backup` | Snapshot the database and uploads. |
+| `npm run cron` | Call the guarded `/api/cron` route every 15 minutes. |
+| `npm run logos:fetch` | Download airline logos into `uploads/airlines/`. |
+
+<Callout type="info" title="The docs site is part of the app">
+  The documentation you are reading is served by the same Next.js application at `/docs`. Its MDX
+  content lives in `content/docs`, and its search endpoint is `/docs/api/search`. See
+  [the docs site](/docs/developer/docs-site) for details.
+</Callout>
+
+## Next steps
+
+- Follow the [quick start](/docs/user/getting-started/quick-start) to issue the first quotation.
+- Load [demo data](/docs/user/getting-started/demo-data) to explore every screen.
+- Read [the workflow](/docs/user/guide/workflow) for the end-to-end process.

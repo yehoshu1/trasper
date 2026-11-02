@@ -1,0 +1,130 @@
+---
+title: Contributing
+description: Development setup, checks, commit conventions and where to start.
+---
+
+Thank you for improving Trasper. This project handles money and customer documents, so changes are
+reviewed with care. Small, focused pull requests are easier to merge than large rewrites.
+
+## Before you start
+
+- Read this documentation and `AGENTS.md`.
+- Search existing issues and pull requests.
+- Open an issue first for a large change.
+- Never include customer data, passport data, credentials, API keys or production database dumps in
+  an issue, commit or screenshot.
+
+## Development setup
+
+```bash
+git clone https://github.com/yehoshu1/trasper.git
+cd trasper
+cp .env.example .env
+# Set AUTH_SECRET and ADMIN_PASSWORD, then:
+npm install
+npm run db:generate
+npm run db:deploy
+npm run db:seed
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) for the public landing page, choose **Staff sign
+in**, and use the seeded admin. The staff dashboard is at `/dashboard`. Change the password after
+the first sign-in.
+
+## The checks
+
+Every pull request must pass:
+
+```bash
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+Browser tests are optional locally but required when changing the end-to-end flow:
+
+```bash
+npm run test:e2e
+```
+
+## What to change
+
+| Area | Where |
+| --- | --- |
+| Pricing | `src/lib/pricing/`, with tests. |
+| PNR parsing | `src/lib/pnr/` and fixtures. |
+| Quotation logic | `src/lib/quotation.ts`, `src/server/actions/quotations.ts`. |
+| Documents | `src/lib/documents.ts`, `src/server/documents.ts`, `src/documents/`. |
+| Settings | `src/server/settings.ts`, `src/server/actions/settings.ts`, settings pages. |
+| Permissions | `src/lib/permissions.ts`, `src/server/auth.ts`, `src/server/guard.ts`. |
+| Schema | `prisma/schema.prisma` and a new migration. |
+| Public landing page | `src/app/page.tsx`, `src/app/landing.module.css`, `public/screenshots/`. |
+| Docs site | `content/docs/`, `src/app/docs/`, `src/lib/source.ts`. |
+| Deployment | `Dockerfile`, `Dockerfile.dev`, `docker-compose.*.yml`, `deploy/Caddyfile`, `.github/workflows/ci.yml`. |
+
+## Rules to preserve
+
+- Money is `BigInt` minor units.
+- The pricing engine is pure and VAT is on markup only.
+- Line prices sum exactly to the total in every layout.
+- Issued documents are frozen snapshots.
+- Payments are append-only; corrections are reversals.
+- Every write is a server action with a capability check, Zod validation and an audit row in the
+  same transaction.
+- Contacts and passengers are archived, never deleted.
+- Passport data is never stored.
+- User-facing copy is English (UK).
+
+## Adding tests
+
+- Add a table-driven unit test for a new domain rule.
+- Add a PNR fixture for a parse failure.
+- Add a Playwright step for a changed end-to-end flow.
+- Keep the line-sum invariant assertion in every pricing case.
+
+## Database changes
+
+```bash
+npm run db:migrate -- --name describe_the_change
+npm run db:generate
+```
+
+Commit the schema and migration together. Never edit an applied migration.
+
+## Releases and versioning
+
+The project uses Semantic Versioning. `package.json` is the single source of truth, and release tags
+are `vX.Y.Z`. CI rejects a tag that does not match `package.json`, bakes `APP_VERSION` into the image
+and publishes the matching container tags.
+
+From a clean `main`, after moving the completed entries into `[Unreleased]` in `CHANGELOG.md`, run one
+of:
+
+```bash
+npm run release:patch
+npm run release:minor
+npm run release:major
+git push --follow-tags
+```
+
+The release script updates `package.json`, `package-lock.json` and `CHANGELOG.md`, commits them and
+creates the annotated tag. Do not tag a commit that has not passed CI.
+
+## Commits and pull requests
+
+- Imperative subject: `Add a configurable document footer`.
+- Keep commits logically separate.
+- Describe the problem, approach and tests in the pull request.
+- Link the issue the change closes.
+- Update the README or CHANGELOG when behaviour or configuration changes.
+
+## Security
+
+Do not open a public issue for a vulnerability. Follow `SECURITY.md` and the
+[security page](/docs/user/operations/security#reporting-a-vulnerability).
+
+## Licence
+
+By contributing you agree that your contribution is licensed under the MIT Licence.

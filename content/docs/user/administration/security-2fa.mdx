@@ -1,0 +1,78 @@
+---
+title: Security and two-factor
+description: TOTP enrolment, recovery codes, sessions and per-role enforcement.
+---
+
+**Settings → Security** is each user's security centre. Administrators also set an optional
+per-role enrolment policy there.
+
+## Signing in
+
+Staff sign in with email and password. Self-registration is disabled; an administrator creates every
+account under **Settings → Users**. Inactive accounts cannot sign in.
+
+**Forgot password** sends a single-use link through Resend, valid for one hour. Using the link
+revokes the account's existing sessions. If system email is not configured, an administrator can
+reset the password from the user page instead.
+
+## Two-factor authentication
+
+Trasper supports TOTP authenticator apps.
+
+1. Enter the current password.
+2. Scan the QR code or enter the setup key.
+3. Enter the six-digit code to confirm.
+4. Save the recovery codes shown (they are also emailed when system mail is configured).
+
+Backup codes are single-use. Regenerating them invalidates the old set. Codes are managed by Better
+Auth and are never shown in the audit log.
+
+## Sign-in flow
+
+- Password sign-in is followed by a six-digit code when 2FA is enabled.
+- Repeated sign-in, setup and verification attempts are rate limited.
+- Recovery codes can be used when the authenticator is unavailable.
+
+## Disabling 2FA
+
+Disabling requires the current password. A user whose role is in the mandatory list cannot disable
+2FA. Administrators cannot disable another user's authenticator.
+
+## Per-role policy
+
+An administrator can require 2FA for selected roles. A user in a listed role who has not enrolled is
+redirected to `/enrol-2fa` before any staff page or server action is allowed. Enforcement is in
+`requireUser` and `actionUser`, not just the UI.
+
+<Callout type="warn" title="Lockout risk">
+  If you require 2FA for the only administrator and lose the authenticator and recovery codes,
+  recovery requires server-side intervention. Keep recovery codes safe and configure system email.
+</Callout>
+
+## Profile
+
+**Settings → Profile** manages your display name, profile photo and password. The photo is shown in
+the sidebar and against your audit entries; it must be PNG, JPEG or WebP and no larger than 2 MB.
+Changing the password signs out your other sessions.
+
+## Sessions
+
+The Security page lists signed-in sessions with device, IP, user agent and last activity. You can:
+
+- revoke one session;
+- revoke every session, which signs you out everywhere;
+- change the password, which revokes other sessions automatically.
+
+Sessions expire after 8 hours and are refreshed when active.
+
+## Password policy
+
+- Minimum 10 characters, maximum 200.
+- Passwords are hashed by Better Auth.
+- Reset tokens are single-use, expire after one hour, and revoke existing sessions when used.
+- Sign-in is rate limited: 5 attempts per 15 minutes per rule in addition to the general limit.
+
+## System email
+
+Resend is used only for 2FA recovery, password reset and staff invites. Customer documents are never
+emailed by Trasper. Configure `RESEND_API_KEY`, `SYSTEM_FROM_EMAIL` and `SYSTEM_FROM_NAME`.

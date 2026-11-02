@@ -1,0 +1,58 @@
+---
+title: Audit log
+description: Append-only record of every write, with filters and cost-aware redaction.
+---
+
+**Settings → Audit log** is available to roles with `viewAudit`. It is an append-only record of every
+write in the application.
+
+## What is recorded
+
+Each entry has:
+
+- timestamp;
+- user (or `system` for scheduled jobs);
+- action name, for example `sendQuotation`, `recordPayment` or `updateCompany`;
+- entity and entity id;
+- a JSON diff with `before` and `after` values.
+
+Big integers are serialised as decimal strings so the diff remains JSON-safe.
+
+## Guarantees
+
+- The audit row is written in the **same transaction** as the change it describes.
+- There is no application action to edit or delete an audit entry.
+- Scheduled jobs such as quotation expiry and pro forma status rollup write their own entries with a
+  null user.
+- Failed writes roll back their audit row too.
+
+## Filtering
+
+Filter by user, entity type and date range. The page shows the 200 most recent matching entries.
+
+## Redaction
+
+Roles without `viewCosts` see cost-bearing fields removed from the diff: rates, margins, costs,
+markup, VAT, taxes and profit. The redaction helper also removes secret-bearing keys from that view,
+including:
+
+- `apiKey`, `apiKeyCipher`, `aiApiKeyCipher`, `ciphertext`;
+- `secret`, `token`, `backupCodes`.
+
+This is why the company settings action logs only the fields its form changed rather than spreading
+the full settings object, which contains the AI ciphertext.
+
+## Using the log
+
+Typical investigations:
+
+- who sent or revised a quotation and when;
+- which exchange rate was used;
+- when a payment was reversed and why;
+- who changed a role or company identity;
+- whether a scheduled rollup changed a status.
+
+## Retention
+
+Audit entries are not pruned automatically. Back them up with the database and treat them as part of
+the permanent record.

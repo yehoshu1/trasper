@@ -1,0 +1,46 @@
+---
+title: Document templates
+description: Five print designs, header modes and frozen template choices.
+---
+
+**Settings → Document templates** chooses the design for newly issued quotations, itineraries and pro
+formas.
+
+## Designs
+
+| Template | Description |
+| --- | --- |
+| Classic | Teal accents, a light header and soft table headings: the default look. |
+| Modern | Charcoal header band, high-contrast table headings and strong section rules. |
+| Minimal | Quiet black-and-white layout with hairline rules and no filled table backgrounds. |
+| Executive | Centred formal header in navy and gold, with refined section labels. |
+| Vivid | Bright blue header block, oversized document title and an amber accent bar. |
+
+Each document type has its own choice. The previews use sample data and can be opened full-size to
+compare the picture letterhead with the company-details header.
+
+## Frozen choice
+
+The template is copied into the document snapshot when it is sent or issued. Changing the default
+later does not restyle an issued document. A reissued itinerary or revision picks up the current
+template.
+
+## Header mode
+
+The company settings choose between:
+
+- a full-width picture letterhead;
+- typed company details with the logo.
+
+The TIN is always printed separately when a picture letterhead is used. See
+[Company settings](/docs/user/administration/company#document-header).
+
+## Rendering
+
+The live preview and the PDF route render the **same** React template from the same frozen snapshot.
+PDFs are produced server-side with `pdf-lib`, not a headless browser. This keeps the two outputs
+identical and removes a Chromium dependency from the runtime image.
+
+## Permission
+
+`manageSettings` is required. The choice is audited under `updateDocumentTemplates`.

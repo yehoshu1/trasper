@@ -1,0 +1,77 @@
+---
+title: Database changes
+description: Edit the schema, create a migration and keep SQLite portable.
+---
+
+## Workflow
+
+1. Edit `prisma/schema.prisma`.
+2. Create and apply a development migration:
+
+   ```bash
+   npm run db:migrate -- --name describe_the_change
+   ```
+
+3. Regenerate the client:
+
+   ```bash
+   npm run db:generate
+   ```
+
+4. Commit the schema change and the generated migration together.
+5. Never edit an already-applied migration; add a new one.
+
+Production applies migrations with:
+
+```bash
+npm run db:deploy
+```
+
+## Portability rules
+
+- SQLite is the supported production database.
+- No Prisma enums for statuses, roles or capabilities; use strings validated by Zod.
+- Money is `BigInt` (SQLite integer).
+- Keep WAL mode and the busy timeout enabled.
+- Avoid database-specific functions in application code.
+- Index foreign keys and status/date columns used by list queries.
+
+## Adding a model or column
+
+- Add indexes for foreign keys and common filters.
+- Give new status columns a safe default.
+- Consider existing rows when adding a required column: provide a default or a backfill migration.
+- Keep JSON snapshot fields as text; do not normalise a frozen document.
+- Add an audit entry for writes to the new model.
+
+## Deleting or renaming
+
+- SQLite migrations can be restrictive. Prefer additive changes.
+- Archive instead of deleting referenced records (contacts, passengers, bank accounts, attachments).
+- Never delete issued documents, payments or audit entries through a migration.
+
+## Generated client
+
+The Prisma client is generated into `src/generated/prisma` with the `prisma-client` generator. Do not
+edit generated files. Re-run `npm run db:generate` after schema changes.
+
+## CI
+
+CI prepares a fresh database:
+
+```bash
+npm run db:generate
+npx prisma migrate deploy
+npm run db:seed
+```
+
+Any migration that fails on an empty database fails CI before the build.
+
+## Destructive commands
+
+```bash
+npm run db:reset
+```
+
+is for local development only. It drops and reseeds the database. Never run it against data you care
+about or against a production database.

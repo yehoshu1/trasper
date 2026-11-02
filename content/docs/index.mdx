@@ -1,0 +1,62 @@
+---
+title: Trasper documentation
+description: Staff quotations, itineraries, pro forma invoices and payments for travel agencies.
+---
+
+Trasper is a staff-only quotation and pro forma system for travel agencies. Build branded options
+from a pasted PNR or from scratch, add named passengers or traveller groups, issue an itinerary and
+a pro forma invoice, then record and reconcile payments. Itineraries can also be created standalone —
+by hand or from pasted text — when no quotation or pricing is needed.
+
+This documentation is split by audience.
+
+<Cards>
+  <Card title="User guide" href="/docs/user">
+    For agency staff, administrators and operators: the daily workflow, every settings page,
+    deployment, backups and the behaviour rules behind pricing and documents.
+  </Card>
+  <Card title="Developer guide" href="/docs/developer">
+    For contributors and integrators: architecture, code standards, the data model, HTTP routes,
+    testing and how this docs site is built.
+  </Card>
+</Cards>
+
+## Which section do I need?
+
+| I want to… | Go to |
+| --- | --- |
+| Issue my first quotation | [Quick start](/docs/user/getting-started/quick-start) |
+| Learn the daily screen-by-screen flow | [Staff guide](/docs/user/guide/workflow) |
+| Configure the agency, tax, templates or users | [Administration](/docs/user/administration/company) |
+| Deploy, back up or troubleshoot an installation | [Operations](/docs/user/operations/docker) |
+| Understand the pricing or document rules | [Reference](/docs/user/reference/pricing) |
+| Change the code or add a migration | [Developer guide](/docs/developer/architecture) |
+| Find an API route or the database model | [HTTP routes](/docs/developer/http-routes) · [Data model](/docs/developer/data-model) |
+
+## The short version
+
+1. Add the paying customer and link the travellers, or quote a traveller group before the names are known.
+2. Create a quotation, then build one or more options. Enter the flights and costs by hand, or paste
+   a PNR when a booking already exists.
+3. Mark the quotation sent. It locks, freezes its totals and becomes the customer document.
+4. Accept an option and issue the itinerary and pro forma.
+5. Record payments. Pro forma status is derived from the ledger, never typed.
+
+## Scope and limits
+
+- **Pasted text only.** Trasper does not call a GDS or airline API; the converter reads text you
+  paste. Flights can also be entered by hand when there is no text to read.
+- **Pro formas, not final invoices.** The document flow stops at a pro forma and its payment ledger;
+  final invoices and receipts are outside this build.
+- **No customer mailbox.** Staff record calls, emails and messages in the timeline. Resend is used
+  only for staff 2FA, recovery, password reset and invites.
+- **No passport data.** Collect and check travel documents outside the system.
+- **Word is internal.** The Word export is for staff who can see costs; PDFs are the customer
+  deliverable.
+- **Single-tenant SQLite.** The app needs a persistent disk and is not designed for a serverless
+  filesystem.
+
+<Callout type="info" title="Agency-neutral by design">
+  Company name, address, logo, footer, bank details and time zone live in Settings. Nothing about a
+  particular agency is compiled into the source code.
+</Callout>

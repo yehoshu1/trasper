@@ -1,0 +1,19 @@
+{
+  "title": "Staff guide",
+  "description": "The daily workflow, screen by screen.",
+  "pages": [
+    "workflow",
+    "dashboard",
+    "quotations",
+    "quotation-editor",
+    "pnr-conversion",
+    "itineraries",
+    "proformas",
+    "payments",
+    "customers",
+    "passengers",
+    "history-and-files",
+    "reports",
+    "search-and-notifications"
+  ]
+}

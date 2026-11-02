@@ -1,0 +1,74 @@
+---
+title: Payments
+description: Record receipts, reverse mistakes, read the ledger and reconcile aged debtors.
+---
+
+Payments are append-only. Trasper never edits or deletes a payment; corrections are new reversing
+entries linked to the original.
+
+## Record a payment
+
+Open a pro forma and choose **Record payment**.
+
+| Field | Rules |
+| --- | --- |
+| Date | Cannot be in the future (agency time zone). |
+| Amount | Must be greater than zero and cannot take the total above the pro forma total. |
+| Method | Cash, bank transfer, mobile money, cheque or card. |
+| Reference | Optional bank or receipt reference. |
+
+The action re-checks the balance inside the transaction, so two accountants recording at the same
+time cannot overpay. Recording a payment updates the derived status and writes the audit entry in
+the same transaction.
+
+## Reverse a payment
+
+Choose **Reverse** on the ledger row and give a reason. This creates a negative entry with:
+
+- the same method;
+- today's date in the agency time zone;
+- a reference beginning `Reversal:`;
+- a link (`reversesId`) to the original payment.
+
+A payment can be reversed at most once, enforced by a unique index and a transaction check. A
+reversing entry cannot itself be reversed. A cancelled pro forma cannot take payments or reversals.
+
+## Ledger
+
+The **Payments** page (roles with `viewPaymentLedger`) shows every receipt and reversal with totals
+for the current view:
+
+- received;
+- reversed;
+- net;
+- number of entries.
+
+Filters cover the date range and payment method, with free-text search over the table. The ledger is
+append-only and is the source of truth for balances. Selected rows can be exported to CSV.
+
+## Aged debtors
+
+**Reports → Aged debtors** lists outstanding pro forma balances by age:
+
+| Bucket | Meaning |
+| --- | --- |
+| Current | Not yet due. |
+| 1–30 | Up to 30 days past due. |
+| 31–60 | 31 to 60 days. |
+| 61–90 | 61 to 90 days. |
+| 90+ | More than 90 days. |
+
+Age is calculated from the due date (or issue date when no due date) to the reporting date in UTC
+calendar days. Cancelled pro formas and zero balances are excluded.
+
+The report exports as CSV from `/api/reports/aged-debtors` for roles with `viewReports`.
+
+## Reporting interaction
+
+Payments feed the reports page:
+
+- **Payments received** is net of reversals.
+- **Outstanding** is the balance at period end.
+- **Profit** comes from the frozen quotation totals, not from payments.
+
+See [reports](/docs/user/guide/reports) and [pricing rules](/docs/user/reference/pricing).

@@ -1,0 +1,101 @@
+---
+title: Data model
+description: The Prisma models, relationships and structural invariants.
+---
+
+Trasper uses Prisma with SQLite. The schema is in `prisma/schema.prisma`; migrations are in
+`prisma/migrations/`.
+
+## People and access
+
+| Model | Purpose |
+| --- | --- |
+| `User` | Staff identity, role key, branch, active flag, 2FA flag, last login. |
+| `Session` | Database session for Better Auth. |
+| `Account` | Better Auth credential/provider account. |
+| `Verification` | Better Auth verification tokens. |
+| `TwoFactor` | TOTP secret, hashed backup codes, failed count, lockout. |
+| `Role` | Role key, name, JSON capability array, system/active flags. |
+
+`User.role` and `User.branch` are plain strings validated by Zod and the role/branch tables. There
+are no Prisma enums for roles or statuses.
+
+## Customers and travellers
+
+| Model | Purpose |
+| --- | --- |
+| `Contact` | Paying customer, address, archive timestamp, version. |
+| `Passenger` | Traveller, type, archive timestamp, version. |
+
+`Contact` and `Passenger` have a many-to-many relation. `FareLine` points at a named passenger, or
+stores a passenger type and quantity when the travellers are still unnamed.
+
+## Quotations
+
+| Model | Purpose |
+| --- | --- |
+| `Quotation` | Number, revision, status, customer, branch, currency, dates, snapshot, bank, lock fields. |
+| `QuoteOption` | Option label/type, PNR, deadline, cost currency, rate, margin, frozen totals. |
+| `Segment` | Flight segment with local wall-clock times. |
+| `FareLine` | Traveller cost in the option's cost currency: a named passenger, or a type plus quantity for an unnamed group. |
+| `ServiceLine` | Non-flight cost with quantity, unit, unit cost and details. |
+| `TaxLine` | Optional tax with kind, value, enabled flag and base. |
+
+`Quotation.options` cascade on delete; a draft delete removes its options and lines. Issued documents
+reference the quotation but keep their own snapshots.
+
+## Issued documents
+
+| Model | Purpose |
+| --- | --- |
+| `Itinerary` | Number, optional quotation/option/contact, branch, snapshot, issue time, supersede fields. |
+| `Proforma` | Number, quotation, option, bank, status, total, dates, terms, showVat, snapshot, cancellation. |
+| `ProformaLine` | Denormalised line rows for reporting/export. |
+| `Payment` | Append-only receipt or reversal, method, reference, `reversesId`. |
+| `Instalment` | Optional payment schedule target. |
+| `Attachment` | File metadata linked to a quotation or pro forma. |
+
+## Reference data and settings
+
+| Model | Purpose |
+| --- | --- |
+| `Branch` | Two-digit code, name, active. |
+| `Airline` | IATA code, name, logo path. |
+| `Airport` | IATA code, name, city, country, IANA zone. |
+| `Currency` | Code, name, symbol, active. |
+| `ExchangeRate` | From/to, scaled rate, effective date, author. |
+| `BankAccount` | Printed details, default flag, archive flag, sort order. |
+| `TaxPreset` | Reusable optional tax. |
+| `Setting` | Key/value store for typed settings. |
+| `Sequence` | Document number counters. |
+| `AuditLog` | Append-only before/after JSON. |
+| `Activity` | Sales timeline and next follow-up. |
+| `SavedTableView` | Per-user list view state. |
+
+## Structural invariants
+
+- Money columns are `BigInt` in minor units. Rates are `BigInt` micro-units. Margins, VAT and taxes
+  are `BigInt` basis points (or minor units for fixed/lump).
+- Dates that represent calendar dates are stored at UTC midnight.
+- Segment times are local wall-clock strings.
+- Statuses, roles and capabilities are strings validated by Zod.
+- `Payment.reversesId` is unique, so a payment can be reversed once.
+- `QuoteOption.frozenTotals`, `Quotation.snapshot`, `Itinerary.snapshot` and `Proforma.snapshot` are
+  JSON text; they are never recomputed for issued documents.
+- `Quotation.number`, `Itinerary.number` and `Proforma.number` are unique.
+- `SavedTableView` is unique per user and list key.
+
+## SQLite
+
+- WAL mode and a busy timeout are enabled at connection time.
+- The database is a single file on a persistent disk.
+- Migrations are applied with `prisma migrate deploy` in production.
+- There are no database enums; keeping types portable avoids migration pain.
+
+## Regenerating the client
+
+```bash
+npm run db:generate
+```
+
+The client is generated into `src/generated/prisma`. Do not edit generated files by hand.

@@ -1,0 +1,177 @@
+---
+title: Docker deployment
+description: Development and production Compose stacks, GHCR images, volumes and the versioning flow.
+---
+
+The repository ships two Compose files: a development stack that builds from source and a production
+stack that pulls the published image. They are separate so a development command cannot accidentally
+start (or build over) production.
+
+## Development stack
+
+```bash
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up --build
+```
+
+`docker-compose.dev.yml` builds `Dockerfile.dev`, bind-mounts the repository for hot reload and runs
+the Next.js dev server at [http://localhost:3000](http://localhost:3000). The public landing page is
+`/`; staff sign in at `/login` and land on the dashboard at `/dashboard`. The docs are at `/docs`.
+Set `APP_PORT=3100` before the command if port 3000 is already in use. The database, uploads and
+backups live in named volumes (`dev-data`, `dev-backups`), not on the host.
+
+The container reinstalls dependencies when `package-lock.json` changes. Rebuild only when
+`Dockerfile.dev` changes, then reset data if needed:
+
+```bash
+docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml down -v
+```
+
+## Production stack
+
+```bash
+cp .env.example .env
+# Set AUTH_SECRET, ADMIN_PASSWORD, CRON_SECRET, APP_DOMAIN, APP_URL, ACME_EMAIL,
+# APP_IMAGE_REPO and APP_IMAGE_TAG.
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+The production stack has three services:
+
+| Service | Role |
+| --- | --- |
+| `app` | The published GHCR image. Runs migrations and the idempotent seed on start. |
+| `cron` | Calls the guarded `/api/cron` route every 15 minutes. |
+| `caddy` | Terminates HTTPS and renews certificates. |
+
+It never builds on the host. `APP_DOMAIN` is the hostname Caddy serves, and this stack derives
+`APP_URL` from it as `https://<APP_DOMAIN>`. For a bare-Node deployment, set `APP_URL` directly to
+the public `https://` origin. After deployment, the public landing page is at `/`, the staff
+dashboard is at `/dashboard`, and the documentation is at `/docs`.
+
+## Published image
+
+The CI pipeline publishes to GHCR after the verification and end-to-end jobs pass:
+
+| Trigger | Tags |
+| --- | --- |
+| push to `main` | `latest`, `main`, `sha-<commit>` |
+| tag `v1.2.3` | `1.2.3`, `1.2`, `latest`, `sha-<commit>` |
+
+Images target `linux/amd64`. Set the repository and version in `.env`:
+
+```text
+APP_IMAGE_REPO="ghcr.io/<owner>/<repo>"
+APP_IMAGE_TAG="1.2.3"
+```
+
+`APP_IMAGE_REPO` has no tag. `APP_IMAGE_TAG` is the release tag without the leading `v`. Pin an exact
+version in production; `latest` works but makes an upgrade implicit.
+
+Private packages require `docker login ghcr.io` with a token that can read packages. Public packages
+can be pulled anonymously.
+
+## Volumes
+
+Production:
+
+| Volume | Holds |
+| --- | --- |
+| `app-data` | SQLite database and uploads, mounted at `/data`. |
+| `app-backups` | Local backups at `/backups`. |
+| `caddy-data` and `caddy-config` | TLS certificates and Caddy state. |
+
+Development uses `dev-data` for the database and uploads, `dev-backups` for backups, and
+`node_modules` for container dependencies. `down -v` removes them.
+
+State lives on volumes, so replacing a container does not lose data.
+
+## Database and seed on start
+
+Both containers apply migrations before the server starts. Production runs:
+
+```bash
+npx prisma migrate deploy && node scripts/seed.mjs && node .next/standalone/server.js
+```
+
+The seed is idempotent: it uses `INSERT OR IGNORE` and existence checks, so a restart does not
+duplicate reference data or reset the admin password. The development container also runs
+`prisma generate` so schema changes are picked up after a restart.
+
+## Health checks
+
+The app image defines a health check against `/api/health`. Docker Compose uses it to gate the cron
+and Caddy services. The endpoint returns `{ ok: true, time, version }`; `version` is the
+`APP_VERSION` baked into the image. It does not query the database; use a real page or the logs for a
+deeper check.
+
+## Reverse proxy
+
+Caddy:
+
+- proxies to `app:3000`;
+- enables gzip;
+- adds HSTS and hardening headers;
+- logs errors only, so password-reset tokens in URLs are not written to the access log.
+
+The Next.js app also sets a nonce-based CSP and hardening headers. Keep both layers.
+
+## Versioning
+
+Trasper uses Semantic Versioning. `package.json` is the source of truth; `/api/health` reports the
+version baked into the running image. CI rejects a `vX.Y.Z` tag that does not match `package.json`.
+
+Cut a release from a clean `main` with entries under `[Unreleased]` in `CHANGELOG.md`:
+
+```bash
+npm run release:patch   # or release:minor / release:major
+git push --follow-tags
+```
+
+The release script updates `package.json`, `package-lock.json` and `CHANGELOG.md`, commits, and
+creates an annotated tag. CI publishes matching `X.Y.Z` and `X.Y` image tags. Set `APP_IMAGE_TAG` to
+the exact released version on the host.
+
+## Building without Docker
+
+```bash
+npm ci
+npm run db:generate
+npm run build
+npm start
+```
+
+The server serves the public landing page at `/` and the staff dashboard at `/dashboard`. The build
+uses webpack (`next build --webpack`) and the wasm SWC package. The Dockerfile removes native SWC
+packages in `postinstall` for portability.
+
+## Production checklist
+
+- [ ] `AUTH_SECRET` is random, 32+ characters, and not an example value.
+- [ ] `APP_URL` is the public HTTPS origin.
+- [ ] `ADMIN_PASSWORD` is strong and changed after first sign-in.
+- [ ] `CRON_SECRET` is random and at least 16 characters.
+- [ ] `APP_IMAGE_REPO` and a pinned `APP_IMAGE_TAG` are set.
+- [ ] Resend is configured if password reset or invites are needed.
+- [ ] A backup destination exists and has been tested.
+- [ ] The Docker host has a persistent disk; no serverless filesystem.
+- [ ] `UPLOAD_DIR` and `BACKUP_DIR` are on persistent storage.
+- [ ] TLS certificates renew (Caddy handles this).
+- [ ] The first admin completes Settings → Company and adds bank accounts.
+
+## Upgrades
+
+1. Back up the database and uploads.
+2. Set `APP_IMAGE_TAG` to the new release and pull it.
+3. Let `prisma migrate deploy` run on start.
+4. Check `/api/health` (including the reported version), sign-in, a quotation preview and a PDF.
+5. Review the changelog and release notes.
+
+```bash
+APP_IMAGE_TAG=1.2.4 docker compose -f docker-compose.prod.yml pull
+APP_IMAGE_TAG=1.2.4 docker compose -f docker-compose.prod.yml up -d
+```
+
+Never run destructive Prisma commands against production data.

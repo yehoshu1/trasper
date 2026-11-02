@@ -1,0 +1,97 @@
+---
+title: Code standards
+description: TypeScript, money, schemas, server actions, naming and formatting rules.
+---
+
+## TypeScript
+
+- Strict mode is on.
+- No `any` in the pricing, PNR or permission layers.
+- Prefer pure functions and explicit input/output types.
+- Keep shared editor/server shapes in `src/lib/quotation.ts` or `src/lib/schemas.ts`.
+- Use `import type` for type-only imports.
+
+## Money
+
+- `BigInt` minor units for money.
+- `BigInt` micro-units for exchange rates.
+- `BigInt` basis points for percentages.
+- Never use floating point for money, rates or VAT.
+- Convert decimal strings at the boundary, once.
+- Round once at the total in the pricing engine.
+
+## Schemas
+
+- One Zod schema per input, shared by the form and the server action.
+- Validate on the server even when the form also validates.
+- Keep statuses and roles as validated strings, not Prisma enums.
+
+## Server actions
+
+Every write follows the same order:
+
+1. `actionUser(capability)` or `requireCapableUser`.
+2. Zod parse.
+3. Domain checks.
+4. Transaction: write + `audit(tx, ...)`.
+5. `revalidatePath` for affected pages.
+6. Return or redirect with a clear message.
+
+Helpers that take a `userId` must not live in a `"use server"` module, because every export of such a
+module becomes a public action. Use a plain module such as `quotation-mutations.ts`.
+
+## Pricing
+
+- The engine is pure: no database, I/O or implicit clock.
+- VAT is on markup only.
+- Optional taxes use cost, markup or subtotal; never another tax.
+- Line prices must sum exactly to the total.
+- Add a table-driven test for every rule.
+
+## PNR
+
+- The parser never guesses.
+- Unreadable input goes to `unparsed` with a warning.
+- Add a fixture for every real-world failure.
+- Keep segment times as local wall-clock strings.
+
+## Documents
+
+- Snapshot interfaces live in `src/lib/documents.ts`.
+- Templates live in `src/documents/` and must render from the snapshot only.
+- Preview and PDF must use the same data.
+- Never recompute an issued document from current settings.
+
+## UI
+
+- Use the shared components in `src/components/ui`.
+- User-facing copy is English (UK): `31 Oct 2026`, 24-hour times.
+- Keep labels and errors short and specific.
+- Do not hide a control as the only permission check.
+
+## Naming
+
+- `camelCase` for variables and functions.
+- `PascalCase` for components and types.
+- `kebab-case` for file names.
+- `UPPER_SNAKE_CASE` for constants.
+- Actions end in `Action`; pure helpers describe their result.
+
+## Formatting
+
+- Follow the surrounding file.
+- Do not reformat unrelated files.
+- Keep imports grouped and ordered as in the existing code.
+- Run `npm run typecheck`, `npm run lint` and `npm test` before opening a pull request.
+
+## Comments
+
+Explain *why*, not *what*. Preserve the domain comments around money, snapshots, locking and
+security. A comment that says "VAT on markup only" is protecting a rule, not restating code.
+
+## Commits
+
+- Imperative subject, for example `Add a configurable document footer`.
+- Keep commits logically separate.
+- Describe the problem, approach and tests in the pull request.
+- Update the README or CHANGELOG when behaviour or configuration changes.

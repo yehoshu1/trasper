@@ -1,0 +1,78 @@
+---
+title: Security hardening
+description: Deployment responsibilities, built-in protections and the vulnerability process.
+---
+
+Trasper is a staff-only, single-tenant system. The repository provides secure defaults; the operator
+is responsible for the host, network, secrets and backups.
+
+## Operator responsibilities
+
+- Use a strong, unique `AUTH_SECRET` and `CRON_SECRET`.
+- Serve over HTTPS; `APP_URL` must be `https://` in production.
+- Restrict the staff network and keep the host patched.
+- Protect backups, which contain password hashes and customer data.
+- Keep `RESEND_API_KEY`, AI keys, `.env` and database files out of source control.
+- Review the audit log and rotate credentials after suspected compromise.
+- Require two-factor authentication for privileged roles.
+
+## Built-in protections
+
+| Area | Protection |
+| --- | --- |
+| Authentication | Better Auth, hashed passwords, database sessions, 8-hour expiry. |
+| Authorization | Capability checks on pages, actions, API routes and downloads; server-side redaction for viewers. |
+| Rate limits | Sign-in, password reset, 2FA, AI conversion, search, exports and document downloads. |
+| Uploads | Images are validated by magic bytes; attachments are checked by MIME type, extension and size. All stored files are served through authorised routes with traversal protection. |
+| CSV | Formula-injection neutralisation. |
+| Browser | Nonce-based CSP, `nosniff`, frame denial, strict referrer policy, COOP/CORP, Permissions-Policy. |
+| Documents | Frozen snapshots; PDFs rendered server-side from the same snapshot as the preview. |
+| Payments | Append-only ledger, reversing entries only, unique reversal guard. |
+| Data | Passport data is never stored; contacts and passengers are archived, not deleted. |
+| Secrets | AI key encrypted at rest with AES-256-GCM; settings actions avoid writing secret values to the audit log. |
+| Cron | Bearer token only; query-string secrets rejected. |
+| AI | URL validation, private-address blocking, prompt-injection boundary, Zod validation. |
+
+## Security headers
+
+Next.js sends a per-request CSP with a nonce, plus:
+
+```text
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+```
+
+HSTS is added in production. Caddy adds a second layer at the edge. Do not weaken either.
+
+## Passwords and sessions
+
+- Minimum 10 characters.
+- Reset tokens are single-use and expire after one hour.
+- Password reset revokes existing sessions.
+- Users can revoke individual sessions or all sessions.
+- Repeated failed sign-ins are throttled per account and IP.
+
+## Backups
+
+Backups contain password hashes, customer data and encrypted settings. Encrypt the destination,
+restrict access and keep an off-server copy. See [backups](/docs/user/operations/backups).
+
+## Reporting a vulnerability
+
+Do **not** open a public issue. Use the repository host's private vulnerability reporting or
+security-advisory feature. Include reproduction steps, affected routes, the version and any
+redacted proof of concept.
+
+Acknowledgement within 5 working days, severity decision within 10 working days, coordinated
+disclosure.
+
+## Out of scope
+
+- Findings requiring an already-compromised server, database or administrator.
+- Missing headers on a reverse proxy not in this repository.
+- Unrealistic denial-of-service on a self-hosted installation.
+- Automated scanner output without demonstrated impact.

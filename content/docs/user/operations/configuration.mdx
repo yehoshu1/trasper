@@ -1,0 +1,109 @@
+---
+title: Configuration
+description: Environment variables for runtime, seed data, email, AI, backups and cron.
+---
+
+Deployment values belong in the environment. Agency identity belongs in the database. Copy
+`.env.example` and set what you need.
+
+## Runtime
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLite file, for example `file:./data/app.db`. In Docker, `file:/data/app.db`. |
+| `APP_URL` | Public origin for cookies, trusted origins and links. Must be `https://` in production. |
+| `APP_DOMAIN` | Hostname terminated by the bundled Caddy proxy. |
+| `APP_TIMEZONE` | Fallback IANA zone before the company setting is saved. |
+| `APP_NAME` | Optional display name before settings load, for example the TOTP issuer. |
+| `APP_PORT` | Optional host port for the development Compose stack; default 3000. |
+| `APP_IMAGE_REPO` | GHCR repository for the production stack, without a tag. |
+| `APP_IMAGE_TAG` | Production image tag and release version, for example `1.2.3`. |
+| `APP_VERSION` | Read-only build value baked into the image; reported by `/api/health`. |
+| `AUTH_SECRET` | Session signing secret; 32+ random characters outside development. |
+| `BETTER_AUTH_SECRET` | Optional alias for `AUTH_SECRET`. |
+| `SETTINGS_SECRET` | Optional separate key for encrypting settings secrets; defaults to `AUTH_SECRET`. |
+| `UPLOAD_DIR` | Persistent directory for logos, avatars and attachments. |
+| `LOG_LEVEL` | Application log level. |
+
+`APP_URL` and `AUTH_SECRET` fail closed outside development. Example values in the repository are
+rejected. In the production Compose stack, `APP_URL` is derived from `APP_DOMAIN` as
+`https://<APP_DOMAIN>`; set `APP_URL` directly for a bare-Node deployment.
+
+## First admin and seed
+
+| Variable | Purpose |
+| --- | --- |
+| `ADMIN_EMAIL` | First administrator's email. |
+| `ADMIN_PASSWORD` | First administrator's password. Production rejects the published development default. |
+| `SEED_DEMO` | Set `0` to skip demo contacts during seeding. |
+
+Seed-only company and pricing variables initialise a fresh database. Once an admin saves the
+corresponding setting, the database is the source of truth:
+
+`SEED_COMPANY_NAME`, `SEED_COMPANY_ADDRESS`, `SEED_COMPANY_EMAIL`, `SEED_COMPANY_PHONE`,
+`SEED_COMPANY_WEBSITE`, `SEED_COMPANY_TIN`, `SEED_COMPANY_FOOTER`, `BASE_CURRENCY`, `VAT_ENABLED`,
+`VAT_RATE_BPS`, `VAT_REGISTRATION_NUMBER`, `VAT_LABEL`, `PRICING_ROUNDING_UNIT`,
+`PRICING_DEFAULT_MARGIN_BPS`, `PRICING_DEFAULT_VALIDITY_DAYS`, `PRICING_RATE_MAX_AGE_DAYS`,
+`PRICING_DISPLAY`, `PRICING_TAX_DISPLAY`, `SERVICE_FEE_LABEL`, `TAX_LABEL`, `TOTAL_LABEL`,
+`PER_PERSON_LABEL`, `TAX_NOTE`.
+
+## System email
+
+| Variable | Purpose |
+| --- | --- |
+| `RESEND_API_KEY` | Enables transactional system email. |
+| `SYSTEM_FROM_EMAIL` | From address for system mail. |
+| `SYSTEM_FROM_NAME` | Optional override for the agency name in the From header. |
+
+Used only for 2FA, recovery, password reset and staff invites. Never used for customer documents.
+
+## Scheduled maintenance
+
+| Variable | Purpose |
+| --- | --- |
+| `CRON_SECRET` | Bearer token for `/api/cron`. Required and at least 16 characters in production. |
+| `CRON_INTERVAL_SECONDS` | Interval for `npm run cron` (default 900). |
+| `CRON_URL` | Base URL used by `scripts/cron.mjs` (defaults to `APP_URL`, then localhost). |
+
+The secret must arrive as `Authorization: Bearer …`. Query-string secrets are rejected because URLs
+leak into logs, history and referrer headers.
+
+## AI
+
+| Variable | Purpose |
+| --- | --- |
+| `AI_ALLOW_PRIVATE_BASE_URL` | `1` permits private/link-local provider URLs in production. |
+| `OPENAI_API_KEY` | Fallback key when no encrypted key is saved in Settings → AI. |
+
+The AI provider URL, model and encrypted key are managed in **Settings → AI**, not by environment
+variables. `AI_PROVIDER`, `AI_MODEL`, `AI_API_KEY` and `AI_BASE_URL` remain in `.env.example` as
+documented deployment hints, but the application reads the saved settings and the fallback
+`OPENAI_API_KEY` only.
+
+## Backups
+
+| Variable | Purpose |
+| --- | --- |
+| `BACKUP_DIR` | Local backup destination. |
+| `BACKUP_REMOTE` | Optional mounted or synced off-server directory. |
+| `BACKUP_KEEP_DAILY` | Daily copies to keep (default 14). |
+| `BACKUP_KEEP_WEEKLY` | Weekly copies to keep (default 8). |
+| `BACKUP_KEEP_MONTHLY` | Monthly copies to keep (default 12). |
+
+## HTTPS
+
+| Variable | Purpose |
+| --- | --- |
+| `ACME_EMAIL` | Let's Encrypt contact address for Caddy. |
+
+## Changing values
+
+- **Branding and commercial rules** — change them in the app, not in `.env`. The database wins.
+- **Deployment values** — change `.env` and restart. Never bake secrets into the image.
+- **Seed values** — only affect a brand-new database; they do not overwrite saved settings.
+
+<Callout type="warn" title="Rotating AUTH_SECRET">
+  Rotating `AUTH_SECRET` invalidates sessions and makes previously encrypted settings secrets
+  undecryptable. Re-enter the AI key after rotation, or set a stable `SETTINGS_SECRET` before saving
+  encrypted settings.
+</Callout>

@@ -1,0 +1,1318 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #0f766e;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 44%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 63.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.9% 10%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 0 0% 63.9%;
+    --chart-1: 239 84% 67%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 330 81% 60%;
+    --chart-5: 188 94% 43%;
+    --status-paid: 142 71% 45%;
+    --status-part-paid: 239 84% 67%;
+    --status-unpaid: 38 92% 50%;
+    --status-cancelled: 330 81% 60%;
+
+    /* Legacy aliases used across the app (kept so every screen themes). */
+    --sand-50: #fafafa;
+    --sand-100: #f4f4f5;
+    --sand-200: #e5e5e5;
+    --sand-300: #d4d4d4;
+    --ink: #0a0a0a;
+    --ink-soft: #262626;
+    --ink-muted: #737373;
+    --ink-faint: #a3a3a3;
+    --moss-50: #f0fdf4;
+    --moss-100: #dcfce7;
+    --moss-200: #bbf7d0;
+    --moss-600: #15803d;
+    --moss-700: #166534;
+    --moss-800: #14532d;
+    --moss-900: #052e16;
+    --input-bg: transparent;
+    --radius-card: 0.75rem;
+    --table-row-hover: 240 4.8% 95.9%;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 7.8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 18.8%;
+    --ring: 0 0% 32%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --sidebar: 0 0% 6.7%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 0 0% 13.7%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 0 0% 32%;
+    --chart-1: 239 84% 72%;
+    --chart-2: 142 69% 58%;
+    --chart-3: 38 92% 55%;
+    --chart-4: 330 81% 66%;
+    --chart-5: 188 94% 48%;
+    --status-paid: 142 69% 58%;
+    --status-part-paid: 239 84% 72%;
+    --status-unpaid: 38 92% 55%;
+    --status-cancelled: 330 81% 66%;
+
+    --sand-50: #171717;
+    --sand-100: #1f1f1f;
+    --sand-200: #2a2a2a;
+    --sand-300: #3a3a3a;
+    --ink: #fafafa;
+    --ink-soft: #e5e5e5;
+    --ink-muted: #a3a3a3;
+    --ink-faint: #737373;
+    --moss-50: #052e16;
+    --moss-100: #14361f;
+    --moss-200: #166534;
+    --moss-600: #86efac;
+    --moss-700: #4ade80;
+    --moss-800: #bbf7d0;
+    --moss-900: #dcfce7;
+    --input-bg: transparent;
+    --table-row-hover: 0 0% 14.9%;
+  }
+
+  /* ---- Colour themes ----
+     Accent-only palettes inspired by the default brand colours. Surfaces, text and
+     layout stay exactly as they are; these tokens replace the neutral accents.
+     The classic theme mirrors the original tokens so the default look is
+     unchanged. Dark variants apply both on <html> and on preview wrappers. */
+  [data-palette="classic"] {
+    --background: 0 0% 100%;
+    --sidebar: 0 0% 98%;
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --muted: 0 0% 96.1%;
+    --secondary: 240 4.8% 95.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --ring: 0 0% 63.9%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-ring: 0 0% 63.9%;
+    --table-row-hover: 240 4.8% 95.9%;
+  }
+
+  [data-palette="classic"].dark,
+  .dark [data-palette="classic"] {
+    --background: 0 0% 3.9%;
+    --sidebar: 0 0% 6.7%;
+    --card: 0 0% 7.8%;
+    --popover: 0 0% 9%;
+    --muted: 0 0% 14.9%;
+    --secondary: 0 0% 14.9%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --ring: 0 0% 32%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 240 5.9% 10%;
+    --sidebar-accent: 0 0% 13.7%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-ring: 0 0% 32%;
+    --table-row-hover: 0 0% 14.9%;
+  }
+
+  [data-palette="royal"] {
+    --background: 224 100% 98.4%;
+    --sidebar: 224 55% 97%;
+    --card: 224 60% 99.4%;
+    --popover: 224 60% 99.7%;
+    --muted: 224 60% 96.8%;
+    --secondary: 224 50% 95.5%;
+    --primary: 224.4 64.3% 32.9%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 224 64% 45%;
+    --accent: 224 100% 96%;
+    --accent-foreground: 224 64% 28%;
+    --sidebar-primary: 224.4 64.3% 32.9%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 70% 94%;
+    --sidebar-accent-foreground: 224 64% 30%;
+    --sidebar-ring: 224 64% 45%;
+    --table-row-hover: 224 70% 93.5%;
+  }
+
+  [data-palette="royal"].dark,
+  .dark [data-palette="royal"] {
+    --background: 224 45% 6%;
+    --sidebar: 224 40% 7%;
+    --card: 224 40% 8.2%;
+    --popover: 224 35% 9.2%;
+    --muted: 224 35% 15%;
+    --secondary: 224 32% 14.8%;
+    --primary: 213 94% 68%;
+    --primary-foreground: 224 64% 12%;
+    --ring: 213 94% 68%;
+    --accent: 224 45% 18%;
+    --accent-foreground: 213 94% 88%;
+    --sidebar-primary: 213 94% 68%;
+    --sidebar-primary-foreground: 224 64% 12%;
+    --sidebar-accent: 224 40% 17%;
+    --sidebar-accent-foreground: 213 94% 90%;
+    --sidebar-ring: 213 94% 68%;
+    --table-row-hover: 224 45% 18%;
+  }
+
+  [data-palette="sunset"] {
+    --background: 20 100% 98%;
+    --sidebar: 20 55% 97%;
+    --card: 20 70% 99.4%;
+    --popover: 20 70% 99.7%;
+    --muted: 20 70% 96.8%;
+    --secondary: 20 65% 95.5%;
+    --primary: 15.5 87.6% 55.9%;
+    --primary-foreground: 224 65% 10%;
+    --ring: 15.5 87.6% 55.9%;
+    --accent: 20 100% 96%;
+    --accent-foreground: 16 80% 32%;
+    --sidebar-primary: 15.5 87.6% 55.9%;
+    --sidebar-primary-foreground: 224 65% 10%;
+    --sidebar-accent: 20 100% 94%;
+    --sidebar-accent-foreground: 16 80% 28%;
+    --sidebar-ring: 15.5 87.6% 55.9%;
+    --table-row-hover: 20 100% 94%;
+  }
+
+  [data-palette="sunset"].dark,
+  .dark [data-palette="sunset"] {
+    --background: 20 35% 6.5%;
+    --sidebar: 20 30% 7.5%;
+    --card: 20 28% 8.2%;
+    --popover: 20 25% 9.2%;
+    --muted: 20 28% 15%;
+    --secondary: 20 28% 15%;
+    --primary: 24 95% 66%;
+    --primary-foreground: 224 65% 10%;
+    --ring: 24 95% 66%;
+    --accent: 20 45% 18%;
+    --accent-foreground: 24 100% 88%;
+    --sidebar-primary: 24 95% 66%;
+    --sidebar-primary-foreground: 224 65% 10%;
+    --sidebar-accent: 20 40% 17%;
+    --sidebar-accent-foreground: 24 100% 90%;
+    --sidebar-ring: 24 95% 66%;
+    --table-row-hover: 20 40% 17%;
+  }
+
+  [data-palette="sky"] {
+    --background: 204 100% 98%;
+    --sidebar: 204 55% 97%;
+    --card: 204 80% 99.4%;
+    --popover: 204 80% 99.7%;
+    --muted: 204 70% 96.8%;
+    --secondary: 204 65% 95.5%;
+    --primary: 217 91% 51%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 15.5 87.6% 55.9%;
+    --accent: 204 94% 94%;
+    --accent-foreground: 201 90% 27%;
+    --sidebar-primary: 217 91% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 204 94% 91%;
+    --sidebar-accent-foreground: 201 90% 24%;
+    --sidebar-ring: 15.5 87.6% 55.9%;
+    --table-row-hover: 204 94% 91%;
+  }
+
+  [data-palette="sky"].dark,
+  .dark [data-palette="sky"] {
+    --background: 201 45% 6%;
+    --sidebar: 201 40% 7%;
+    --card: 201 35% 8.2%;
+    --popover: 201 32% 9.2%;
+    --muted: 201 32% 15%;
+    --secondary: 201 30% 15%;
+    --primary: 199 89% 68%;
+    --primary-foreground: 204 90% 10%;
+    --ring: 24 95% 66%;
+    --accent: 201 60% 17%;
+    --accent-foreground: 199 95% 88%;
+    --sidebar-primary: 199 89% 68%;
+    --sidebar-primary-foreground: 204 90% 10%;
+    --sidebar-accent: 201 55% 16%;
+    --sidebar-accent-foreground: 199 95% 90%;
+    --sidebar-ring: 24 95% 66%;
+    --table-row-hover: 201 55% 16%;
+  }
+
+  [data-palette="midnight"] {
+    --background: 224 60% 98%;
+    --sidebar: 224 50% 97%;
+    --card: 224 60% 99.2%;
+    --popover: 224 60% 99.6%;
+    --muted: 224 60% 96.8%;
+    --secondary: 224 50% 95.5%;
+    --primary: 224 64% 22%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 15.5 87.6% 55.9%;
+    --accent: 24 100% 96%;
+    --accent-foreground: 16 80% 30%;
+    --sidebar-primary: 224 64% 22%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 55% 93%;
+    --sidebar-accent-foreground: 224 64% 24%;
+    --sidebar-ring: 15.5 87.6% 55.9%;
+    --table-row-hover: 224 55% 93%;
+  }
+
+  [data-palette="midnight"].dark,
+  .dark [data-palette="midnight"] {
+    --background: 224 50% 5.5%;
+    --sidebar: 224 45% 6.8%;
+    --card: 224 38% 8%;
+    --popover: 224 35% 9%;
+    --muted: 224 32% 14.8%;
+    --secondary: 224 30% 14.8%;
+    --primary: 213 94% 78%;
+    --primary-foreground: 224 64% 12%;
+    --ring: 24 95% 66%;
+    --accent: 24 40% 18%;
+    --accent-foreground: 24 100% 88%;
+    --sidebar-primary: 213 94% 78%;
+    --sidebar-primary-foreground: 224 64% 12%;
+    --sidebar-accent: 224 35% 18%;
+    --sidebar-accent-foreground: 213 94% 92%;
+    --sidebar-ring: 24 95% 66%;
+    --table-row-hover: 224 35% 18%;
+  }
+
+  [data-palette="ember"] {
+    --background: 30 100% 98%;
+    --sidebar: 30 55% 97%;
+    --card: 30 70% 99.4%;
+    --popover: 30 70% 99.7%;
+    --muted: 30 70% 96.8%;
+    --secondary: 30 65% 95.5%;
+    --primary: 20.9 90.2% 38.8%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 224 64% 40%;
+    --accent: 33 100% 95%;
+    --accent-foreground: 21 80% 30%;
+    --sidebar-primary: 20.9 90.2% 38.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 33 100% 92%;
+    --sidebar-accent-foreground: 21 80% 28%;
+    --sidebar-ring: 224 64% 40%;
+    --table-row-hover: 33 100% 92%;
+  }
+
+  [data-palette="ember"].dark,
+  .dark [data-palette="ember"] {
+    --background: 24 30% 6%;
+    --sidebar: 24 30% 7%;
+    --card: 24 28% 8.2%;
+    --popover: 24 25% 9.2%;
+    --muted: 24 28% 15%;
+    --secondary: 24 26% 15%;
+    --primary: 27 96% 72%;
+    --primary-foreground: 20 80% 12%;
+    --ring: 213 94% 76%;
+    --accent: 24 45% 17%;
+    --accent-foreground: 27 96% 88%;
+    --sidebar-primary: 27 96% 72%;
+    --sidebar-primary-foreground: 20 80% 12%;
+    --sidebar-accent: 24 38% 16%;
+    --sidebar-accent-foreground: 27 96% 90%;
+    --sidebar-ring: 213 94% 76%;
+    --table-row-hover: 24 38% 16%;
+  }
+
+  /* Chart series follow the palette. Status dashes stay semantic so paid,
+     unpaid and cancelled keep their established colours. */
+  [data-palette="classic"] {
+    --chart-1: 239 84% 67%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 330 81% 60%;
+    --chart-5: 188 94% 43%;
+  }
+
+  [data-palette="classic"].dark,
+  .dark [data-palette="classic"] {
+    --chart-1: 239 84% 72%;
+    --chart-2: 142 69% 58%;
+    --chart-3: 38 92% 55%;
+    --chart-4: 330 81% 66%;
+    --chart-5: 188 94% 48%;
+  }
+
+  [data-palette="royal"] {
+    --chart-1: 224 64% 45%;
+    --chart-2: 16 88% 56%;
+    --chart-3: 190 75% 42%;
+    --chart-4: 265 65% 58%;
+    --chart-5: 340 70% 55%;
+  }
+
+  [data-palette="royal"].dark,
+  .dark [data-palette="royal"] {
+    --chart-1: 213 94% 68%;
+    --chart-2: 24 95% 66%;
+    --chart-3: 188 85% 60%;
+    --chart-4: 265 75% 72%;
+    --chart-5: 340 80% 68%;
+  }
+
+  [data-palette="sunset"] {
+    --chart-1: 16 88% 52%;
+    --chart-2: 224 64% 45%;
+    --chart-3: 40 90% 45%;
+    --chart-4: 186 70% 38%;
+    --chart-5: 330 75% 52%;
+  }
+
+  [data-palette="sunset"].dark,
+  .dark [data-palette="sunset"] {
+    --chart-1: 24 95% 66%;
+    --chart-2: 213 94% 68%;
+    --chart-3: 42 95% 60%;
+    --chart-4: 186 80% 55%;
+    --chart-5: 330 85% 68%;
+  }
+
+  [data-palette="sky"] {
+    --chart-1: 217 91% 51%;
+    --chart-2: 16 88% 56%;
+    --chart-3: 185 75% 40%;
+    --chart-4: 270 70% 60%;
+    --chart-5: 150 60% 40%;
+  }
+
+  [data-palette="sky"].dark,
+  .dark [data-palette="sky"] {
+    --chart-1: 199 89% 68%;
+    --chart-2: 24 95% 66%;
+    --chart-3: 185 85% 58%;
+    --chart-4: 270 80% 72%;
+    --chart-5: 150 65% 58%;
+  }
+
+  [data-palette="midnight"] {
+    --chart-1: 224 64% 40%;
+    --chart-2: 16 88% 56%;
+    --chart-3: 190 75% 38%;
+    --chart-4: 255 60% 55%;
+    --chart-5: 340 65% 52%;
+  }
+
+  [data-palette="midnight"].dark,
+  .dark [data-palette="midnight"] {
+    --chart-1: 213 94% 78%;
+    --chart-2: 24 95% 66%;
+    --chart-3: 188 85% 60%;
+    --chart-4: 255 75% 72%;
+    --chart-5: 340 80% 68%;
+  }
+
+  [data-palette="ember"] {
+    --chart-1: 21 90% 45%;
+    --chart-2: 224 64% 45%;
+    --chart-3: 38 90% 45%;
+    --chart-4: 188 65% 36%;
+    --chart-5: 348 70% 50%;
+  }
+
+  [data-palette="ember"].dark,
+  .dark [data-palette="ember"] {
+    --chart-1: 27 96% 72%;
+    --chart-2: 213 94% 68%;
+    --chart-3: 42 95% 62%;
+    --chart-4: 188 80% 56%;
+    --chart-5: 348 80% 66%;
+  }
+
+  /* ---- Complementary palettes ---- */
+  [data-palette="emerald"] {
+    --background: 175.3 34.8% 98.5%;
+    --sidebar: 175.3 27.1% 97%;
+    --card: 175.3 19.4% 99.4%;
+    --popover: 175.3 19.4% 99.7%;
+    --muted: 175.3 34.8% 96.8%;
+    --secondary: 175.3 31% 95.4%;
+    --primary: 175.3 77.4% 26.1%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 37.7 92.1% 50.2%;
+    --accent: 175.3 62% 96%;
+    --accent-foreground: 175.3 77.4% 28%;
+    --sidebar-primary: 175.3 77.4% 26.1%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 175.3 62% 93%;
+    --sidebar-accent-foreground: 175.3 77.4% 24%;
+    --sidebar-ring: 37.7 92.1% 50.2%;
+    --table-row-hover: 175.3 54.2% 94.5%;
+    --chart-1: 175.3 77.4% 38%;
+    --chart-2: 37.7 92.1% 50.2%;
+    --chart-3: 220.3 65% 48%;
+    --chart-4: 355.3 65% 52%;
+    --chart-5: 120.3 70% 50%;
+  }
+
+  [data-palette="emerald"].dark,
+  .dark [data-palette="emerald"] {
+    --background: 175.3 27.1% 6.5%;
+    --sidebar: 175.3 31% 7.2%;
+    --card: 175.3 19.4% 8.2%;
+    --popover: 175.3 19.4% 9.2%;
+    --muted: 175.3 34.8% 15%;
+    --secondary: 175.3 31% 14.8%;
+    --primary: 175.3 77.4% 65%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 37.7 92.1% 62%;
+    --accent: 175.3 62% 18%;
+    --accent-foreground: 175.3 77.4% 88%;
+    --sidebar-primary: 175.3 77.4% 65%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 175.3 62% 17%;
+    --sidebar-accent-foreground: 175.3 77.4% 90%;
+    --sidebar-ring: 37.7 92.1% 62%;
+    --table-row-hover: 175.3 34.8% 15%;
+    --chart-1: 175.3 77.4% 68%;
+    --chart-2: 37.7 92.1% 68%;
+    --chart-3: 220.3 65% 65%;
+    --chart-4: 355.3 65% 68%;
+    --chart-5: 120.3 70% 66%;
+  }
+
+  [data-palette="coral"] {
+    --background: 346.8 34.7% 98.5%;
+    --sidebar: 346.8 27% 97%;
+    --card: 346.8 19.3% 99.4%;
+    --popover: 346.8 19.3% 99.7%;
+    --muted: 346.8 34.7% 96.8%;
+    --secondary: 346.8 30.9% 95.4%;
+    --primary: 346.8 77.2% 49.8%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 198.6 88.7% 48.4%;
+    --accent: 346.8 61.7% 96%;
+    --accent-foreground: 346.8 77.2% 28%;
+    --sidebar-primary: 346.8 77.2% 49.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 346.8 61.7% 93%;
+    --sidebar-accent-foreground: 346.8 77.2% 24%;
+    --sidebar-ring: 198.6 88.7% 48.4%;
+    --table-row-hover: 346.8 54% 94.5%;
+    --chart-1: 346.8 77.2% 49.8%;
+    --chart-2: 198.6 88.7% 48.4%;
+    --chart-3: 31.8 65% 48%;
+    --chart-4: 166.8 65% 52%;
+    --chart-5: 291.8 70% 50%;
+  }
+
+  [data-palette="coral"].dark,
+  .dark [data-palette="coral"] {
+    --background: 346.8 27% 6.5%;
+    --sidebar: 346.8 30.9% 7.2%;
+    --card: 346.8 19.3% 8.2%;
+    --popover: 346.8 19.3% 9.2%;
+    --muted: 346.8 34.7% 15%;
+    --secondary: 346.8 30.9% 14.8%;
+    --primary: 346.8 77.2% 65%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 198.6 88.7% 62%;
+    --accent: 346.8 61.7% 18%;
+    --accent-foreground: 346.8 77.2% 88%;
+    --sidebar-primary: 346.8 77.2% 65%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 346.8 61.7% 17%;
+    --sidebar-accent-foreground: 346.8 77.2% 90%;
+    --sidebar-ring: 198.6 88.7% 62%;
+    --table-row-hover: 346.8 34.7% 15%;
+    --chart-1: 346.8 77.2% 68%;
+    --chart-2: 198.6 88.7% 68%;
+    --chart-3: 31.8 65% 65%;
+    --chart-4: 166.8 65% 68%;
+    --chart-5: 291.8 70% 66%;
+  }
+
+  [data-palette="gold"] {
+    --background: 32.1 42.6% 98.5%;
+    --sidebar: 32.1 33.1% 97%;
+    --card: 32.1 23.7% 99.4%;
+    --popover: 32.1 23.7% 99.7%;
+    --muted: 32.1 42.6% 96.8%;
+    --secondary: 32.1 37.8% 95.4%;
+    --primary: 32.1 94.6% 43.7%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 224.4 64.3% 32.9%;
+    --accent: 32.1 75.7% 96%;
+    --accent-foreground: 32.1 90% 28%;
+    --sidebar-primary: 32.1 94.6% 43.7%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 32.1 75.7% 93%;
+    --sidebar-accent-foreground: 32.1 90% 24%;
+    --sidebar-ring: 224.4 64.3% 32.9%;
+    --table-row-hover: 32.1 66.2% 94.5%;
+    --chart-1: 32.1 90% 43.7%;
+    --chart-2: 224.4 64.3% 42%;
+    --chart-3: 77.1 65% 48%;
+    --chart-4: 212.1 65% 52%;
+    --chart-5: 337.1 70% 50%;
+  }
+
+  [data-palette="gold"].dark,
+  .dark [data-palette="gold"] {
+    --background: 32.1 33.1% 6.5%;
+    --sidebar: 32.1 37.8% 7.2%;
+    --card: 32.1 23.7% 8.2%;
+    --popover: 32.1 23.7% 9.2%;
+    --muted: 32.1 42.6% 15%;
+    --secondary: 32.1 37.8% 14.8%;
+    --primary: 32.1 94.6% 65%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 224.4 64.3% 62%;
+    --accent: 32.1 75.7% 18%;
+    --accent-foreground: 32.1 90% 88%;
+    --sidebar-primary: 32.1 94.6% 65%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 32.1 75.7% 17%;
+    --sidebar-accent-foreground: 32.1 90% 90%;
+    --sidebar-ring: 224.4 64.3% 62%;
+    --table-row-hover: 32.1 42.6% 15%;
+    --chart-1: 32.1 90% 68%;
+    --chart-2: 224.4 64.3% 68%;
+    --chart-3: 77.1 65% 65%;
+    --chart-4: 212.1 65% 68%;
+    --chart-5: 337.1 70% 66%;
+  }
+
+  [data-palette="violet"] {
+    --background: 262.1 37.5% 98.5%;
+    --sidebar: 262.1 29.1% 97%;
+    --card: 262.1 20.8% 99.4%;
+    --popover: 262.1 20.8% 99.7%;
+    --muted: 262.1 37.5% 96.8%;
+    --secondary: 262.1 33.3% 95.4%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 83.7 80.5% 44.3%;
+    --accent: 262.1 66.6% 96%;
+    --accent-foreground: 262.1 83.3% 28%;
+    --sidebar-primary: 262.1 83.3% 57.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 262.1 66.6% 93%;
+    --sidebar-accent-foreground: 262.1 83.3% 24%;
+    --sidebar-ring: 83.7 80.5% 44.3%;
+    --table-row-hover: 262.1 58.3% 94.5%;
+    --chart-1: 262.1 83.3% 57.8%;
+    --chart-2: 83.7 80.5% 44.3%;
+    --chart-3: 307.1 65% 48%;
+    --chart-4: 82.1 65% 52%;
+    --chart-5: 207.1 70% 50%;
+  }
+
+  [data-palette="violet"].dark,
+  .dark [data-palette="violet"] {
+    --background: 262.1 29.1% 6.5%;
+    --sidebar: 262.1 33.3% 7.2%;
+    --card: 262.1 20.8% 8.2%;
+    --popover: 262.1 20.8% 9.2%;
+    --muted: 262.1 37.5% 15%;
+    --secondary: 262.1 33.3% 14.8%;
+    --primary: 262.1 83.3% 67%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 83.7 80.5% 62%;
+    --accent: 262.1 66.6% 18%;
+    --accent-foreground: 262.1 83.3% 88%;
+    --sidebar-primary: 262.1 83.3% 67%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 262.1 66.6% 17%;
+    --sidebar-accent-foreground: 262.1 83.3% 90%;
+    --sidebar-ring: 83.7 80.5% 62%;
+    --table-row-hover: 262.1 37.5% 15%;
+    --chart-1: 262.1 83.3% 68%;
+    --chart-2: 83.7 80.5% 68%;
+    --chart-3: 307.1 65% 65%;
+    --chart-4: 82.1 65% 68%;
+    --chart-5: 207.1 70% 66%;
+  }
+
+  [data-palette="rose"] {
+    --background: 345.3 37.2% 98.5%;
+    --sidebar: 345.3 28.9% 97%;
+    --card: 345.3 20.7% 99.4%;
+    --popover: 345.3 20.7% 99.7%;
+    --muted: 345.3 37.2% 96.8%;
+    --secondary: 345.3 33.1% 95.4%;
+    --primary: 345.3 82.7% 40.8%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 173.4 80.4% 40%;
+    --accent: 345.3 66.2% 96%;
+    --accent-foreground: 345.3 82.7% 28%;
+    --sidebar-primary: 345.3 82.7% 40.8%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 345.3 66.2% 93%;
+    --sidebar-accent-foreground: 345.3 82.7% 24%;
+    --sidebar-ring: 173.4 80.4% 40%;
+    --table-row-hover: 345.3 57.9% 94.5%;
+    --chart-1: 345.3 82.7% 40.8%;
+    --chart-2: 173.4 80.4% 42%;
+    --chart-3: 30.3 65% 48%;
+    --chart-4: 165.3 65% 52%;
+    --chart-5: 290.3 70% 50%;
+  }
+
+  [data-palette="rose"].dark,
+  .dark [data-palette="rose"] {
+    --background: 345.3 28.9% 6.5%;
+    --sidebar: 345.3 33.1% 7.2%;
+    --card: 345.3 20.7% 8.2%;
+    --popover: 345.3 20.7% 9.2%;
+    --muted: 345.3 37.2% 15%;
+    --secondary: 345.3 33.1% 14.8%;
+    --primary: 345.3 82.7% 65%;
+    --primary-foreground: 224 65% 12%;
+    --ring: 173.4 80.4% 62%;
+    --accent: 345.3 66.2% 18%;
+    --accent-foreground: 345.3 82.7% 88%;
+    --sidebar-primary: 345.3 82.7% 65%;
+    --sidebar-primary-foreground: 224 65% 12%;
+    --sidebar-accent: 345.3 66.2% 17%;
+    --sidebar-accent-foreground: 345.3 82.7% 90%;
+    --sidebar-ring: 173.4 80.4% 62%;
+    --table-row-hover: 345.3 37.2% 15%;
+    --chart-1: 345.3 82.7% 68%;
+    --chart-2: 173.4 80.4% 68%;
+    --chart-3: 30.3 65% 65%;
+    --chart-4: 165.3 65% 68%;
+    --chart-5: 290.3 70% 66%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  /* Grid children default to min-width:auto, so a long email, document number
+     or input can force a column wider than the viewport. Let tracks shrink and
+     let the element's own wrapping or overflow rules take over. */
+  .grid > * {
+    min-width: 0;
+  }
+
+  html {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background: hsl(217 91% 60% / 0.3);
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* ---- shadcn surfaces ---- */
+  .card {
+    /* Grid and flex children default to min-width:auto, which lets long
+       emails, document numbers or wide tables push a card past the viewport.
+       Cards keep their overflow scrollers inside the column instead. */
+    @apply min-w-0 rounded-xl border bg-card text-card-foreground shadow-sm;
+  }
+
+  .card-body {
+    @apply p-5 sm:p-6;
+  }
+
+  .panel-title {
+    @apply text-[15px] font-semibold leading-none tracking-tight text-foreground;
+  }
+
+  .panel-sub {
+    @apply mt-1.5 text-[13px] text-muted-foreground;
+  }
+
+  .section-label {
+    @apply text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  .pill-active {
+    @apply pill border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300;
+  }
+
+  .pill-muted {
+    @apply pill border-border bg-muted text-muted-foreground;
+  }
+
+  .label {
+    @apply mb-2 block text-[13px] font-medium leading-none text-foreground;
+  }
+
+  .input {
+    @apply flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground shadow-sm outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn {
+    @apply inline-flex h-9 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 text-[13px] font-medium shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50 [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  .btn-secondary {
+    @apply btn border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-danger {
+    @apply btn border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70;
+  }
+
+  .btn-ghost {
+    @apply btn text-muted-foreground shadow-none hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .icon-btn {
+    @apply inline-flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground transition-colors hover:bg-sidebar-primary/90;
+  }
+
+  .table {
+    @apply w-full caption-bottom text-left text-[13px];
+  }
+
+  .table th {
+    @apply h-9 border-b border-border px-3 text-left align-middle text-xs font-medium text-muted-foreground;
+  }
+
+  .table td {
+    @apply border-b border-border/70 px-3 py-3 align-middle text-foreground;
+  }
+
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .table tbody tr {
+    @apply transition-colors;
+  }
+
+  .table tbody tr:hover {
+    background-color: hsl(var(--table-row-hover) / 0.5);
+  }
+
+  .table tbody tr[data-selected] {
+    @apply bg-secondary/70;
+  }
+
+  .theme-row-hover {
+    background-color: hsl(var(--table-row-hover) / 0.5);
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-md border border-transparent px-2 py-0.5 text-[11px] font-medium;
+  }
+
+  /* ---- Sidebar (sidebar-07 language) ---- */
+  .sidebar-shell {
+    @apply sticky top-0 flex h-svh shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground;
+  }
+
+  .sidebar-link {
+    @apply flex h-8 w-full items-center gap-2.5 overflow-hidden rounded-md px-2 text-[13px] font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground;
+  }
+
+  .sidebar-link-active {
+    @apply bg-sidebar-accent font-medium text-sidebar-accent-foreground;
+  }
+
+  .sidebar-group-label {
+    @apply px-2 pb-1 pt-4 text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground/80;
+  }
+
+  /* ---- Print documents (unchanged semantics) ---- */
+  .doc-page {
+    @apply mx-auto bg-white text-slate-900 shadow-lg;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 14mm;
+    font-size: 12px;
+  }
+
+  /* ---- Modern document template ---- */
+  .doc-modern-header {
+    @apply mb-5 flex flex-wrap items-start justify-between gap-6 bg-brand-900 px-5 py-4 text-white;
+  }
+
+  .doc-modern-company {
+    @apply text-xl font-bold leading-tight text-white;
+  }
+
+  .doc-modern-contact {
+    @apply text-[10.5px] leading-snug text-white/75;
+  }
+
+  .doc-modern-title {
+    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-white/70;
+  }
+
+  .doc-modern-number {
+    @apply mt-0.5 text-base font-bold text-white;
+  }
+
+  .doc-modern-strip {
+    @apply mb-5 flex items-center justify-between bg-brand-900 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white;
+  }
+
+  .doc-modern .doc-label,
+  .doc-modern .doc-leg-title {
+    @apply text-brand-900;
+  }
+
+  .doc-modern .doc-section-title {
+    @apply border-l-[3px] border-brand-700 pl-2.5 text-brand-900;
+  }
+
+  .doc-modern .doc-table th {
+    @apply border-b border-brand-900 bg-brand-900 text-white;
+  }
+
+  .doc-modern .doc-table td {
+    @apply border-slate-200;
+  }
+
+  .doc-modern .doc-grand-total td {
+    @apply border-t-2 border-brand-900 bg-slate-100;
+  }
+
+  .doc-modern .doc-option-heading {
+    @apply border-brand-900;
+  }
+
+  /* ---- Minimal document template ---- */
+  .doc-minimal-header {
+    @apply mb-5 flex flex-wrap items-start justify-between gap-6 border-b border-slate-900 pb-3;
+  }
+
+  .doc-minimal-company {
+    @apply text-lg font-semibold uppercase tracking-[0.08em] text-slate-900;
+  }
+
+  .doc-minimal-contact {
+    @apply text-[10.5px] leading-snug text-slate-600;
+  }
+
+  .doc-minimal-title {
+    @apply text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-700;
+  }
+
+  .doc-minimal-number {
+    @apply mt-0.5 text-sm font-semibold text-slate-900;
+  }
+
+  .doc-minimal-rule {
+    @apply mb-4 border-t border-slate-900;
+  }
+
+  .doc-minimal .doc-label,
+  .doc-minimal .doc-leg-title {
+    @apply tracking-[0.14em] text-slate-900;
+  }
+
+  .doc-minimal .doc-section-title {
+    @apply border-b border-slate-900 pb-1 text-slate-900;
+  }
+
+  .doc-minimal .doc-table th {
+    @apply border-b border-slate-900 bg-white text-slate-900;
+  }
+
+  .doc-minimal .doc-table td {
+    @apply border-slate-200;
+  }
+
+  .doc-minimal .doc-grand-total td {
+    @apply border-t border-slate-900 bg-white;
+  }
+
+  .doc-minimal .doc-option-heading {
+    @apply border-slate-900;
+  }
+
+  /* ---- Executive document template ---- */
+  .doc-executive-header {
+    @apply mb-5 text-center;
+  }
+
+  .doc-executive-company {
+    @apply text-xl font-bold tracking-[0.06em] text-[#1d3557];
+  }
+
+  .doc-executive-contact {
+    @apply text-[10.5px] leading-snug text-slate-600;
+  }
+
+  .doc-executive-rule {
+    @apply my-2 border-y border-[#b48a2f] py-[2px];
+  }
+
+  .doc-executive-document {
+    @apply flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase tracking-[0.18em] text-[#1d3557];
+  }
+
+  .doc-executive-document span:last-child {
+    font-weight: 700;
+  }
+
+  .doc-executive .doc-label,
+  .doc-executive .doc-leg-title {
+    @apply text-[#1d3557];
+  }
+
+  .doc-executive .doc-section-title {
+    @apply border-b border-[#b48a2f] pb-1 text-[#1d3557];
+  }
+
+  .doc-executive .doc-table th {
+    @apply border-b-2 border-[#b48a2f] bg-[#1d3557] text-white;
+  }
+
+  .doc-executive .doc-table td {
+    @apply border-slate-200;
+  }
+
+  .doc-executive .doc-grand-total td {
+    @apply border-t-2 border-[#b48a2f] bg-[#f7f3e8];
+  }
+
+  .doc-executive .doc-option-heading {
+    @apply border-[#b48a2f];
+  }
+
+  /* ---- Vivid document template ---- */
+  .doc-vivid-header {
+    @apply mb-5 flex flex-wrap items-start justify-between gap-6 border-t-[6px] border-amber-400 bg-blue-700 px-5 py-4 text-white;
+  }
+
+  .doc-vivid-title {
+    @apply text-2xl font-black uppercase leading-none tracking-tight text-white;
+  }
+
+  .doc-vivid-number {
+    @apply mt-1 text-sm font-semibold text-blue-100;
+  }
+
+  .doc-vivid-company {
+    @apply text-sm font-bold text-white;
+  }
+
+  .doc-vivid-contact {
+    @apply text-[10px] leading-snug text-blue-100;
+  }
+
+  .doc-vivid-strip {
+    @apply mb-5 flex items-center justify-between border-t-[6px] border-amber-400 bg-blue-700 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white;
+  }
+
+  .doc-vivid .doc-label,
+  .doc-vivid .doc-leg-title {
+    @apply text-blue-700;
+  }
+
+  .doc-vivid .doc-section-title {
+    @apply border-l-4 border-amber-400 pl-2.5 text-blue-700;
+  }
+
+  .doc-vivid .doc-table th {
+    @apply border-b border-blue-700 bg-blue-700 text-white;
+  }
+
+  .doc-vivid .doc-table td {
+    @apply border-blue-100;
+  }
+
+  .doc-vivid .doc-grand-total td {
+    @apply border-t-2 border-amber-400 bg-blue-50;
+  }
+
+  .doc-vivid .doc-option-heading {
+    @apply border-blue-700;
+  }
+
+  /* ---- Template previews in Settings ---- */
+  .template-preview {
+    @apply relative flex h-[270px] justify-center overflow-hidden rounded-md border border-border bg-muted/40;
+  }
+
+  .template-preview-page {
+    width: 210mm;
+    flex: none;
+    transform: scale(0.23);
+    transform-origin: top center;
+  }
+
+  .template-preview-page .doc-page {
+    box-shadow: none;
+  }
+
+  .doc-header {
+    @apply flex items-start justify-between gap-6 border-b-2 border-brand-700 pb-4;
+  }
+
+  .doc-letterhead {
+    @apply mb-2 block w-full object-contain;
+    max-height: 42mm;
+    object-position: left top;
+  }
+
+  /* The TIN is deliberately outside the picture letterhead: an uploaded
+     letterhead normally carries branding only, not the tax number. */
+  .doc-tin {
+    @apply mb-4 text-right text-[10px] font-semibold tracking-wide text-slate-600;
+  }
+
+  .doc-body {
+    @apply pt-5;
+  }
+
+  .doc-footer {
+    @apply mt-8 flex items-center justify-between border-t border-slate-200 pt-2 text-[10px] text-slate-500;
+  }
+
+  .doc-section {
+    @apply mb-4;
+  }
+
+  .doc-label {
+    @apply mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-700;
+  }
+
+  .doc-section-title {
+    @apply text-sm font-bold uppercase tracking-wide text-slate-900;
+  }
+
+  .doc-table {
+    @apply mb-4 w-full border-collapse text-left text-[11px];
+  }
+
+  .doc-table th {
+    @apply border-b border-slate-300 bg-slate-50 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600;
+  }
+
+  .doc-table td {
+    @apply border-b border-slate-100 px-2 py-1.5 align-top;
+  }
+
+  .doc-layover td {
+    @apply bg-slate-50 text-[11px] italic text-slate-700;
+  }
+
+  .doc-grand-total td {
+    @apply border-t-2 border-slate-800 bg-slate-50 text-sm;
+  }
+
+  .doc-option {
+    @apply mb-6;
+  }
+
+  .doc-leg {
+    @apply mb-4;
+    break-inside: avoid;
+  }
+
+  .doc-leg-title {
+    @apply mb-1 text-[11px] font-bold uppercase tracking-[0.14em] text-brand-700;
+  }
+
+  .doc-option-heading {
+    @apply mb-2 flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 pb-1;
+  }
+
+  .doc-totals-wrap {
+    @apply break-inside-avoid;
+  }
+}
+
+/* Screen shows the real PDF pages; print falls back to the HTML template. */
+.print-only {
+  display: none;
+}
+
+/* On phones and small tablets the A4 preview reflows to the available width
+   instead of forcing a horizontal scrollbar. Print and PDF still use A4
+   (the PDF is rendered by pdf-lib, not from these screen styles). */
+@media screen and (max-width: 900px) {
+  .doc-page {
+    width: 100%;
+    min-height: 0;
+    padding: 8mm;
+  }
+
+  .doc-table {
+    font-size: 10px;
+  }
+
+  .doc-table th,
+  .doc-table td {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .doc-letterhead {
+    max-height: 30mm;
+  }
+
+  .doc-tin {
+    text-align: left;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .doc-page {
+    padding: 5mm;
+  }
+
+  .doc-table {
+    table-layout: fixed;
+    font-size: 9px;
+  }
+
+  /* Fixed Tailwind column widths (w-28/w-20) are right for A4 but squeeze
+     the route and times off a phone. Let the six flight columns share the
+     width evenly and wrap their labels instead. */
+  .doc-page .doc-table th {
+    width: auto !important;
+    overflow-wrap: anywhere;
+  }
+
+  .doc-table th,
+  .doc-table td {
+    padding: 2px;
+    overflow-wrap: anywhere;
+  }
+
+  .doc-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media print {
+  .no-print,
+  .screen-only {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  body {
+    background: white;
+  }
+  body > div {
+    display: block !important;
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+  main {
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .min-h-screen,
+  .min-h-svh,
+  .h-svh {
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  .overflow-x-auto {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  .doc-page {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 12mm;
+    box-shadow: none;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .doc-totals-wrap,
+  .doc-table tr {
+    break-inside: avoid;
+  }
+  .doc-option-heading,
+  .doc-leg-title {
+    break-after: avoid;
+  }
+  .doc-table thead {
+    display: table-header-group;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}

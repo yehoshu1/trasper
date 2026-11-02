@@ -1,0 +1,131 @@
+---
+title: Pricing rules
+description: The pure pricing engine, integer money, calculation order, rounding and the line-total invariant.
+---
+
+The pricing engine lives in `src/lib/pricing/`. It is pure: no database, no file system, no network
+and no implicit clock. Inputs go in; a result comes out. Every rule below has a table-driven test.
+
+## Money representation
+
+| Value | Type | Scale |
+| --- | --- | --- |
+| Money | `BigInt` minor units | Tambala, cents, pence and so on. |
+| Exchange rate | `BigInt` `rateMicro` | Rate × 1,000,000. |
+| Margin | `BigInt` basis points when percent | 10% = 1000 bps. |
+| VAT | `BigInt` basis points | 16.5% = 1650 bps. |
+| Optional percentage tax | `BigInt` basis points | 10% = 1000 bps. |
+| Fixed tax / lump margin | `BigInt` minor units | Quotation currency. |
+| Rounding unit | `BigInt` minor units | 100 = nearest whole currency unit. |
+
+Never use `number` for money. Decimal strings cross the server-action boundary and are converted to
+`BigInt` before calculation.
+
+## Calculation order
+
+```text
+1. convert each cost line at the option's stored rate
+2. sum to the cost total
+3. markup = cost total × margin %   OR   the lump-sum margin
+4. VAT = markup × VAT rate          (only when enabled)
+5. optional taxes on their configured base
+6. total = cost + markup + VAT + taxes
+7. round once to the rounding unit
+8. allocate the rounded total over the lines
+```
+
+VAT is **never** charged on cost or on other taxes. Optional taxes may be charged on cost, markup or
+subtotal, but never recursively on each other.
+
+## Conversion
+
+```text
+converted = roundHalfAwayFromZero(costMinor × rateMicro / 1,000,000)
+```
+
+The same cost currency as the quotation uses a rate of `1,000,000`. Conversion rounds once per line;
+the rounded converted cost is what appears on the document.
+
+## Worked example
+
+Inputs:
+
+- line 1 cost: 60,000 minor units;
+- line 2 cost: 40,000 minor units;
+- cost total: 100,000;
+- margin: 10% = 1,000 bps;
+- VAT: 16.5% = 1,650 bps, enabled;
+- rounding unit: 1.
+
+| Step | Amount |
+| --- | --- |
+| Cost total | 100,000 |
+| Markup | 10,000 |
+| VAT on markup | 1,650 |
+| Optional taxes | 0 |
+| Unrounded total | 111,650 |
+| Rounded total | 111,650 |
+
+Line allocation:
+
+| Line | Converted cost | Price share |
+| --- | --- | --- |
+| 1 | 60,000 | 66,990 |
+| 2 | 40,000 | 44,660 |
+| **Sum** | 100,000 | **111,650** |
+
+The last line absorbs the remainder, so the customer rows add up exactly.
+
+## Rounding example
+
+Same inputs but a rounding unit of 100:
+
+| Value | Amount |
+| --- | --- |
+| Unrounded total | 111,650 |
+| Rounded total | 111,700 |
+| Rounding adjustment | +50 |
+
+Line 1 is rounded to the unit: 67,000. Line 2 receives the remainder: 44,700. The sum is still exactly
+111,700.
+
+## Optional tax bases
+
+With cost 100,000, markup 10,000 and a 10% optional tax:
+
+| Base | Base amount | Tax | Total before rounding |
+| --- | --- | --- | --- |
+| Cost | 100,000 | 10,000 | 121,650 (with VAT) |
+| Markup | 10,000 | 1,000 | 112,650 |
+| Subtotal | 110,000 | 11,000 | 122,650 |
+
+A fixed tax adds its minor-unit amount directly.
+
+## Negative margins
+
+A percentage margin cannot be below -100%. A lump-sum margin can be negative. A negative margin
+reduces the total and produces negative markup/profit. Only an administrator may send such a
+quotation, with a reason. VAT is calculated on the (possibly negative) markup.
+
+## The invariants
+
+1. `sum(line.priceMinor) === totalMinor` for every pricing result.
+2. For every presentation layout, the sum of visible rows + service fee + tax rows equals the total.
+3. Rounding happens once, at the total.
+4. VAT never uses cost or taxes as its base.
+5. Optional taxes never use another tax as their base.
+6. The same inputs always produce the same result.
+7. No floating point is used for money, rates or percentages.
+
+Tests cover zero-cost lines, a zero cost total, one line, many lines, negative margins, fixed and
+percentage taxes, every tax base, a range of rounding units and every presentation mode.
+
+## Where it is used
+
+- `calculateOption` in `src/lib/pricing/index.ts` produces the internal result.
+- `presentPricing` in `src/lib/pricing/presentation.ts` lays it out for customers.
+- `computeOption` in `src/lib/quotation.ts` builds the engine input from the editor.
+- Frozen totals are copied into the quotation and pro forma snapshots.
+
+See [pricing presentation](/docs/user/administration/pricing-presentation) for the layouts and
+[documents](/docs/user/reference/documents) for snapshots.
