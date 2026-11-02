@@ -42,6 +42,7 @@ RUN apt-get update \
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
+    HOSTNAME="0.0.0.0" \
     DATABASE_URL="file:/data/app.db" \
     UPLOAD_DIR="/data/uploads" \
     BACKUP_DIR="/backups" \

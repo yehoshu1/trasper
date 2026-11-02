@@ -19,6 +19,9 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
+      # The standalone server otherwise binds to the Docker container
+      # hostname, and the 127.0.0.1 health check fails.
+      HOSTNAME: "0.0.0.0"
       DATABASE_URL: "file:/data/app.db"
       UPLOAD_DIR: "/data/uploads"
       BACKUP_DIR: "/backups"
