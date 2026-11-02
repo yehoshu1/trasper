@@ -1924,10 +1924,10 @@ export function QuotationEditor({
               <div className="card card-body space-y-2">
                 <h2 className="text-sm font-semibold text-foreground">Customer reply</h2>
                 <p className="text-xs text-muted-foreground">Accept exactly one option, or decline the quotation.</p>
-                {options.map((option) =>
+                {quotation.options.map((option) =>
                   option.id ? (
                     <Button variant="default"
-                      key={option.key}
+                      key={option.id}
                       type="button" className="w-full"
                       disabled={pending}
                       onClick={() => handleAccept(option.id!)}

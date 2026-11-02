@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { chooseOption } from "./select";
+import { chooseOption, fillDateTime } from "./select";
 
 /**
  * Permission checks: roles see only what they should, and a
@@ -51,8 +51,8 @@ test("a quotation draft carries internal pricing for an agent", async ({ browser
   await row.locator("input").nth(1).fill("875");
   await row.locator("input").nth(2).fill("BLZ");
   await row.locator("input").nth(3).fill("ADD");
-  await row.locator('input[type="datetime-local"]').nth(0).fill("2027-05-04T06:20");
-  await row.locator('input[type="datetime-local"]').nth(1).fill("2027-05-04T12:35");
+  await fillDateTime(page, row, 0, "2027-05-04T06:20");
+  await fillDateTime(page, row, 1, "2027-05-04T12:35");
   await page.click('button:has-text("+ Add passenger")');
   const fare = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
   await fare.locator('input[inputmode="decimal"]').first().fill("620.00");

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { inflateSync } from "node:zlib";
 
-import { chooseOption } from "./select";
+import { chooseOption, fillDateTime } from "./select";
 
 /**
  * Delivery flows:
@@ -79,8 +79,8 @@ async function addOnePricedSegment(page: import("@playwright/test").Page) {
   await segmentRow.locator("input").nth(1).fill("875");
   await segmentRow.locator("input").nth(2).fill("BLZ");
   await segmentRow.locator("input").nth(3).fill("ADD");
-  await segmentRow.locator('input[type="datetime-local"]').nth(0).fill("2027-05-10T06:20");
-  await segmentRow.locator('input[type="datetime-local"]').nth(1).fill("2027-05-10T12:35");
+  await fillDateTime(page, segmentRow, 0, "2027-05-10T06:20");
+  await fillDateTime(page, segmentRow, 1, "2027-05-10T12:35");
 
   await page.click('button:has-text("+ Add passenger")');
   const fareRow = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();

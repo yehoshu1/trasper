@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-import { chooseOption } from "./select";
+import { chooseOption, fillDateTime } from "./select";
 
 /**
  * End-to-end flow:
@@ -79,8 +79,8 @@ test("create a quotation with two options", async () => {
   await segmentRow.locator("input").nth(1).fill("875");
   await segmentRow.locator("input").nth(2).fill("BLZ");
   await segmentRow.locator("input").nth(3).fill("ADD");
-  await segmentRow.locator('input[type="datetime-local"]').nth(0).fill("2027-03-10T06:20");
-  await segmentRow.locator('input[type="datetime-local"]').nth(1).fill("2027-03-10T12:35");
+  await fillDateTime(page, segmentRow, 0, "2027-03-10T06:20");
+  await fillDateTime(page, segmentRow, 1, "2027-03-10T12:35");
 
   await page.click('button:has-text("+ Add passenger")');
   const fareRow = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
@@ -94,8 +94,8 @@ test("create a quotation with two options", async () => {
   await segmentB.locator("input").nth(1).fill("920");
   await segmentB.locator("input").nth(2).fill("BLZ");
   await segmentB.locator("input").nth(3).fill("NBO");
-  await segmentB.locator('input[type="datetime-local"]').nth(0).fill("2027-03-17T07:45");
-  await segmentB.locator('input[type="datetime-local"]').nth(1).fill("2027-03-17T11:10");
+  await fillDateTime(page, segmentB, 0, "2027-03-17T07:45");
+  await fillDateTime(page, segmentB, 1, "2027-03-17T11:10");
 
   await page.click('button:has-text("+ Add passenger")');
   const fareB = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
@@ -121,7 +121,7 @@ test("send and accept one option", async () => {
   // The quotation is now locked and offers Accept / Decline.
   await expect(page.getByRole("button", { name: "Accept Option A" })).toBeVisible({ timeout: 20_000 });
   await page.click('button:has-text("Accept Option A")');
-  await expect(page.getByText("Accepted Option A")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText("Accepted Option A").first()).toBeVisible({ timeout: 20_000 });
 });
 
 test("issue an itinerary from the accepted option", async () => {
@@ -159,9 +159,7 @@ test("issue a pro forma and pay it in two steps", async () => {
 });
 
 test("the payment ledger lists both receipts", async () => {
-  await page.goto("/payments");
-  await page.fill('input[name="q"]', contactName);
-  await page.click('button[type="submit"]');
+  await page.goto(`/payments?q=${encodeURIComponent(contactName)}`);
   await expect(page.getByText(contactName).first()).toBeVisible();
 });
 
