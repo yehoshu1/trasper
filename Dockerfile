@@ -1,5 +1,5 @@
 # ---- build stage ----------------------------------------------------------
-FROM node:24-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 
 WORKDIR /app
 
@@ -30,7 +30,7 @@ RUN npx prisma generate \
   && npm run build
 
 # ---- runtime stage --------------------------------------------------------
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 
 # PDFs are rendered with pdf-lib (pure JavaScript), so no browser is needed
 # in the image. tini reaps signals; ca-certificates for outbound TLS.
