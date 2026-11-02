@@ -34,6 +34,11 @@ services:
     volumes:
       - app-data:/data
       - app-backups:/backups
+    # Dokploy's Traefik lives on this external network. Without it the domain
+    # has no route and Traefik answers 404.
+    networks:
+      - default
+      - dokploy-network
     expose:
       - "3000"
     healthcheck:
@@ -64,3 +69,7 @@ services:
 volumes:
   app-data:
   app-backups:
+
+networks:
+  dokploy-network:
+    external: true
