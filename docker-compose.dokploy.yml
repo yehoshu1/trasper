@@ -1,0 +1,63 @@
+# Dokploy deployment.
+#
+# Dokploy runs Traefik and owns ports 80/443, so this stack deliberately has no
+# Caddy service. Point the domain at the `app` service, container port 3000,
+# in the Dokploy Domains tab.
+#
+# In Dokploy:
+#   Compose Path: ./docker-compose.dokploy.yml
+#   Environment:  the values from .env.example (APP_URL, AUTH_SECRET, ...)
+#
+# `env_file: .env` passes the seed, pricing and mail values through to the app;
+# the environment block below pins the paths and the public origin.
+name: trasper
+
+services:
+  app:
+    image: "${APP_IMAGE_REPO:?set APP_IMAGE_REPO in the Dokploy environment}:${APP_IMAGE_TAG:?set APP_IMAGE_TAG in the Dokploy environment}"
+    pull_policy: always
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: "file:/data/app.db"
+      UPLOAD_DIR: "/data/uploads"
+      BACKUP_DIR: "/backups"
+      # Explicit: Dokploy does not use the bundled Caddy, so APP_URL cannot be
+      # derived from APP_DOMAIN.
+      APP_URL: "${APP_URL:?set APP_URL to the public https origin}"
+      AUTH_SECRET: "${AUTH_SECRET:?set AUTH_SECRET in the Dokploy environment}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?set ADMIN_PASSWORD in the Dokploy environment}"
+      AI_ALLOW_PRIVATE_BASE_URL: "${AI_ALLOW_PRIVATE_BASE_URL:-0}"
+    volumes:
+      - app-data:/data
+      - app-backups:/backups
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Scheduled maintenance (quotation expiry, pro forma status rollups).
+  cron:
+    image: curlimages/curl:8.11.1
+    restart: unless-stopped
+    environment:
+      CRON_SECRET: "${CRON_SECRET:?set CRON_SECRET in the Dokploy environment}"
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          curl -fsS -H "Authorization: Bearer $$CRON_SECRET" http://app:3000/api/cron || true
+          sleep 900
+        done
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  app-data:
+  app-backups:
