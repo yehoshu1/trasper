@@ -270,6 +270,16 @@ directly. The production stack contains:
 
 State lives on volumes: the SQLite database and uploads (`app-data`), backups (`app-backups`), and Caddy's certificates. Replacing the container does not lose data.
 
+Airline logos are part of `uploads/`, not the image, so a fresh `app-data` volume has none. Fetch
+them once inside the running container, or upload them under **Settings → Airlines**:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app node scripts/fetch-airline-logos.mjs
+```
+
+On Dokploy, use `docker-compose.dokploy.yml` instead: Dokploy's Traefik owns ports 80/443, so that
+stack has no Caddy and joins the external `dokploy-network`.
+
 ### Image tags
 
 Every push to `main` and every `v*` tag builds the image and publishes it to GHCR, but only after the verification and end-to-end jobs pass:
@@ -345,6 +355,7 @@ npm run lint         # ESLint
 npm test             # compiled unit suite on Node's test runner
 npm run test:e2e     # Playwright browser suite
 npm run build        # production build
+npm run logos:fetch  # download airline logos into uploads/airlines/
 ```
 
 The unit suite covers pricing invariants, PNR parsing fixtures, time-zone and daylight-saving handling, money parsing, permissions, locking, numbering, aged debtors, saved views, revision diffs, document snapshots and AI-schema validation. Every domain rule in the implementation notes has a test.

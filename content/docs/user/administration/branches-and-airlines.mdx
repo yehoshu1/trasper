@@ -38,6 +38,17 @@ logos.
 - The logo path is copied into an issued document snapshot, so replacing a logo later does not alter
   old documents.
 
+A fresh deployment has **no logos**. `uploads/` is not committed and the image does not copy it, so
+the `app-data` volume starts empty. After the first start, either upload logos from
+**Settings → Airlines**, or fetch them inside the running container:
+
+```bash
+docker exec -it <app-container> node scripts/fetch-airline-logos.mjs
+```
+
+The script writes `/data/uploads/airlines/` and updates `Airline.logoPath`. It needs outbound HTTPS
+to Wikimedia and skips airlines that already have a logo; re-run it to fill any that failed.
+
 Airline and airport data is factual reference data. It is not affiliated with any carrier.
 
 ## Airports

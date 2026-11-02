@@ -100,6 +100,25 @@ The seed is idempotent: it uses `INSERT OR IGNORE` and existence checks, so a re
 duplicate reference data or reset the admin password. The development container also runs
 `prisma generate` so schema changes are picked up after a restart.
 
+### Airline logos
+
+Airline logos live under `uploads/`, on the `app-data` volume, not in the image. A new volume starts
+with none. Fetch them once inside the running app container:
+
+```bash
+docker compose -f docker-compose.prod.yml exec app node scripts/fetch-airline-logos.mjs
+```
+
+or upload them in **Settings → Airlines**. The script needs outbound HTTPS to Wikimedia and updates
+`Airline.logoPath` in the database. Issued documents keep the logo path frozen in their snapshot, so
+replacing a logo does not alter them.
+
+### Dokploy
+
+Dokploy already runs Traefik on ports 80/443. Use `docker-compose.dokploy.yml`, which runs only
+`app` and `cron` and joins the external `dokploy-network`. Attach the domain to the `app` service on
+container port 3000. Do not use the Caddy stack on Dokploy.
+
 ## Health checks
 
 The app image defines a health check against `/api/health`. Docker Compose uses it to gate the cron
