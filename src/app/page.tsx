@@ -13,7 +13,7 @@ import {
   FileCheck2,
   FileText,
   Fingerprint,
-  Github,
+  GitBranch,
   History,
   Layers3,
   LockKeyhole,
@@ -245,7 +245,7 @@ export default function LandingPage() {
               aria-label="View Trasper on GitHub"
               title="Trasper on GitHub"
             >
-              <Github aria-hidden />
+              <GitBranch aria-hidden />
             </a>
             <div className={styles.navTheme}>
               <ThemeToggle />
