@@ -141,6 +141,50 @@ export async function archiveContactAction(formData: FormData): Promise<void> {
   saved(`/customers/${before.id}`);
 }
 
+export async function deleteContactAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageContacts");
+  const id = z.string().min(1).max(64).safeParse(formData.get("id"));
+  if (!id.success) fail("/customers", "Invalid customer");
+  const before = await prisma.contact.findUnique({ where: { id: id.data } });
+  if (!before) fail("/customers", "Customer not found");
+
+  await prisma
+    .$transaction(async (tx) => {
+      // Re-check inside the transaction. A customer with a quotation or
+      // itinerary is history and must be archived, never hard-deleted.
+      const [quotations, itineraries] = await Promise.all([
+        tx.quotation.count({ where: { contactId: before.id } }),
+        tx.itinerary.count({ where: { contactId: before.id } }),
+      ]);
+      if (quotations > 0 || itineraries > 0) {
+        throw new Error("This customer has documents. Archive it instead.");
+      }
+      await tx.contact.update({
+        where: { id: before.id },
+        data: { passengers: { set: [] } },
+      });
+      await tx.contact.delete({ where: { id: before.id } });
+      await audit(tx, {
+        userId: user.id,
+        action: "deleteContact",
+        entity: "Contact",
+        entityId: before.id,
+        before: {
+          name: before.name,
+          type: before.type,
+          email: before.email,
+          phone: before.phone,
+          archivedAt: before.archivedAt,
+        },
+        after: null,
+      });
+    })
+    .catch((error) => fail(`/customers/${before.id}`, errorMessage(error)));
+
+  revalidatePath("/customers");
+  redirect("/customers?deleted=1");
+}
+
 export async function unarchiveContactAction(formData: FormData): Promise<void> {
   const user = await actionUser("manageContacts");
   const id = z.string().min(1).max(64).safeParse(formData.get("id"));
@@ -325,6 +369,44 @@ export async function archivePassengerAction(formData: FormData): Promise<void> 
     });
   });
   saved(`/passengers/${id.data}`);
+}
+
+export async function deletePassengerAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageContacts");
+  const id = z.string().min(1).max(64).safeParse(formData.get("id"));
+  if (!id.success) fail("/passengers", "Invalid passenger");
+  const before = await prisma.passenger.findUnique({ where: { id: id.data } });
+  if (!before) fail("/passengers", "Passenger not found");
+
+  await prisma
+    .$transaction(async (tx) => {
+      // A passenger priced on a quotation is part of that document's history.
+      const fares = await tx.fareLine.count({ where: { passengerId: before.id } });
+      if (fares > 0) throw new Error("This passenger is priced on a quotation. Archive it instead.");
+      await tx.passenger.update({
+        where: { id: before.id },
+        data: { contacts: { set: [] } },
+      });
+      await tx.passenger.delete({ where: { id: before.id } });
+      await audit(tx, {
+        userId: user.id,
+        action: "deletePassenger",
+        entity: "Passenger",
+        entityId: before.id,
+        before: {
+          title: before.title,
+          firstName: before.firstName,
+          lastName: before.lastName,
+          type: before.type,
+          archivedAt: before.archivedAt,
+        },
+        after: null,
+      });
+    })
+    .catch((error) => fail(`/passengers/${before.id}`, errorMessage(error)));
+
+  revalidatePath("/passengers");
+  redirect("/passengers?deleted=1");
 }
 
 export async function unarchivePassengerAction(formData: FormData): Promise<void> {

@@ -53,7 +53,9 @@ export async function bulkCancelQuotationsAction(
     let done = 0;
     let skipped = 0;
     for (const id of parsedIds.data) {
-      const result = await cancelQuotationCore(id, user.id, parsedReason.data);
+      const result = await cancelQuotationCore(id, user.id, parsedReason.data, {
+        allowAccepted: user.role === "admin",
+      });
       if (result.ok) done += 1;
       else skipped += 1;
     }

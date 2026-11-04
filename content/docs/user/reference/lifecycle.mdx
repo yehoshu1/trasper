@@ -7,12 +7,15 @@ description: Quotation and pro forma status transitions, locks, revisions and ca
 
 ```text
 draft ──send──► sent ──accept──► accepted
-  │               │
+  │               │               │
   │               ├──decline──► declined
   │               └──expire───► expired
+  │               └──cancel──► cancelled
   │
   ├──cancel──► cancelled
   └──delete──► (gone, draft only)
+
+accepted ──cancel (admin)──► cancelled
 
 any non-draft ──revise──► new draft revision
 old record ──► superseded
@@ -25,7 +28,7 @@ old record ──► superseded
 | `accepted` | No | Yes | Accept an option. |
 | `declined` | No | No | Decline action. |
 | `expired` | No | No | Validity passed; cron or page load. |
-| `cancelled` | No | No | Cancel action (draft or sent only). |
+| `cancelled` | No | No | Cancel action: draft/sent, or accepted by an admin. |
 | `superseded` | No | No | A revision was created. |
 
 ## Sending
@@ -62,9 +65,10 @@ on page loads. Expiry is idempotent and audited with a null user.
 
 ## Cancelling
 
-A draft or sent quotation can be cancelled with a reason. Accepted, declined, expired and superseded
-quotations cannot be cancelled. Cancellation does not delete the record and does not release its
-number.
+A draft or sent quotation can be cancelled with a reason. An accepted quotation can also be
+cancelled, but only by an administrator. Declined, expired and superseded quotations cannot be
+cancelled. Cancelling an accepted quotation does not cancel its issued itineraries or pro formas and
+does not reverse payments. Cancellation does not delete the record and does not release its number.
 
 ## Deleting
 

@@ -377,6 +377,8 @@ export function QuotationEditor({
 }: QuotationEditorProps) {
   const router = useRouter();
   const canEdit = canEditProp && !quotation.locked;
+  const canCancel =
+    canManage && (quotation.status === "sent" || (quotation.status === "accepted" && isAdmin));
   const [header, setHeader] = useState<HeaderDraft>({
     referenceNo: quotation.referenceNo,
     branch: quotation.branch,
@@ -982,7 +984,7 @@ export function QuotationEditor({
         </div>
       </div>
 
-      {canManage && quotation.status === "sent" ? (
+      {canCancel ? (
         <form
           action={cancelQuotationAction}
           className="no-print mb-4 flex flex-wrap items-center justify-end gap-2"
@@ -995,8 +997,12 @@ export function QuotationEditor({
             minLength={3}
           />
           <ConfirmButton variant="destructive" className="px-3 py-1.5 text-xs"
-            title="Cancel quotation?"
-            message="This quotation is awaiting a reply and has not been accepted. The customer will no longer be able to accept it."
+            title={quotation.status === "accepted" ? "Cancel accepted quotation?" : "Cancel quotation?"}
+            message={
+              quotation.status === "accepted"
+                ? "This quotation has already been accepted. Cancelling it does not cancel issued itineraries or pro formas, or reverse payments. Continue?"
+                : "This quotation is awaiting a reply and has not been accepted. The customer will no longer be able to accept it."
+            }
           >
             Cancel quotation
           </ConfirmButton>

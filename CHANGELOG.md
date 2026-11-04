@@ -49,6 +49,10 @@ All notable changes to this project are documented here. The format follows
   frozen into the snapshot. The default is the 24-hour wording.
 - Branded 404 and runtime error pages for the public app, staff workspace and
   documentation, with retry actions and an error reference when available.
+- Unreferenced customers and passengers can now be permanently deleted;
+  records referenced by documents remain archive-only.
+- Administrators can cancel an accepted quotation with a reason. Issued
+  documents and payments are left unchanged and must be handled separately.
 - A public product landing page at `/`, focused on the workflow, features and
   value proposition. The authenticated staff dashboard now lives at
   `/dashboard`, and all post-sign-in redirects, navigation links and end-to-end

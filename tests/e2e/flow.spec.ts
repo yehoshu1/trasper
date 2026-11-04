@@ -171,3 +171,42 @@ test("quotations download as a PDF", async () => {
   ]);
   expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
 });
+
+test("an admin cancels the accepted quotation", async () => {
+  await page.goto(quotationUrl);
+  await page.fill('input[name="reason"]', "Client cancelled after acceptance");
+  await page.click('button:has-text("Cancel quotation")');
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Cancel quotation" })
+    .click();
+  await expect(page.getByText(/Client cancelled after acceptance —/)).toBeVisible({
+    timeout: 20_000,
+  });
+});
+
+test("does not offer permanent delete for a customer with documents", async () => {
+  await page.goto(`/customers?q=${encodeURIComponent(contactName)}`);
+  await page.getByRole("link", { name: contactName }).first().click();
+  await expect(page.getByRole("button", { name: "Delete customer" })).toHaveCount(0);
+  await expect(
+    page.getByText("Customers with quotations or itineraries can only be archived."),
+  ).toBeVisible();
+});
+
+test("deletes an unreferenced customer", async () => {
+  const name = `E2E Delete ${stamp}`;
+  await page.goto("/customers/new");
+  await page.fill("#name", name);
+  await page.click('button[type="submit"]');
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+
+  await page.click('button:has-text("Delete customer")');
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete customer" })
+    .click();
+  await expect(page).toHaveURL(/\/customers\?deleted=1/);
+  await expect(page.getByText("Customer deleted.")).toBeVisible();
+  await expect(page.getByText(name)).toHaveCount(0);
+});

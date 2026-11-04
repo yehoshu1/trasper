@@ -630,7 +630,9 @@ export async function cancelQuotationAction(formData: FormData): Promise<void> {
   });
   if (!parsed.success) fail("/quotations", parsed.error.issues[0]?.message ?? "Check the form");
 
-  const result = await cancelQuotationCore(parsed.data.quotationId, user.id, parsed.data.reason);
+  const result = await cancelQuotationCore(parsed.data.quotationId, user.id, parsed.data.reason, {
+    allowAccepted: user.role === "admin",
+  });
   if (!result.ok) fail(`/quotations/${parsed.data.quotationId}`, result.error ?? "Could not cancel");
   revalidatePath(`/quotations/${parsed.data.quotationId}`);
   revalidatePath("/quotations");

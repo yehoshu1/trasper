@@ -10,7 +10,7 @@ import { Alert, Card, EmptyState, PageHeader, StatusBadge } from "@/components/u
 import { formatDate } from "@/lib/dates";
 import { requireCapableUser } from "@/server/auth";
 import { prisma } from "@/server/db";
-import { archivePassengerAction, unarchivePassengerAction } from "@/server/actions/contacts";
+import { archivePassengerAction, deletePassengerAction, unarchivePassengerAction } from "@/server/actions/contacts";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +41,7 @@ export default async function PassengerPage({
     },
   });
   if (!passenger) notFound();
+  const canDelete = passenger.fares.length === 0;
 
   const quotations = new Map<
     string,
@@ -118,19 +119,37 @@ export default async function PassengerPage({
       </div>
 
       <div className="mt-6">
-        {passenger.archivedAt ? (
-          <form action={unarchivePassengerAction}>
-            <Input type="hidden" name="id" value={passenger.id} />
-            <Button variant="secondary" type="submit">Unarchive passenger</Button>
-          </form>
-        ) : (
-          <form action={archivePassengerAction}>
-            <Input type="hidden" name="id" value={passenger.id} />
-            <ConfirmButton message="Archive this passenger? Existing documents stay unchanged.">
-              Archive passenger
-            </ConfirmButton>
-          </form>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {passenger.archivedAt ? (
+            <form action={unarchivePassengerAction}>
+              <Input type="hidden" name="id" value={passenger.id} />
+              <Button variant="secondary" type="submit">Unarchive passenger</Button>
+            </form>
+          ) : (
+            <form action={archivePassengerAction}>
+              <Input type="hidden" name="id" value={passenger.id} />
+              <ConfirmButton message="Archive this passenger? Existing documents stay unchanged.">
+                Archive passenger
+              </ConfirmButton>
+            </form>
+          )}
+          {canDelete ? (
+            <form action={deletePassengerAction}>
+              <Input type="hidden" name="id" value={passenger.id} />
+              <ConfirmButton
+                variant="destructive"
+                message="Permanently delete this passenger? Customer links are removed. This cannot be undone."
+              >
+                Delete passenger
+              </ConfirmButton>
+            </form>
+          ) : null}
+        </div>
+        {!canDelete ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Passengers priced on a quotation can only be archived.
+          </p>
+        ) : null}
       </div>
     </div>
   );

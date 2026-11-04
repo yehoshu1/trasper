@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function PassengersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; archived?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; archived?: string; saved?: string; deleted?: string; error?: string }>;
 }) {
   await requireCapableUser("manageContacts");
   const params = await searchParams;
@@ -52,6 +52,7 @@ export default async function PassengersPage({
 
       {params.error ? <Alert tone="error">{params.error}</Alert> : null}
       {params.saved ? <Alert tone="success">Saved.</Alert> : null}
+      {params.deleted ? <Alert tone="success">Passenger deleted.</Alert> : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0">

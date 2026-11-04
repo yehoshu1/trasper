@@ -17,6 +17,7 @@ import { prisma } from "@/server/db";
 import {
   archiveContactAction,
   createPassengerAction,
+  deleteContactAction,
   linkPassengerAction,
   unarchiveContactAction,
   unlinkPassengerAction,
@@ -80,6 +81,7 @@ export default async function CustomerPage({
     }, 0n);
 
   const canManage = hasCapability(user, "manageContacts");
+  const canDelete = contact.quotations.length === 0 && itineraries.length === 0;
 
   return (
     <div>
@@ -167,21 +169,39 @@ export default async function CustomerPage({
             </dl>
             {canManage ? (
               <div className="mt-4 border-t border-border/70 pt-3">
-                {contact.archivedAt ? (
-                  <form action={unarchiveContactAction}>
-                    <Input type="hidden" name="id" value={contact.id} />
-                    <Button variant="secondary" type="submit">
-                      Unarchive customer
-                    </Button>
-                  </form>
-                ) : (
-                  <form action={archiveContactAction}>
-                    <Input type="hidden" name="id" value={contact.id} />
-                    <ConfirmButton message="Archive this customer? Existing documents stay readable.">
-                      Archive customer
-                    </ConfirmButton>
-                  </form>
-                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  {contact.archivedAt ? (
+                    <form action={unarchiveContactAction}>
+                      <Input type="hidden" name="id" value={contact.id} />
+                      <Button variant="secondary" type="submit">
+                        Unarchive customer
+                      </Button>
+                    </form>
+                  ) : (
+                    <form action={archiveContactAction}>
+                      <Input type="hidden" name="id" value={contact.id} />
+                      <ConfirmButton message="Archive this customer? Existing documents stay readable.">
+                        Archive customer
+                      </ConfirmButton>
+                    </form>
+                  )}
+                  {canDelete ? (
+                    <form action={deleteContactAction}>
+                      <Input type="hidden" name="id" value={contact.id} />
+                      <ConfirmButton
+                        variant="destructive"
+                        message="Permanently delete this customer? Linked passengers are kept, but the customer link is removed. This cannot be undone."
+                      >
+                        Delete customer
+                      </ConfirmButton>
+                    </form>
+                  ) : null}
+                </div>
+                {!canDelete ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Customers with quotations or itineraries can only be archived.
+                  </p>
+                ) : null}
               </div>
             ) : null}
           </Card>

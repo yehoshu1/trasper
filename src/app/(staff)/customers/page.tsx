@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; archived?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{ q?: string; archived?: string; saved?: string; deleted?: string; error?: string }>;
 }) {
   const user = await requireCapableUser("viewContacts");
   const params = await searchParams;
@@ -76,6 +76,7 @@ export default async function CustomersPage({
 
       {params.error ? <Alert tone="error">{params.error}</Alert> : null}
       {params.saved ? <Alert tone="success">Saved.</Alert> : null}
+      {params.deleted ? <Alert tone="success">Customer deleted.</Alert> : null}
 
       <div className="mb-4 flex justify-end">
         <div className="flex gap-1 rounded-lg border border-border bg-card p-1 text-xs font-semibold">

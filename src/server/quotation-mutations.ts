@@ -131,16 +131,25 @@ export async function duplicateQuotationCore(
   return { id: created.id, number: created.number };
 }
 
-/** Cancel a draft or sent quotation. Caller must authorise first. */
+/** Cancel a draft, sent or (for an admin) accepted quotation. */
 export async function cancelQuotationCore(
   quotationId: string,
   userId: string,
   reason: string,
+  options: { allowAccepted?: boolean } = {},
 ): Promise<ActionResult> {
   const quotation = await prisma.quotation.findUnique({ where: { id: quotationId } });
   if (!quotation) return actionError("Quotation not found");
-  if (quotation.status !== "draft" && quotation.status !== "sent") {
-    return actionError("Only a quotation that has not been accepted can be cancelled");
+  const allowed =
+    quotation.status === "draft" ||
+    quotation.status === "sent" ||
+    (options.allowAccepted === true && quotation.status === "accepted");
+  if (!allowed) {
+    return actionError(
+      quotation.status === "accepted"
+        ? "Only an administrator can cancel an accepted quotation"
+        : "Only a draft, sent or accepted quotation can be cancelled",
+    );
   }
   await prisma.$transaction(async (tx) => {
     await tx.quotation.update({
@@ -157,7 +166,7 @@ export async function cancelQuotationCore(
       action: "cancelQuotation",
       entity: "Quotation",
       entityId: quotation.id,
-      before: { status: quotation.status },
+      before: { status: quotation.status, acceptedOptionId: quotation.acceptedOptionId },
       after: { status: "cancelled", reason },
     });
   });
