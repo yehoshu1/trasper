@@ -1410,10 +1410,8 @@ export function QuotationEditor({
                       </p>
                     ) : null}
 
-                    <details className="mt-3 rounded-lg border border-border bg-muted/40 p-3">
-                      <summary className="cursor-pointer text-xs font-semibold text-foreground">
-                        Already booked? Import the PNR or itinerary (optional)
-                      </summary>
+                    <div className="mt-3 rounded-lg border border-border bg-muted/40 p-3">
+                      <p className="text-xs font-semibold text-foreground">Import a PNR or itinerary</p>
                       <div className="mt-2 flex flex-wrap items-end gap-2">
                         <label className="flex-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           PNR or itinerary text
@@ -1434,8 +1432,8 @@ export function QuotationEditor({
                         </Button>
                       </div>
                       <p className="mt-1.5 text-[10px] text-muted-foreground">
-                        Only needed when a booking already exists. Itinerary lines become a clean PNR before the
-                        flights are applied.
+                        Paste booking-system output or one segment per line. Itinerary lines become a clean PNR
+                        before the flights are applied.
                       </p>
                       {pnrNotice.length > 0 ? (
                         <ul className="mt-2 space-y-0.5 text-xs text-foreground">
@@ -1444,7 +1442,7 @@ export function QuotationEditor({
                           ))}
                         </ul>
                       ) : null}
-                    </details>
+                    </div>
                   </div>
 
                   <div>

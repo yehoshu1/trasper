@@ -71,6 +71,8 @@ All notable changes to this project are documented here. The format follows
 - Existing installations are moved to the new 1-day validity default once; the
   value remains editable in Settings → Company.
 - New quotations and revisions now default to one day's validity.
+- The quotation editor's PNR import panel is visible by default; the
+  “Already booked?” prompt has been removed.
 - Default currency is USD and VAT is off until an administrator configures the
   agency's tax rules.
 
