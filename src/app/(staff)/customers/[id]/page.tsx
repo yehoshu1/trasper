@@ -74,7 +74,7 @@ export default async function CustomerPage({
   });
 
   const balance = proformas
-    .filter((proforma) => proforma.status !== "cancelled")
+    .filter((proforma) => proforma.status !== "cancelled" && proforma.status !== "draft")
     .reduce((sum, proforma) => {
       const paid = proforma.payments.reduce((total, payment) => total + payment.amountMinor, 0n);
       return sum + (proforma.totalMinor - paid);
@@ -344,8 +344,8 @@ export default async function CustomerPage({
               <Money amountMinor={balance} currency={settings.baseCurrency} className="[word-spacing:-0.15em]" />
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {proformas.filter((proforma) => proforma.status !== "cancelled").length} active pro
-              forma{proformas.filter((proforma) => proforma.status !== "cancelled").length === 1 ? "" : "s"}
+              {proformas.filter((proforma) => proforma.status !== "cancelled" && proforma.status !== "draft").length} active pro
+              forma{proformas.filter((proforma) => proforma.status !== "cancelled" && proforma.status !== "draft").length === 1 ? "" : "s"}
             </p>
           </Card>
 

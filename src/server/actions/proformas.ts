@@ -6,7 +6,12 @@ import { z } from "zod";
 
 import { chooseBankAccount } from "@/lib/bank-accounts";
 import { documentDateFromInput, todayInAppZone } from "@/lib/dates";
-import { cancelProformaSchema, createProformaSchema } from "@/lib/schemas";
+import { applyTravellerNames } from "@/lib/travellers";
+import {
+  cancelProformaSchema,
+  createProformaSchema,
+  updateProformaDraftSchema,
+} from "@/lib/schemas";
 import { audit } from "@/server/audit";
 import { actionUser } from "@/server/guard";
 import { prisma } from "@/server/db";
@@ -81,7 +86,7 @@ export async function createProformaAction(formData: FormData): Promise<void> {
           optionId: option.id,
           bankAccountId: bank?.id ?? quotation.bankAccountId,
           referenceNo: quotation.referenceNo,
-          status: "unpaid",
+          status: "draft",
           currency: quotation.currency,
           totalMinor: BigInt(snapshot.totalMinor),
           issueDate,
@@ -106,6 +111,7 @@ export async function createProformaAction(formData: FormData): Promise<void> {
         entityId: proforma.id,
         after: {
           number: proforma.number,
+          status: "draft",
           totalMinor: proforma.totalMinor,
           quotationId: quotation.id,
           optionId: option.id,
@@ -126,6 +132,183 @@ export async function createProformaAction(formData: FormData): Promise<void> {
     redirect(`/quotations?error=${encodeURIComponent(errorMessage(error))}`);
   }
   redirect(`/proformas/${proformaId}`);
+}
+
+type ProformaDraftInput = z.infer<typeof updateProformaDraftSchema>;
+
+/**
+ * Rebuild a draft pro forma from the accepted option, then apply the traveller
+ * names typed into the draft. No number is allocated here: the pro forma
+ * already has one from creation.
+ */
+async function prepareProformaDraft(proformaId: string, input: ProformaDraftInput) {
+  const proforma = await prisma.proforma.findUnique({ where: { id: proformaId } });
+  if (!proforma) throw new Error("Pro forma not found");
+  if (proforma.status !== "draft") {
+    throw new Error("Only a draft pro forma can be edited or sent");
+  }
+
+  const quotation = await loadQuotation(proforma.quotationId);
+  if (!quotation) throw new Error("Quotation not found");
+  const option = quotation.options.find((entry) => entry.id === proforma.optionId);
+  if (!option) throw new Error("The pro forma option could not be found");
+
+  const settings = await getSettings();
+  const bankAccounts = await prisma.bankAccount.findMany({ where: { isArchived: false } });
+  const bank = chooseBankAccount(bankAccounts, input.bankAccountId);
+  const dueDate = input.dueDate ? documentDateFromInput(input.dueDate) : undefined;
+  const terms = input.terms || settings.paymentTerms;
+  const snapshot = await buildProformaSnapshot(quotation, option, settings, {
+    number: proforma.number,
+    issueDate: proforma.issueDate,
+    dueDate,
+    terms,
+    showVat: input.showVat,
+    bankAccountId: bank?.id ?? proforma.bankAccountId,
+  });
+
+  const names = applyTravellerNames(snapshot.passengers, input.travellerNames);
+  if (names.error) throw new Error(names.error);
+  snapshot.passengers = names.passengers;
+
+  return {
+    proforma,
+    snapshot,
+    snapshotJson: JSON.stringify(snapshot),
+    dueDate: dueDate ?? null,
+    terms,
+    showVat: input.showVat,
+    bankAccountId: bank?.id ?? proforma.bankAccountId ?? null,
+  };
+}
+
+function proformaDraftData(prepared: Awaited<ReturnType<typeof prepareProformaDraft>>) {
+  return {
+    dueDate: prepared.dueDate,
+    terms: prepared.terms,
+    showVat: prepared.showVat,
+    bankAccountId: prepared.bankAccountId,
+    totalMinor: BigInt(prepared.snapshot.totalMinor),
+    snapshot: prepared.snapshotJson,
+  };
+}
+
+export async function updateProformaDraftAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageDocuments");
+  const parsed = updateProformaDraftSchema.safeParse({
+    proformaId: formData.get("proformaId"),
+    dueDate: formData.get("dueDate") ?? "",
+    terms: formData.get("terms") ?? "",
+    showVat: formData.get("showVat") === "on",
+    bankAccountId: formData.get("bankAccountId") || undefined,
+    travellerNames: formData.get("travellerNames") ?? "",
+  });
+  if (!parsed.success) {
+    redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the draft")}`);
+  }
+
+  let prepared: Awaited<ReturnType<typeof prepareProformaDraft>>;
+  try {
+    prepared = await prepareProformaDraft(parsed.data.proformaId, parsed.data);
+  } catch (error) {
+    redirect(`/proformas/${parsed.data.proformaId}?error=${encodeURIComponent(errorMessage(error))}`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.proformaLine.deleteMany({ where: { proformaId: prepared.proforma.id } });
+    await tx.proforma.update({
+      where: { id: prepared.proforma.id },
+      data: {
+        ...proformaDraftData(prepared),
+        lines: {
+          create: prepared.snapshot.lines.map((line, index) => ({
+            position: index,
+            description: line.description,
+            amountMinor: BigInt(line.amountMinor),
+          })),
+        },
+      },
+    });
+    await audit(tx, {
+      userId: user.id,
+      action: "updateProformaDraft",
+      entity: "Proforma",
+      entityId: prepared.proforma.id,
+      before: {
+        status: prepared.proforma.status,
+        totalMinor: prepared.proforma.totalMinor,
+        dueDate: prepared.proforma.dueDate?.toISOString() ?? null,
+      },
+      after: {
+        status: "draft",
+        totalMinor: prepared.snapshot.totalMinor,
+        dueDate: prepared.dueDate?.toISOString() ?? null,
+      },
+    });
+  });
+
+  revalidatePath(`/proformas/${prepared.proforma.id}`);
+  revalidatePath("/proformas");
+  redirect(`/proformas/${prepared.proforma.id}?saved=1`);
+}
+
+export async function sendProformaAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageDocuments");
+  const parsed = updateProformaDraftSchema.safeParse({
+    proformaId: formData.get("proformaId"),
+    dueDate: formData.get("dueDate") ?? "",
+    terms: formData.get("terms") ?? "",
+    showVat: formData.get("showVat") === "on",
+    bankAccountId: formData.get("bankAccountId") || undefined,
+    travellerNames: formData.get("travellerNames") ?? "",
+  });
+  if (!parsed.success) {
+    redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the draft")}`);
+  }
+
+  let prepared: Awaited<ReturnType<typeof prepareProformaDraft>>;
+  try {
+    prepared = await prepareProformaDraft(parsed.data.proformaId, parsed.data);
+  } catch (error) {
+    redirect(`/proformas/${parsed.data.proformaId}?error=${encodeURIComponent(errorMessage(error))}`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.proformaLine.deleteMany({ where: { proformaId: prepared.proforma.id } });
+    await tx.proforma.update({
+      where: { id: prepared.proforma.id },
+      data: {
+        ...proformaDraftData(prepared),
+        status: "unpaid",
+        sentAt: new Date(),
+        lockedAt: new Date(),
+        lines: {
+          create: prepared.snapshot.lines.map((line, index) => ({
+            position: index,
+            description: line.description,
+            amountMinor: BigInt(line.amountMinor),
+          })),
+        },
+      },
+    });
+    await audit(tx, {
+      userId: user.id,
+      action: "sendProforma",
+      entity: "Proforma",
+      entityId: prepared.proforma.id,
+      before: { status: "draft" },
+      after: {
+        status: "unpaid",
+        totalMinor: prepared.snapshot.totalMinor,
+        sentAt: new Date(),
+      },
+    });
+  });
+
+  revalidatePath(`/proformas/${prepared.proforma.id}`);
+  revalidatePath("/proformas");
+  revalidatePath("/dashboard");
+  redirect(`/proformas/${prepared.proforma.id}?saved=1`);
 }
 
 export async function archiveProformaAction(formData: FormData): Promise<void> {

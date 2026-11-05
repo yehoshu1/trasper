@@ -33,6 +33,9 @@ export async function recordPaymentAction(formData: FormData): Promise<void> {
 
   const proforma = await prisma.proforma.findUnique({ where: { id: parsed.data.proformaId } });
   if (!proforma) back("/proformas", "Pro forma not found");
+  if (proforma.status === "draft") {
+    back(`/proformas/${proforma.id}`, "Mark this pro forma as sent before recording payments");
+  }
   if (proforma.status === "cancelled") {
     back(`/proformas/${proforma.id}`, "A cancelled pro forma cannot take payments");
   }
@@ -67,6 +70,10 @@ export async function recordPaymentAction(formData: FormData): Promise<void> {
       const current = await tx.proforma.findUnique({ where: { id: proforma.id } });
       if (!current) {
         rejection.message = "Pro forma not found";
+        throw new Error("PAYMENT_REJECTED");
+      }
+      if (current.status === "draft") {
+        rejection.message = "Mark this pro forma as sent before recording payments";
         throw new Error("PAYMENT_REJECTED");
       }
       if (current.status === "cancelled") {

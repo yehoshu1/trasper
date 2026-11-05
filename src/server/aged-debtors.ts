@@ -20,7 +20,7 @@ export interface AgedDebtorView extends AgedDebtorReport {
 
 export async function loadAgedDebtors(asOf: Date = new Date()): Promise<AgedDebtorView> {
   const proformas = await prisma.proforma.findMany({
-    where: { status: { not: "cancelled" } },
+    where: { status: { notIn: ["cancelled", "draft"] } },
     include: {
       payments: { select: { amountMinor: true } },
       quotation: {

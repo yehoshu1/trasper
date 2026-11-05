@@ -10,7 +10,7 @@ import { getSettings } from "@/server/settings";
 
 export const dynamic = "force-dynamic";
 
-const STATUSES = ["unpaid", "part_paid", "paid", "cancelled"];
+const STATUSES = ["draft", "unpaid", "part_paid", "paid", "cancelled"];
 
 export default async function ProformasPage({
   searchParams,
@@ -45,7 +45,12 @@ export default async function ProformasPage({
   });
   const countFor = (value: string) => counts.find((entry) => entry.status === value)?._count._all ?? 0;
   const outstanding = proformas
-    .filter((proforma) => proforma.status !== "cancelled" && (!status || proforma.status === status))
+    .filter(
+      (proforma) =>
+        proforma.status !== "cancelled" &&
+        proforma.status !== "draft" &&
+        (!status || proforma.status === status),
+    )
     .reduce((sum, proforma) => {
       const paid = proforma.payments.reduce((total, payment) => total + payment.amountMinor, 0n);
       return sum + (proforma.totalMinor - paid);

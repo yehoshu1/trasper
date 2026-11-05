@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 
 import type { Contact, Airport } from "@/generated/prisma/client";
 import { chooseBankAccount } from "@/lib/bank-accounts";
+import { groupTravellerPassengers } from "@/lib/travellers";
 import { toDateInput } from "@/lib/dates";
 import type {
   DocumentBank,
@@ -105,7 +106,14 @@ export function passengersForOption(option: QuotationOptionWithRelations): Docum
   for (const fare of option.fares) {
     if (!fare.passengerId) {
       const type = fare.passengerType as DocumentPassenger["type"];
-      groups.set(type, Math.max(groups.get(type) ?? 0, Math.max(1, fare.quantity)));
+      const expanded = groupTravellerPassengers(type, fare.quantity, fare.travellerNames);
+      for (const passenger of expanded) {
+        if (passenger.unnamed) {
+          groups.set(type, (groups.get(type) ?? 0) + Math.max(1, passenger.quantity ?? 1));
+        } else {
+          passengers.push(passenger);
+        }
+      }
       continue;
     }
     if (seen.has(fare.passengerId) || !fare.passenger) continue;
@@ -125,13 +133,26 @@ export function passengersForOption(option: QuotationOptionWithRelations): Docum
 
 export function uniquePassengers(quotation: QuotationWithRelations): DocumentPassenger[] {
   const seen = new Set<string>();
+  const seenNames = new Set<string>();
   const passengers: DocumentPassenger[] = [];
   const groups = new Map<DocumentPassenger["type"], number>();
   for (const option of quotation.options) {
     for (const fare of option.fares) {
       if (!fare.passengerId) {
         const type = fare.passengerType as DocumentPassenger["type"];
-        groups.set(type, Math.max(groups.get(type) ?? 0, Math.max(1, fare.quantity)));
+        const expanded = groupTravellerPassengers(type, fare.quantity, fare.travellerNames);
+        for (const passenger of expanded) {
+          if (passenger.unnamed) {
+            // Options are alternatives, so the highest group count wins rather
+            // than adding the same travellers once per option.
+            groups.set(type, Math.max(groups.get(type) ?? 0, Math.max(1, passenger.quantity ?? 1)));
+          } else {
+            const key = `${type}|${passenger.firstName}|${passenger.lastName}`.toUpperCase();
+            if (seenNames.has(key)) continue;
+            seenNames.add(key);
+            passengers.push(passenger);
+          }
+        }
         continue;
       }
       if (seen.has(fare.passengerId) || !fare.passenger) continue;

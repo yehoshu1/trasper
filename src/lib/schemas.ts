@@ -133,6 +133,8 @@ export const fareInputSchema = z
       .regex(/^\d{1,3}$/, "Quantity must be a whole number")
       .optional(),
     costMinor: nonNegativeMoneyString,
+    /** Optional names for an unnamed group, one per line. */
+    travellerNames: optionalText(6000),
   })
   .superRefine((fare, ctx) => {
     if (fare.passengerId) {
@@ -145,11 +147,23 @@ export const fareInputSchema = z
       }
       return;
     }
-    if (fare.quantity !== undefined && Number(fare.quantity) < 1) {
+    const quantity = Number(fare.quantity ?? "1");
+    if (fare.quantity !== undefined && quantity < 1) {
       ctx.addIssue({
         code: "custom",
         message: "A traveller group needs at least one traveller",
         path: ["quantity"],
+      });
+    }
+    const names = (fare.travellerNames ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (names.length > quantity) {
+      ctx.addIssue({
+        code: "custom",
+        message: "More traveller names than the group quantity",
+        path: ["travellerNames"],
       });
     }
   });
@@ -300,6 +314,21 @@ export const createProformaSchema = z.object({
   terms: optionalText(1000),
   showVat: z.boolean().default(false),
   bankAccountId: optionalText(64),
+});
+
+export const updateProformaDraftSchema = z.object({
+  proformaId: z.string().min(1).max(64),
+  dueDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v === "" ? undefined : v)),
+  terms: optionalText(1000),
+  showVat: z.boolean().default(false),
+  bankAccountId: optionalText(64),
+  /** One name per traveller, in the order the quotation recorded them. */
+  travellerNames: z.string().max(6000).optional().default(""),
 });
 
 export const paymentTermOptions = [

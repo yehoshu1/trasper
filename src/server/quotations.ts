@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import { isExpired, appTimeZone, toDateInput } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { parseFrozenTotals } from "@/lib/documents";
+import { groupTravellerPassengers } from "@/lib/travellers";
 import {
   computeOption,
   presentOption,
@@ -165,6 +166,7 @@ export function toEditorOption(option: QuotationOptionWithRelations): EditorOpti
         fare.passengerType) as EditorOption["fares"][number]["passengerType"],
       quantity: fare.quantity.toString(),
       costMinor: fare.costMinor.toString(),
+      travellerNames: fare.travellerNames ?? undefined,
     })),
     services: option.services.map((service) => ({
       id: service.id,
@@ -306,14 +308,31 @@ export async function freezeOptions(
     }
     for (const fare of option.fares) {
       if (fare.passengerId) continue;
-      passengers.set(`group-${fare.passengerType}`, {
-        id: `group-${fare.passengerType}`,
-        firstName: "",
-        lastName: "",
-        type: fare.passengerType,
-        quantity: fare.quantity,
-        unnamed: true,
-      });
+      const expanded = groupTravellerPassengers(
+        fare.passengerType as "adult" | "child" | "infant",
+        fare.quantity,
+        fare.travellerNames,
+      );
+      for (const passenger of expanded) {
+        if (passenger.unnamed) {
+          passengers.set(`group-${fare.passengerType}`, {
+            id: `group-${fare.passengerType}`,
+            firstName: "",
+            lastName: "",
+            type: fare.passengerType,
+            quantity: passenger.quantity,
+            unnamed: true,
+          });
+        } else {
+          const id = `name-${fare.passengerType}-${passenger.firstName}-${passenger.lastName}`;
+          passengers.set(id, {
+            id,
+            firstName: passenger.firstName,
+            lastName: passenger.lastName,
+            type: fare.passengerType,
+          });
+        }
+      }
     }
 
     const frozen = {

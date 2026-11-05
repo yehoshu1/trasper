@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,13 +26,16 @@ import { applyPaymentsToSchedule } from "@/lib/aged-debtors";
 import { hasCapability } from "@/lib/permissions";
 import { minorToDecimalString } from "@/lib/money";
 import { parseSnapshot, type ProformaSnapshot } from "@/lib/documents";
+import { travellerNamesText, travellerSlots } from "@/lib/travellers";
 import { ProformaDocument } from "@/documents/proforma-document";
 import { requireCapableUser } from "@/server/auth";
 import { prisma } from "@/server/db";
 import {
   archiveProformaAction,
   cancelProformaAction,
+  sendProformaAction,
   unarchiveProformaAction,
+  updateProformaDraftAction,
 } from "@/server/actions/proformas";
 import { recordPaymentAction, reversePaymentAction } from "@/server/actions/payments";
 import { removeInstalmentsAction, saveInstalmentsAction } from "@/server/actions/instalments";
@@ -65,11 +69,19 @@ export default async function ProformaPage({
   });
   if (!proforma) notFound();
 
-  const instalments = await prisma.instalment.findMany({
-    where: { proformaId: proforma.id },
-    orderBy: { position: "asc" },
-  });
+  const [instalments, banks] = await Promise.all([
+    prisma.instalment.findMany({
+      where: { proformaId: proforma.id },
+      orderBy: { position: "asc" },
+    }),
+    prisma.bankAccount.findMany({
+      where: { isArchived: false },
+      orderBy: [{ sortOrder: "asc" }, { label: "asc" }],
+      select: { id: true, label: true, currency: true },
+    }),
+  ]);
   const snapshot = parseSnapshot<ProformaSnapshot>(proforma.snapshot);
+  const isDraft = proforma.status === "draft";
   const paid = proforma.payments.reduce((sum, payment) => sum + payment.amountMinor, 0n);
   const balance = proforma.totalMinor - paid;
   const schedule = applyPaymentsToSchedule(
@@ -83,7 +95,11 @@ export default async function ProformaPage({
     new Date(),
   );
   const canManage = hasCapability(user, "manageDocuments");
-  const canRecord = hasCapability(user, "recordPayments") && proforma.status !== "cancelled" && balance > 0n;
+  const canRecord =
+    hasCapability(user, "recordPayments") &&
+    proforma.status !== "cancelled" &&
+    !isDraft &&
+    balance > 0n;
   const canCancel = canManage && proforma.status !== "cancelled";
   const canReverse = hasCapability(user, "recordPayments");
   const reversedIds = new Set(
@@ -141,6 +157,18 @@ export default async function ProformaPage({
 
       {query.error ? <Alert tone="error">{query.error}</Alert> : null}
       {query.saved ? <Alert tone="success">Saved.</Alert> : null}
+      {isDraft ? (
+        <Alert tone="info" title="Draft pro forma">
+          This pro forma has not been sent. Edit the traveller names, dates and payment terms, then
+          choose <strong>Mark sent</strong>. The number is already reserved and is never reused.
+        </Alert>
+      ) : null}
+      {proforma.sentAt && !isDraft ? (
+        <Alert tone="success" title="Sent">
+          Sent {formatDateTime(proforma.sentAt)}. The document is now locked; later changes to the
+          quotation, settings or reference data do not alter it.
+        </Alert>
+      ) : null}
       {proforma.archivedAt ? (
         <Alert tone="info" title="Archived">
           Archived {formatDateTime(proforma.archivedAt)}. This pro forma is hidden from the active
@@ -204,6 +232,84 @@ export default async function ProformaPage({
         </div>
 
         <aside className="no-print min-w-0 space-y-5">
+          {isDraft && canManage ? (
+            <Card
+              title="Draft details"
+              subtitle="Traveller names and payment details are editable until the document is sent."
+            >
+              {snapshot ? (
+                <form action={updateProformaDraftAction} className="space-y-3">
+                  <Input type="hidden" name="proformaId" value={proforma.id} />
+                  <Field
+                    label="Traveller names"
+                    htmlFor="travellerNames"
+                    hint={`One name per line, in traveller order. ${travellerSlots(snapshot.passengers).length} traveller${travellerSlots(snapshot.passengers).length === 1 ? "" : "s"} on this document; blank lines stay "names to be advised".`}
+                  >
+                    <Textarea
+                      id="travellerNames"
+                      name="travellerNames"
+                      rows={Math.max(4, travellerSlots(snapshot.passengers).length)}
+                      className="font-mono text-xs"
+                      defaultValue={travellerNamesText(snapshot.passengers)}
+                      placeholder="One traveller name per line"
+                    />
+                  </Field>
+                  <Field label="Due date" htmlFor="dueDate">
+                    <DatePicker
+                      id="dueDate"
+                      name="dueDate"
+                      defaultValue={proforma.dueDate ? proforma.dueDate.toISOString().slice(0, 10) : ""}
+                    />
+                  </Field>
+                  <Field label="Payment terms" htmlFor="terms">
+                    <Textarea
+                      id="terms"
+                      name="terms"
+                      rows={3}
+                      defaultValue={proforma.terms ?? ""}
+                    />
+                  </Field>
+                  <Field label="Payment details" htmlFor="bankAccountId">
+                    <SelectField
+                      id="bankAccountId"
+                      name="bankAccountId"
+                      defaultValue={proforma.bankAccountId ?? ""}
+                      placeholder="Use the default account"
+                      options={[
+                        { value: "", label: "Use the default account" },
+                        ...banks.map((bank) => ({
+                          value: bank.id,
+                          label: `${bank.label} · ${bank.currency}`,
+                        })),
+                      ]}
+                    />
+                  </Field>
+                  <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Checkbox name="showVat" defaultChecked={proforma.showVat} />
+                    Show VAT explicitly even when the quotation layout hides it
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="secondary" type="submit">
+                      Save draft
+                    </Button>
+                    <ConfirmButton
+                      variant="default"
+                      formAction={sendProformaAction}
+                      title="Mark this pro forma as sent?"
+                      message="This locks the document, freezes its snapshot and makes it available for payments. It cannot be edited afterwards."
+                    >
+                      Mark sent
+                    </ConfirmButton>
+                  </div>
+                </form>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  The snapshot could not be read, so the draft cannot be edited here.
+                </p>
+              )}
+            </Card>
+          ) : null}
+
           {canRecord ? (
             <Card title="Record a payment" subtitle={`Balance ${minorToDecimalString(balance, proforma.currency)} ${proforma.currency}`}>
               <form action={recordPaymentAction} className="space-y-3">
@@ -285,6 +391,7 @@ export default async function ProformaPage({
             </Card>
           ) : null}
 
+          {!isDraft ? (
           <Card
             title="Payment schedule"
             subtitle="A target only. Status and balances still come from the payments."
@@ -339,6 +446,7 @@ export default async function ProformaPage({
               <p className="text-sm text-muted-foreground">No schedule set.</p>
             )}
           </Card>
+          ) : null}
 
           {canCancel ? (
             <Card title="Cancel pro forma">

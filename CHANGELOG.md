@@ -64,6 +64,14 @@ All notable changes to this project are documented here. The format follows
   already linked to the customer. Linked passengers are offered first and unlinked ones are marked.
 - Added **Dodoma International Airport (DOD)** to the airport seed data and as a reference-data
   migration so existing databases receive it on upgrade.
+- Traveller groups now store a **cost per traveller** and multiply it by the quantity, so the
+  markup also scales with the group. Existing group totals are converted by the migration without
+  changing their computed total.
+- Traveller names can be typed directly into a quotation group, one per line, and flow onto the
+  documents. Remaining blank slots stay "names to be advised".
+- Pro forma invoices are now created as **drafts**, with editable traveller names, due date, terms,
+  bank account and VAT display. **Mark sent** locks the snapshot and moves the document into the
+  existing payment-derived lifecycle.
 - A public product landing page at `/`, focused on the workflow, features and
   value proposition. The authenticated staff dashboard now lives at
   `/dashboard`, and all post-sign-in redirects, navigation links and end-to-end

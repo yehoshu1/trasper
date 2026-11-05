@@ -128,12 +128,13 @@ export default async function DashboardPage() {
   }
 
   const statusMeta: Record<string, string> = {
+    draft: "Draft",
     unpaid: "Unpaid",
     part_paid: "Part-paid",
     paid: "Paid",
     cancelled: "Cancelled",
   };
-  const mixOrder = ["paid", "part_paid", "unpaid", "cancelled"];
+  const mixOrder = ["paid", "part_paid", "unpaid", "draft", "cancelled"];
   const mix = mixOrder
     .map((status) => {
       const group = proformaGroups.find((entry) => entry.status === status);

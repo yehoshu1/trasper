@@ -99,6 +99,10 @@ function optionCreateData(option: EditorOption, position: number) {
           ? 1
           : Math.max(1, Number.parseInt(fare.quantity || "1", 10) || 1),
         costMinor: BigInt(fare.costMinor),
+        travellerNames:
+          !fare.passengerId && fare.travellerNames?.trim()
+            ? fare.travellerNames.trim()
+            : null,
       })),
     },
     services: {

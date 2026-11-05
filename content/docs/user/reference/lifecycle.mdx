@@ -98,13 +98,15 @@ not supersede the source. Use it for a similar trip, not for a correction.
 
 | State | Meaning | Can pay? | Can reverse? | Can cancel? |
 | --- | --- | --- | --- | --- |
-| `unpaid` | No net payments | Yes | Yes (if a positive payment exists) | Yes, if net payments are zero |
+| `draft` | Created but not sent; names and terms editable | No | No | Yes |
+| `unpaid` | Sent, no net payments | Yes | Yes (if a positive payment exists) | Yes, if net payments are zero |
 | `part_paid` | Some payment below total | Yes, up to balance | Yes | Only after reversing to zero |
 | `paid` | Payments at or above total | No (would overpay) | Yes | Only after reversing to zero |
 | `cancelled` | Cancelled | No | No | No |
 
-Status is derived from the sum of payments, including negative reversals. It is recalculated on
-every payment action and by the scheduled rollup.
+A draft is the only status not derived from payments. **Mark sent** freezes its snapshot and sets it
+to `unpaid`. From then on status is derived from the sum of payments, including negative reversals,
+and is recalculated on every payment action and by the scheduled rollup.
 
 Cancelling a pro forma requires a zero net balance. Reverse the payments first. A cancelled pro forma
 keeps its number and snapshot.
@@ -116,8 +118,8 @@ totals, payments or document numbers.
 
 - A quotation can be archived once it is `accepted`, `declined`, `expired`, `cancelled` or
   `superseded`. Drafts are deleted instead, and sent quotations must be cancelled first.
-- A pro forma can be archived once it is `paid` or `cancelled`. Unpaid and part-paid pro formas stay
-  in the active list so the balance can still be followed.
+- A pro forma can be archived once it is `paid` or `cancelled`. Draft, unpaid and part-paid pro
+  formas stay in the active list.
 - Archived records disappear from the active quotation and pro forma lists and are reachable through
   the **Archived** view, direct links, reports and the audit log.
 - Restoring clears the flag and returns the record to the active list. Both operations are audited.

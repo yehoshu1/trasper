@@ -21,7 +21,7 @@ export interface JobRunResult {
 
 export async function rollupProformaStatuses(): Promise<{ checked: number; changed: number }> {
   const proformas = await prisma.proforma.findMany({
-    where: { status: { not: "cancelled" } },
+    where: { status: { notIn: ["cancelled", "draft"] } },
     select: {
       id: true,
       status: true,

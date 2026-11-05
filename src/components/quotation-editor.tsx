@@ -51,6 +51,7 @@ import {
   type TaxDisplayMode,
 } from "@/lib/pricing/presentation";
 import type { PassengerType } from "@/lib/pnr";
+import { enteredTravellerNames } from "@/lib/travellers";
 import { ConfirmButton } from "@/components/confirm-button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { StatusBadge } from "@/components/ui";
@@ -121,6 +122,8 @@ interface DraftFare {
   /** Travellers covered by an unnamed fare line. */
   quantity: string;
   cost: string;
+  /** Optional names for an unnamed group, one per line. */
+  travellerNames: string;
 }
 
 interface DraftService {
@@ -266,6 +269,7 @@ function fromEditorOption(option: EditorOption, currency: string, index: number)
       passengerType: fare.passengerType,
       quantity: fare.quantity ?? "1",
       cost: minorToDecimalString(BigInt(fare.costMinor), option.costCurrency),
+      travellerNames: fare.travellerNames ?? "",
     })),
     services: option.services.map((service, serviceIndex) => ({
       key: service.id ?? `service-${index}-${serviceIndex}`,
@@ -320,6 +324,7 @@ function toEditorOption(draft: DraftOption, quotationCurrency: string): EditorOp
       passengerType: fare.passengerType,
       quantity: fare.quantity || "1",
       costMinor: moneySafe(fare.cost, draft.costCurrency),
+      travellerNames: fare.passengerId ? undefined : fare.travellerNames,
     })),
     services: draft.services.map((service) => ({
       category: service.category,
@@ -671,6 +676,7 @@ export function QuotationEditor({
           passengerType: choice.type,
           quantity: "1",
           cost: "",
+          travellerNames: "",
         },
       ],
     });
@@ -698,6 +704,7 @@ export function QuotationEditor({
           passengerType: type,
           quantity: "1",
           cost: "",
+          travellerNames: "",
         },
       ],
     });
@@ -776,6 +783,7 @@ export function QuotationEditor({
           passengerType: match.type,
           quantity: "1",
           cost: "",
+          travellerNames: "",
         });
       } else {
         unmatched.push(`${parsedPassenger.firstName} ${parsedPassenger.lastName}`);
@@ -1493,8 +1501,9 @@ export function QuotationEditor({
                       ) : null}
                     </div>
                     <p className="mb-2 text-[10px] text-muted-foreground">
-                      A named fare is that passenger's cost. A traveller group line is the total cost
-                      for the group.
+                      A named fare is that passenger's cost. A traveller group line stores the cost per
+                      traveller; the group total is the unit cost × quantity. Add names to a group when
+                      they become available.
                     </p>
                     {active.fares.length === 0 ? (
                       <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">
@@ -1509,7 +1518,7 @@ export function QuotationEditor({
                               <th>Passenger</th>
                               <th>Type</th>
                               <th className="w-20">Qty</th>
-                              <th className="w-40">Cost ({active.costCurrency})</th>
+                              <th className="w-44">Unit cost ({active.costCurrency})</th>
                               <th />
                             </tr>
                           </thead>
@@ -1536,9 +1545,26 @@ export function QuotationEditor({
                                       }))}
                                     />
                                   ) : (
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                      Names to be advised
-                                    </span>
+                                    <div className="min-w-[260px] space-y-1">
+                                      <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        Names to be advised
+                                        {enteredTravellerNames(fare.travellerNames).length > 0
+                                          ? ` · ${enteredTravellerNames(fare.travellerNames).length}/${fare.quantity || "1"} named`
+                                          : ""}
+                                      </span>
+                                      <Textarea
+                                        rows={2}
+                                        className="min-w-[240px] font-mono text-xs"
+                                        value={fare.travellerNames}
+                                        disabled={!canEdit}
+                                        placeholder="One name per line (optional)"
+                                        onChange={(event) =>
+                                          updateFare(activeIndex, fareIndex, {
+                                            travellerNames: event.target.value,
+                                          })
+                                        }
+                                      />
+                                    </div>
                                   )}
                                 </td>
                                 <td>
@@ -1582,6 +1608,16 @@ export function QuotationEditor({
                                     disabled={!canEdit}
                                     onChange={(event) => updateFare(activeIndex, fareIndex, { cost: event.target.value })}
                                   />
+                                  {!fare.passengerId ? (
+                                    <span className="mt-0.5 block text-[10px] text-muted-foreground">
+                                      {formatMoney(
+                                        BigInt(moneySafe(fare.cost, active.costCurrency)) *
+                                          BigInt(Math.max(1, Number.parseInt(fare.quantity || "1", 10) || 1)),
+                                        active.costCurrency,
+                                      )}{" "}
+                                      total
+                                    </span>
+                                  ) : null}
                                 </td>
                                 <td>
                                   {canEdit ? (

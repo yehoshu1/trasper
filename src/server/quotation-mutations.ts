@@ -57,6 +57,7 @@ export async function copyOptions(
             passengerType: fare.passengerType,
             quantity: fare.quantity,
             costMinor: fare.costMinor,
+            travellerNames: fare.travellerNames,
           })),
         },
         services: {

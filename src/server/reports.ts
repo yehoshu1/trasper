@@ -84,7 +84,7 @@ export async function loadReport(
       orderBy: { at: "asc" },
     }),
     prisma.proforma.findMany({
-      where: { issueDate: { gte: start, lt: end } },
+      where: { issueDate: { gte: start, lt: end }, status: { notIn: ["draft", "cancelled"] } },
       select: { issueDate: true, currency: true, totalMinor: true, status: true },
     }),
     prisma.payment.findMany({
@@ -98,6 +98,7 @@ export async function loadReport(
     prisma.proforma.findMany({
       where: {
         issueDate: { lt: end },
+        status: { not: "draft" },
         OR: [{ cancelledAt: null }, { cancelledAt: { gte: end } }],
       },
       select: {
@@ -209,7 +210,7 @@ export async function loadReport(
   }
 
   for (const proforma of proformas) {
-    if (proforma.status !== "cancelled") {
+    if (proforma.status !== "cancelled" && proforma.status !== "draft") {
       addMoney(summary.proformaValue, proforma.currency, proforma.totalMinor);
     }
   }

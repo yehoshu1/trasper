@@ -50,6 +50,7 @@ export async function saveInstalmentsAction(formData: FormData): Promise<void> {
   const proforma = await prisma.proforma.findUnique({ where: { id: proformaId } });
   if (!proforma) redirect("/proformas?error=Pro%20forma%20not%20found");
   if (proforma.status === "cancelled") back(proformaId, "A cancelled pro forma cannot take a schedule");
+  if (proforma.status === "draft") back(proformaId, "Mark the pro forma as sent before setting a schedule");
 
   let depositMinor: bigint;
   let balanceMinor: bigint;

@@ -229,7 +229,12 @@ model FareLine {
   passenger     Passenger?  @relation(fields: [passengerId], references: [id])
   passengerType String      @default("adult") // adult | child | infant
   quantity      Int         @default(1) // travellers covered when no name is linked
-  costMinor     BigInt // total for the line, in the option's cost currency
+  // For an unnamed group this is the cost per traveller; the line total is
+  // costMinor x quantity. A named fare has quantity 1, so it is the line total.
+  costMinor     BigInt
+  // Optional free-text names for an unnamed group, one per line. Names may
+  // arrive after the quotation is built; the remaining travellers stay unnamed.
+  travellerNames String?
 
   @@index([optionId])
   @@index([passengerId])
@@ -296,7 +301,7 @@ model Proforma {
   bankAccountId   String?
   bankAccount     BankAccount?   @relation(fields: [bankAccountId], references: [id])
   referenceNo     String?
-  status          String         @default("unpaid") // unpaid | part_paid | paid | cancelled
+  status          String         @default("unpaid") // draft | unpaid | part_paid | paid | cancelled
   currency        String
   totalMinor      BigInt
   issueDate       DateTime
@@ -304,6 +309,8 @@ model Proforma {
   terms           String?
   showVat         Boolean        @default(false)
   snapshot        String
+  sentAt          DateTime? // set when the draft is issued; then the document is locked
+  lockedAt        DateTime?
   cancelledReason String?
   cancelledAt     DateTime?
   archivedAt      DateTime? // hidden from active lists; never a cancellation

@@ -14,6 +14,7 @@ import {
   type TaxDisplayMode,
 } from "./pricing/presentation";
 import type { PassengerType } from "./pnr";
+import { enteredTravellerNames } from "./travellers";
 
 /** Draft shapes shared by the editor (client) and server actions. Money is
  * carried as decimal strings across the action boundary and converted to
@@ -39,7 +40,10 @@ export interface EditorFare {
   passengerType: PassengerType;
   /** Number of travellers covered by an unnamed fare line. */
   quantity?: string;
+  /** For an unnamed group, costMinor is the cost per traveller. */
   costMinor: string;
+  /** Optional names for an unnamed group, one per line. */
+  travellerNames?: string;
 }
 
 export interface EditorService {
@@ -210,7 +214,9 @@ export function computeOption(option: EditorOption, vat: VatContext): ComputedOp
     ...option.fares.map((fare, index) => ({
       id: fare.id ?? `fare-${index}-${fare.passengerId || fare.passengerType}`,
       description: fareDescription(fare),
-      costMinor: BigInt(fare.costMinor || "0"),
+      costMinor:
+        BigInt(fare.costMinor || "0") *
+        BigInt(fare.passengerId ? 1 : fareQuantity(fare)),
       kind: "fare" as const,
       passengerId: fare.passengerId || undefined,
     })),
@@ -363,6 +369,13 @@ export function validateDraftOption(option: EditorOption): DraftValidation {
     const rawQuantity = Number.parseInt(fare.quantity || "1", 10);
     if (!Number.isFinite(rawQuantity) || rawQuantity < 1) {
       push("A traveller group needs at least one traveller", "error");
+    }
+    const names = enteredTravellerNames(fare.travellerNames);
+    if (rawQuantity > 0 && names.length > rawQuantity) {
+      push(
+        `More traveller names than the group quantity (${names.length} names for ${rawQuantity} travellers)`,
+        "error",
+      );
     }
   }
 

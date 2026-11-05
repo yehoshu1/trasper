@@ -36,6 +36,9 @@ export function quotationArchiveError(status: string): string {
 }
 
 export function proformaArchiveError(status: string): string {
+  if (status === "draft") {
+    return "Send or cancel this pro forma before archiving it";
+  }
   if (status === "unpaid" || status === "part_paid") {
     return "Only a fully paid or cancelled pro forma can be archived; the balance is still open";
   }

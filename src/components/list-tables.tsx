@@ -25,7 +25,7 @@ import type { ActionResult } from "@/server/actions/types";
 import type { SavedTableViewState } from "@/lib/saved-views";
 
 const QUOTATION_STATUSES = ["draft", "sent", "accepted", "declined", "expired", "cancelled", "superseded"];
-const PROFORMA_STATUSES = ["unpaid", "part_paid", "paid", "cancelled"];
+const PROFORMA_STATUSES = ["draft", "unpaid", "part_paid", "paid", "cancelled"];
 
 function statusLabel(value: string) {
   return value.replace("_", "-").replace(/^\w/, (letter) => letter.toUpperCase());

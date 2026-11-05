@@ -10,12 +10,13 @@ option** and carries the frozen totals and customer-facing lines.
 
 From an accepted quotation:
 
-1. Choose **Create pro forma**.
-2. Confirm the due date (default: 14 days after issue).
-3. Edit the payment terms if needed; blank uses the standard payment terms.
-4. Choose whether to show VAT explicitly.
-5. Choose the bank account; the default is preselected.
-6. Issue.
+1. Choose **Create pro forma**. It is created as a **draft** with a reserved number.
+2. Add or edit the traveller names (one per line). Names may be supplied later; blank lines stay
+   unnamed.
+3. Confirm the due date (default: 14 days after issue).
+4. Edit the payment terms if needed; blank uses the standard payment terms.
+5. Choose whether to show VAT explicitly and which bank account to print.
+6. Choose **Save draft** to keep editing, or **Mark sent** to issue and lock it.
 
 Rules:
 
@@ -23,7 +24,8 @@ Rules:
 - the accepted option must exist;
 - only one active (non-cancelled) pro forma per quotation option is allowed; cancel the old one
   before issuing another;
-- the number comes from the pro forma sequence and is never reused.
+- the number comes from the pro forma sequence and is never reused;
+- a draft can be edited and cannot take payments; once sent, the snapshot is locked.
 
 ## What it contains
 
@@ -44,13 +46,15 @@ The status is derived from the payment ledger:
 
 | Condition | Status |
 | --- | --- |
-| No payments | Unpaid |
+| Not yet sent | Draft |
+| Sent, no payments | Unpaid |
 | Some payment, below total | Part-paid |
 | Payments at or above total | Paid |
 | Cancelled | Cancelled |
 
-The scheduled job and page loads recalculate statuses, but every payment action recalculates inside
-its transaction as well.
+A draft is the only status not derived from payments. When it is sent it becomes Unpaid; from then
+on the scheduled job and page loads recalculate the status, and every payment action recalculates
+inside its transaction as well.
 
 ## Cancel
 

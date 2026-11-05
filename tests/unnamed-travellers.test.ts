@@ -53,9 +53,10 @@ describe("unnamed traveller groups", () => {
     const computed = computeOption(optionWith([unnamedAdult]), vat);
     assert.equal(computed.lines.length, 1);
     assert.equal(computed.lines[0].description, "2 Adults");
-    assert.equal(computed.result.costTotalMinor, 100000n);
-    assert.equal(computed.result.markupMinor, 10000n);
-    assert.equal(computed.totalMinor, 110000n);
+    // costMinor is the per-traveller cost for an unnamed group.
+    assert.equal(computed.result.costTotalMinor, 200000n);
+    assert.equal(computed.result.markupMinor, 20000n);
+    assert.equal(computed.totalMinor, 220000n);
     assert.equal(invariantLineTotal(computed), true);
   });
 

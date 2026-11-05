@@ -34,6 +34,7 @@ describe("archive rules", () => {
   });
 
   it("explains why an open pro forma cannot be archived", () => {
+    assert.match(proformaArchiveError("draft"), /Send or cancel/i);
     assert.match(proformaArchiveError("unpaid"), /balance is still open/i);
     assert.match(proformaArchiveError("part_paid"), /balance is still open/i);
   });

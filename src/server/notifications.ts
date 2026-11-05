@@ -50,7 +50,7 @@ export async function loadNotifications(
       take: 50,
     }),
     prisma.proforma.findMany({
-      where: { status: { not: "cancelled" }, dueDate: { lt: now } },
+      where: { status: { notIn: ["cancelled", "draft"] }, dueDate: { lt: now } },
       include: {
         quotation: { select: { contact: { select: { name: true } } } },
         payments: { select: { amountMinor: true } },

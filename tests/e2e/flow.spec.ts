@@ -84,7 +84,7 @@ test("create a quotation with two options", async () => {
   await fillDateTime(page, segmentRow, 1, "2027-03-10T12:35");
 
   await page.click('button:has-text("+ Add passenger")');
-  const fareRow = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
+  const fareRow = page.locator("table").filter({ hasText: "Unit cost (" }).first().locator("tbody tr").first();
   await fareRow.locator('input[inputmode="decimal"]').first().fill("620.00");
 
   // --- Option B: second option, same shape --------------------------------
@@ -99,7 +99,7 @@ test("create a quotation with two options", async () => {
   await fillDateTime(page, segmentB, 1, "2027-03-17T11:10");
 
   await page.click('button:has-text("+ Add passenger")');
-  const fareB = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
+  const fareB = page.locator("table").filter({ hasText: "Unit cost (" }).first().locator("tbody tr").first();
   await fareB.locator('input[inputmode="decimal"]').first().fill("540.00");
 
   // Internal pricing panel shows a total for both options.
@@ -141,8 +141,14 @@ test("issue a pro forma and pay it in two steps", async () => {
   await page.click('button:has-text("Create pro forma")');
   await expect(page).toHaveURL(/\/proformas\/[a-z0-9]+$/i, { timeout: 20_000 });
 
-  // Status starts Unpaid.
-  await expect(page.getByText("Unpaid").first()).toBeVisible();
+  // A new pro forma is a draft until it is sent.
+  await expect(page.getByText("Draft pro forma").first()).toBeVisible();
+  await page.click('button:has-text("Mark sent")');
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Mark sent" })
+    .click();
+  await expect(page.getByText("Unpaid").first()).toBeVisible({ timeout: 20_000 });
 
   // Part payment: half the balance.
   const amountInput = page.locator('#amount');

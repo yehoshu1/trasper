@@ -14,6 +14,7 @@ export function ConfirmButton({
   variant = "destructive",
   name,
   value,
+  formAction,
 }: {
   message: string;
   title?: string;
@@ -23,6 +24,7 @@ export function ConfirmButton({
   variant?: ButtonProps["variant"];
   name?: string;
   value?: string;
+  formAction?: ButtonProps["formAction"];
 }) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const confirmedRef = useRef(false);
@@ -63,6 +65,7 @@ export function ConfirmButton({
         type="submit"
         name={name}
         value={value}
+        formAction={formAction}
         variant={variant}
         className={className}
         onClick={(event) => {
