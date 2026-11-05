@@ -436,9 +436,7 @@ export async function sendQuotationAction(
     const bank = chooseBankAccount(bankAccounts, quotation.bankAccountId);
     let snapshot: string;
     try {
-      const built = await buildQuotationSnapshot(quotation, settings, {
-        bankAccountId: bank?.id ?? null,
-      });
+      const built = await buildQuotationSnapshot(quotation, settings);
       snapshot = JSON.stringify(built);
     } catch (error) {
       if (error instanceof DocumentError) return actionError(error.message);

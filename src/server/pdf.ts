@@ -26,6 +26,7 @@ import type {
   QuotationSnapshot,
 } from "../lib/documents";
 import { formatMoney } from "../lib/money";
+import { roundDiv } from "../lib/pricing";
 import type { PricePresentation } from "../lib/pricing/presentation";
 import {
   SERVICE_UNIT_PLURALS,
@@ -418,6 +419,13 @@ function contactLines(contact: DocumentContact): string[] {
 function passengerLine(passenger: DocumentPassenger): string {
   const name = [passenger.title, passenger.firstName, passenger.lastName].filter(Boolean).join(" ");
   return `${name} (${passenger.type})`;
+}
+
+function documentPassengerCount(passengers: DocumentPassenger[]): number {
+  return passengers.reduce(
+    (sum, passenger) => sum + (passenger.unnamed ? Math.max(1, passenger.quantity ?? 1) : 1),
+    0,
+  );
 }
 
 function modernDocumentBand(
@@ -948,10 +956,19 @@ function moneyTable(
     vatRateBps?: string;
     showVat?: boolean;
     presentation?: PricePresentation;
+    alwaysShowPerPerson?: boolean;
+    perPersonCount?: number;
   } = {},
 ): void {
   const format = (value: string) => formatMoney(BigInt(value), currency);
   const presentation = options.presentation;
+  const perPersonCount = presentation?.passengerCount ?? options.perPersonCount;
+  const perPersonMinor =
+    presentation?.perPersonMinor ??
+    (options.alwaysShowPerPerson && perPersonCount && perPersonCount > 0
+      ? roundDiv(BigInt(totalMinor), BigInt(perPersonCount)).toString()
+      : undefined);
+  const perPersonLabel = presentation?.perPersonLabel ?? "Price per person";
 
   const rows: { description: string; amountMinor: string }[] = [];
   if (presentation) {
@@ -1039,10 +1056,10 @@ function moneyTable(
   builder.gap(18);
 
   if (presentation) {
-    if (presentation.perPersonMinor) {
+    if (perPersonMinor) {
       builder.ensure(14);
       builder.paragraph(
-        `${presentation.perPersonLabel}: ${format(presentation.perPersonMinor)}${presentation.passengerCount ? ` (${presentation.passengerCount} traveller${presentation.passengerCount === 1 ? "" : "s"})` : ""}`,
+        `${perPersonLabel}: ${format(perPersonMinor)}${perPersonCount ? ` (${perPersonCount} traveller${perPersonCount === 1 ? "" : "s"})` : ""}`,
         { size: 8, color: COLORS.slate, lineHeight: 11 },
       );
     }
@@ -1085,6 +1102,39 @@ function bankBlock(
   if (bank.instructions) {
     builder.paragraph(bank.instructions, { x, maxWidth: width, size: 8, color: COLORS.slate, lineHeight: 11 });
   }
+}
+
+function signatureBlock(builder: PdfBuilder, companyName: string): void {
+  builder.ensure(72);
+  builder.gap(8);
+  builder.rule(COLORS.line, 0.75);
+  builder.gap(4);
+  builder.paragraph("SIGNED BY", {
+    size: 7.5, font: "bold", color: builder.palette.accent, lineHeight: 10,
+  });
+  builder.paragraph(`For and on behalf of ${companyName}`, {
+    size: 8, color: COLORS.slate, lineHeight: 11,
+  });
+  builder.gap(6);
+  const top = builder.cursor;
+  const leftWidth = CONTENT * 0.42;
+  const rightX = MARGIN + CONTENT * 0.56;
+  const rightWidth = CONTENT * 0.44;
+  builder.pageRef.drawLine({
+    start: { x: MARGIN, y: top - 22 },
+    end: { x: MARGIN + leftWidth, y: top - 22 },
+    thickness: 0.75,
+    color: COLORS.slate,
+  });
+  builder.pageRef.drawLine({
+    start: { x: rightX, y: top - 22 },
+    end: { x: rightX + rightWidth, y: top - 22 },
+    thickness: 0.75,
+    color: COLORS.slate,
+  });
+  builder.at("Name and signature", MARGIN, top - 24, { size: 7, color: COLORS.muted });
+  builder.at("Date", rightX, top - 24, { size: 7, color: COLORS.muted });
+  builder.cursor = top - 42;
 }
 
 function notesBlock(
@@ -1153,24 +1203,22 @@ export async function renderQuotationPdf(snapshot: QuotationSnapshot): Promise<U
     }
     moneyTable(builder, option.lines, snapshot.currency, option.totalMinor, {
       presentation: option.presentation,
+      alwaysShowPerPerson: true,
+      perPersonCount: documentPassengerCount(snapshot.passengers),
     });
     builder.gap(10);
   }
 
-  builder.ensure(130);
-  const half = CONTENT / 2 - 8;
-  const startY = builder.cursor;
-  bankBlock(builder, snapshot.bank, snapshot.currency, MARGIN, half);
-  const leftBottom = builder.cursor;
-  builder.cursor = startY;
-  notesBlock(builder, snapshot.notes, "Important notes", MARGIN + half + 16, half);
-  builder.cursor = Math.min(builder.cursor, leftBottom) - 6;
+  builder.ensure(55);
+  notesBlock(builder, snapshot.notes, "Important notes");
 
   if (snapshot.validityStatement) {
     builder.ensure(55);
     builder.gap(2);
     notesBlock(builder, snapshot.validityStatement, "QUOTATION VALIDITY");
   }
+
+  signatureBlock(builder, snapshot.company.name);
 
   return builder.finish(snapshot.company.name, snapshot.number);
 }
@@ -1295,6 +1343,8 @@ export async function renderProformaPdf(
   }
   builder.cursor = Math.min(builder.cursor, leftBottom);
   builder.gap(10);
+
+  signatureBlock(builder, snapshot.company.name);
 
   builder.paragraph(
     `Pro forma ${snapshot.number} - issued ${displayDate(snapshot.issueDate)} - this is a pro forma invoice, not a tax invoice.`,

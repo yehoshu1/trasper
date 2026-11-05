@@ -10,6 +10,7 @@ import {
   NotesBlock,
   PartyBlock,
   SectionHeading,
+  SignatureBlock,
   formatDocDate,
   passengerName,
 } from "./shared";
@@ -150,6 +151,8 @@ export function ProformaDocument({
           ) : null}
         </div>
       </div>
+
+      <SignatureBlock companyName={snapshot.company.name} />
 
       <NotesBlock notes={snapshot.company.footerText ? snapshot.terms : snapshot.terms} />
 

@@ -336,7 +336,7 @@ export function presentPricing(
     totalMinor: totalMinor.toString(),
     totalLabel,
     perPersonMinor,
-    perPersonLabel: perPersonMinor ? perPersonLabel : undefined,
+    perPersonLabel,
     passengerCount,
   };
 }

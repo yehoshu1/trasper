@@ -1161,6 +1161,18 @@
     @apply text-sm font-bold uppercase tracking-wide text-slate-900;
   }
 
+  .doc-signature {
+    @apply mt-8 break-inside-avoid border-t border-slate-200 pt-4;
+  }
+
+  .doc-signature-grid {
+    @apply grid gap-8 text-[10px] text-slate-500 sm:grid-cols-2;
+  }
+
+  .doc-signature-line {
+    @apply mb-1 h-10 border-b border-slate-400;
+  }
+
   .doc-table {
     @apply mb-4 w-full border-collapse text-left text-[11px];
   }

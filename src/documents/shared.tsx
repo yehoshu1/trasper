@@ -19,6 +19,7 @@ import type {
   DocumentPassenger,
   DocumentTemplate,
 } from "@/lib/documents";
+import { roundDiv } from "@/lib/pricing";
 import type { PricePresentation } from "@/lib/pricing/presentation";
 import {
   SERVICE_UNIT_PLURALS,
@@ -466,6 +467,8 @@ export function MoneyLines({
   vatRateBps,
   showVat,
   presentation,
+  alwaysShowPerPerson = false,
+  perPersonCount,
 }: {
   lines: DocumentLine[];
   currency: string;
@@ -474,8 +477,18 @@ export function MoneyLines({
   vatRateBps?: string;
   showVat?: boolean;
   presentation?: PricePresentation;
+  /** Quotations show the per-person share alongside the total in every layout. */
+  alwaysShowPerPerson?: boolean;
+  perPersonCount?: number;
 }) {
   const format = (value: string) => formatMoney(BigInt(value), currency);
+  const derivedPerPerson =
+    presentation && alwaysShowPerPerson && perPersonCount && perPersonCount > 0
+      ? roundDiv(BigInt(presentation.totalMinor), BigInt(perPersonCount)).toString()
+      : undefined;
+  const perPersonMinor = presentation?.perPersonMinor ?? derivedPerPerson;
+  const perPersonLabel = presentation?.perPersonLabel ?? "Price per person";
+  const count = presentation?.passengerCount ?? perPersonCount;
 
   if (presentation) {
     const quantityLabel = (line: PricePresentation["lines"][number]) => {
@@ -536,12 +549,10 @@ export function MoneyLines({
             </tr>
           </tbody>
         </table>
-        {presentation.perPersonMinor ? (
+        {perPersonMinor ? (
           <p className="mt-1 text-[11px] text-slate-600">
-            {presentation.perPersonLabel}: <span className="font-semibold">{format(presentation.perPersonMinor)}</span>
-            {presentation.passengerCount
-              ? ` (${presentation.passengerCount} traveller${presentation.passengerCount === 1 ? "" : "s"})`
-              : ""}
+            {perPersonLabel}: <span className="font-semibold">{format(perPersonMinor)}</span>
+            {count ? ` (${count} traveller${count === 1 ? "" : "s"})` : ""}
           </p>
         ) : null}
         {presentation.taxNote ? (
@@ -588,6 +599,26 @@ export function MoneyLines({
         </tbody>
       </table>
     </div>
+  );
+}
+
+/** Signature area printed at the foot of quotations and pro formas. */
+export function SignatureBlock({ companyName }: { companyName: string }) {
+  return (
+    <section className="doc-section doc-signature break-inside-avoid">
+      <p className="doc-label">Signed by</p>
+      <p className="mb-3 text-[11px] text-slate-600">For and on behalf of {companyName}</p>
+      <div className="doc-signature-grid">
+        <div>
+          <div className="doc-signature-line" />
+          <p>Name and signature</p>
+        </div>
+        <div>
+          <div className="doc-signature-line" />
+          <p>Date</p>
+        </div>
+      </div>
+    </section>
   );
 }
 

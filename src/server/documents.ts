@@ -339,7 +339,6 @@ function optionTotalsForPrint(
 export async function buildQuotationSnapshot(
   quotation: QuotationWithRelations,
   settings: AppSettings,
-  config: { bankAccountId?: string | null } = {},
 ): Promise<QuotationSnapshot> {
   const options = [];
   for (const option of quotation.options) {
@@ -380,10 +379,9 @@ export async function buildQuotationSnapshot(
     heading: quotation.heading?.trim() || "QUOTATION",
     notes: quotation.notes || settings.quotationNotes,
     validityStatement: settings.quotationValidityStatement || undefined,
-    bank: await bankSnapshot(
-      config.bankAccountId ?? quotation.bankAccountId,
-      quotation.currency,
-    ),
+    // Quotations never print payment details. The pro forma carries the bank
+    // snapshot instead; the field remains for snapshot compatibility.
+    bank: null,
     createdAt: new Date().toISOString(),
   };
 }

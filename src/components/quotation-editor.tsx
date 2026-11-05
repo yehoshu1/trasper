@@ -1120,16 +1120,16 @@ export function QuotationEditor({
                   />
                 </label>
                 <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Payment details
+                  Preferred pro forma account
                   <SelectField
                     id="bankAccountId"
                     className="mt-1"
                     value={header.bankAccountId}
                     disabled={!canEdit}
-                    placeholder="Use the default account at send time"
+                    placeholder="Use the default account"
                     onValueChange={(bankAccountId) => updateHeader("bankAccountId", bankAccountId)}
                     options={[
-                      { value: "", label: "Use the default account at send time" },
+                      { value: "", label: "Use the default account" },
                       ...banks.map((bank) => ({
                         value: bank.id,
                         label: `${bank.label} · ${bank.currency}${bank.isDefault ? " (default)" : ""}`,
@@ -1137,7 +1137,8 @@ export function QuotationEditor({
                     ]}
                   />
                   <span className="mt-1 block text-[10px] font-normal normal-case text-muted-foreground">
-                    The chosen details are frozen into the document when it is sent.
+                    Only used as the default for the pro forma. Bank details are never printed on a
+                    quotation.
                   </span>
                 </label>
                 <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

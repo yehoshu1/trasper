@@ -1,7 +1,6 @@
 import type { QuotationSnapshot } from "@/lib/documents";
 
 import {
-  BankDetails,
   DocumentFrame,
   FlightSummary,
   FlightsTable,
@@ -9,11 +8,16 @@ import {
   NotesBlock,
   PartyBlock,
   SectionHeading,
+  SignatureBlock,
   formatDocDate,
 } from "./shared";
 
-/** Customer-facing quotation. Cost, markup, profit and VAT never appear. */
+/** Customer-facing quotation. Cost, markup, profit, VAT and bank details never appear. */
 export function QuotationDocument({ snapshot }: { snapshot: QuotationSnapshot }) {
+  const passengerCount = snapshot.passengers.reduce(
+    (sum, passenger) => sum + (passenger.unnamed ? Math.max(1, passenger.quantity ?? 1) : 1),
+    0,
+  );
   return (
     <DocumentFrame
       company={snapshot.company}
@@ -64,21 +68,22 @@ export function QuotationDocument({ snapshot }: { snapshot: QuotationSnapshot })
               vatMinor={option.vatMinor}
               showVat={false}
               presentation={option.presentation}
+              alwaysShowPerPerson
+              perPersonCount={passengerCount || option.presentation?.passengerCount}
             />
           </div>
         </section>
       ))}
 
-      <div className="doc-section grid gap-6 sm:grid-cols-2">
-        <BankDetails bank={snapshot.bank} currency={snapshot.currency} />
-        <div>
-          <NotesBlock notes={snapshot.notes} />
-        </div>
+      <div className="doc-section">
+        <NotesBlock notes={snapshot.notes} />
       </div>
 
       {snapshot.validityStatement ? (
         <NotesBlock title="Quotation validity" notes={snapshot.validityStatement} />
       ) : null}
+
+      <SignatureBlock companyName={snapshot.company.name} />
 
       <section className="doc-section text-[11px] text-slate-500">
         <p>

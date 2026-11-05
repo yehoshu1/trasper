@@ -62,6 +62,10 @@ All notable changes to this project are documented here. The format follows
   **Read / convert**, matching the quotation editor. The old "Already booked?" wording stays removed.
 - Docker images now bake the commit SHA into `APP_REVISION` and report it from `/api/health`, so a
   stale deployment can be identified immediately.
+- Quotations print both the total and the price per traveller in every price layout.
+- Quotations no longer print bank details; the chosen account is only a default for the pro forma.
+- Quotations and pro forma invoices end with a **Signed by** area for the issuer's name, signature
+  and date.
 - **+ Add passenger** on a draft quotation now works for any active passenger, not only passengers
   already linked to the customer. Linked passengers are offered first and unlinked ones are marked.
 - Added **Dodoma International Airport (DOD)** to the airport seed data and as a reference-data

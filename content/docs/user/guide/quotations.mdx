@@ -37,7 +37,7 @@ Saved views are stored per user in `SavedTableView`; they never change what anot
 ## Status meanings
 
 - **Draft** — editable. No snapshot exists yet.
-- **Sent** — locked; totals, company profile and bank details are frozen.
+- **Sent** — locked; totals and the company profile are frozen.
 - **Accepted** — the customer chose an option. Documents can be issued.
 - **Declined** — the customer said no.
 - **Expired** — the validity date passed; the scheduled job or a page load applies it.
@@ -73,6 +73,15 @@ from the list; drafts and sent quotations cannot. Archiving does not cancel the 
 snapshot, supersede a revision, cancel a document or reverse a payment. The record stays readable,
 keeps its number, remains in the audit log and is still included in historical financial reports.
 Use **Archived** in the list to find it and **Restore** to return it to the active queue.
+
+## Printed price and bank details
+
+Every quotation option prints both the **total** and the **price per traveller**, whichever customer
+price layout the agency uses. Quotations deliberately do not print bank details; the bank account
+is carried on the pro forma invoice instead. The quotation editor's **Preferred pro forma account**
+only preselects the account for that later invoice.
+
+The quotation ends with a **Signed by** area for the issuer's name, signature and date.
 
 ## Read-only view
 

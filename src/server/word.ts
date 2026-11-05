@@ -13,6 +13,7 @@ import {
 
 import type { FrozenTotals, ProformaSnapshot, QuotationSnapshot } from "@/lib/documents";
 import { formatMoney } from "@/lib/money";
+import { roundDiv } from "@/lib/pricing";
 import type { PricePresentation } from "@/lib/pricing/presentation";
 
 /**
@@ -73,6 +74,7 @@ function customerMoneyRows(
   lines: { description: string; amountMinor: string }[],
   currency: string,
   presentation?: PricePresentation,
+  perPersonCount?: number,
 ): string[][] {
   if (!presentation) {
     return lines.map((line) => [line.description, formatMoney(BigInt(line.amountMinor), currency)]);
@@ -100,16 +102,25 @@ function customerMoneyRows(
     presentation.totalLabel,
     formatMoney(BigInt(presentation.totalMinor), currency),
   ]);
-  if (presentation.perPersonMinor) {
+  const perPersonMinor =
+    presentation.perPersonMinor ??
+    (perPersonCount && perPersonCount > 0
+      ? roundDiv(BigInt(presentation.totalMinor), BigInt(perPersonCount)).toString()
+      : undefined);
+  if (perPersonMinor) {
     rows.push([
       presentation.perPersonLabel ?? "Price per person",
-      formatMoney(BigInt(presentation.perPersonMinor), currency),
+      formatMoney(BigInt(perPersonMinor), currency),
     ]);
   }
   return rows;
 }
 
 export async function buildQuotationDocx(snapshot: QuotationSnapshot): Promise<Buffer> {
+  const passengerCount = snapshot.passengers.reduce(
+    (sum, passenger) => sum + (passenger.unnamed ? Math.max(1, passenger.quantity ?? 1) : 1),
+    0,
+  );
   const children: (Paragraph | Table)[] = [
     ...companyBlock(snapshot),
     new Paragraph({ text: "", spacing: { after: 120 } }),
@@ -144,9 +155,12 @@ export async function buildQuotationDocx(snapshot: QuotationSnapshot): Promise<B
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: [
           row(["Line", "Customer price"], { bold: true, right: [1] }),
-          ...customerMoneyRows(option.lines, snapshot.currency, option.presentation).map(
-            (values) => row(values, { right: [1] }),
-          ),
+          ...customerMoneyRows(
+            option.lines,
+            snapshot.currency,
+            option.presentation,
+            passengerCount,
+          ).map((values) => row(values, { right: [1] })),
         ],
       }),
     );
