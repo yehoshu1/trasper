@@ -1004,6 +1004,13 @@ function moneyTable(
     })));
   }
 
+  if (presentation && perPersonMinor) {
+    rows.push({
+      description: `${perPersonLabel}${perPersonCount ? ` (${perPersonCount} traveller${perPersonCount === 1 ? "" : "s"})` : ""}`,
+      amountMinor: perPersonMinor,
+    });
+  }
+
   const totalLabel = presentation?.totalLabel ?? "Total";
   const top = builder.cursor;
   builder.pageRef.drawRectangle({
@@ -1056,13 +1063,6 @@ function moneyTable(
   builder.gap(18);
 
   if (presentation) {
-    if (perPersonMinor) {
-      builder.ensure(14);
-      builder.paragraph(
-        `${perPersonLabel}: ${format(perPersonMinor)}${perPersonCount ? ` (${perPersonCount} traveller${perPersonCount === 1 ? "" : "s"})` : ""}`,
-        { size: 8, color: COLORS.slate, lineHeight: 11 },
-      );
-    }
     if (presentation.taxNote) {
       builder.ensure(14);
       builder.paragraph(presentation.taxNote, { size: 7.5, color: COLORS.muted, lineHeight: 10 });

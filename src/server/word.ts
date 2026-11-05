@@ -98,21 +98,22 @@ function customerMoneyRows(
   for (const tax of presentation.taxLines) {
     rows.push([tax.name, formatMoney(BigInt(tax.amountMinor), currency)]);
   }
-  rows.push([
-    presentation.totalLabel,
-    formatMoney(BigInt(presentation.totalMinor), currency),
-  ]);
   const perPersonMinor =
     presentation.perPersonMinor ??
     (perPersonCount && perPersonCount > 0
       ? roundDiv(BigInt(presentation.totalMinor), BigInt(perPersonCount)).toString()
       : undefined);
   if (perPersonMinor) {
+    const label = presentation.perPersonLabel ?? "Price per person";
     rows.push([
-      presentation.perPersonLabel ?? "Price per person",
+      `${label}${perPersonCount ? ` (${perPersonCount} traveller${perPersonCount === 1 ? "" : "s"})` : ""}`,
       formatMoney(BigInt(perPersonMinor), currency),
     ]);
   }
+  rows.push([
+    presentation.totalLabel,
+    formatMoney(BigInt(presentation.totalMinor), currency),
+  ]);
   return rows;
 }
 

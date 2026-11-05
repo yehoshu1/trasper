@@ -543,18 +543,21 @@ export function MoneyLines({
                 <td className="text-right tabular-nums">{format(tax.amountMinor)}</td>
               </tr>
             ))}
+            {perPersonMinor ? (
+              <tr className="break-inside-avoid text-slate-700">
+                <td>
+                  {perPersonLabel}
+                  {count ? ` (${count} traveller${count === 1 ? "" : "s"})` : ""}
+                </td>
+                <td className="text-right font-semibold tabular-nums">{format(perPersonMinor)}</td>
+              </tr>
+            ) : null}
             <tr className="doc-grand-total">
               <td className="font-bold">{presentation.totalLabel}</td>
               <td className="text-right font-bold tabular-nums">{format(presentation.totalMinor)}</td>
             </tr>
           </tbody>
         </table>
-        {perPersonMinor ? (
-          <p className="mt-1 text-[11px] text-slate-600">
-            {perPersonLabel}: <span className="font-semibold">{format(perPersonMinor)}</span>
-            {count ? ` (${count} traveller${count === 1 ? "" : "s"})` : ""}
-          </p>
-        ) : null}
         {presentation.taxNote ? (
           <p className="mt-1 text-[11px] text-slate-500">{presentation.taxNote}</p>
         ) : null}
