@@ -158,7 +158,7 @@ test("quotations hide bank details and the pro forma freezes the chosen account"
 
   const bankCustomer = `E2E Bank ${stamp}`;
   await createCustomer(page, bankCustomer);
-  const { url: quotationUrl } = await createDraftQuotation(page, bankCustomer, true);
+  await createDraftQuotation(page, bankCustomer, true);
 
   const bankSelect = page.locator("#bankAccountId");
   await chooseOption(page, bankSelect, `${bankAlternate} · MWK`);
