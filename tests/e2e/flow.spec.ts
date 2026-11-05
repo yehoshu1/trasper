@@ -190,7 +190,7 @@ test("does not offer permanent delete for a customer with documents", async () =
   await page.getByRole("link", { name: contactName }).first().click();
   await expect(page.getByRole("button", { name: "Delete customer" })).toHaveCount(0);
   await expect(
-    page.getByText("Customers with quotations or itineraries can only be archived."),
+    page.getByText(/This customer has \d+ quotation.* so it can only be archived\./),
   ).toBeVisible();
 });
 

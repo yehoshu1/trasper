@@ -199,7 +199,9 @@ export default async function CustomerPage({
                 </div>
                 {!canDelete ? (
                   <p className="mt-2 text-xs text-muted-foreground">
-                    Customers with quotations or itineraries can only be archived.
+                    This customer has {contact.quotations.length} quotation
+                    {contact.quotations.length === 1 ? "" : "s"} and {itineraries.length} itinerar
+                    {itineraries.length === 1 ? "y" : "ies"}, so it can only be archived.
                   </p>
                 ) : null}
               </div>

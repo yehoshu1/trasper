@@ -147,7 +147,8 @@ export default async function PassengerPage({
         </div>
         {!canDelete ? (
           <p className="mt-2 text-xs text-muted-foreground">
-            Passengers priced on a quotation can only be archived.
+            This passenger is priced on {quotations.size} quotation
+            {quotations.size === 1 ? "" : "s"}, so it can only be archived.
           </p>
         ) : null}
       </div>
