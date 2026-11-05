@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+
 import { chooseBankAccount } from "@/lib/bank-accounts";
 import { documentDateFromInput, todayInAppZone } from "@/lib/dates";
 import { cancelProformaSchema, createProformaSchema } from "@/lib/schemas";
@@ -12,7 +14,11 @@ import { allocateNumber } from "@/server/numbering";
 import { getSettings } from "@/server/settings";
 import { loadQuotation } from "@/server/quotations";
 import { buildProformaSnapshot, DocumentError } from "@/server/documents";
-import { cancelProformaCore } from "@/server/proforma-mutations";
+import {
+  archiveProformaCore,
+  cancelProformaCore,
+  unarchiveProformaCore,
+} from "@/server/proforma-mutations";
 import { errorMessage } from "@/server/actions/types";
 
 export async function createProformaAction(formData: FormData): Promise<void> {
@@ -120,6 +126,34 @@ export async function createProformaAction(formData: FormData): Promise<void> {
     redirect(`/quotations?error=${encodeURIComponent(errorMessage(error))}`);
   }
   redirect(`/proformas/${proformaId}`);
+}
+
+export async function archiveProformaAction(formData: FormData): Promise<void> {
+  await changeProformaArchive(formData, true);
+}
+
+export async function unarchiveProformaAction(formData: FormData): Promise<void> {
+  await changeProformaArchive(formData, false);
+}
+
+async function changeProformaArchive(formData: FormData, archive: boolean): Promise<void> {
+  const user = await actionUser("manageDocuments");
+  const parsed = z
+    .object({ proformaId: z.string().min(1).max(64) })
+    .safeParse({ proformaId: formData.get("proformaId") });
+  if (!parsed.success) redirect("/proformas?error=Invalid%20pro%20forma");
+
+  const result = archive
+    ? await archiveProformaCore(parsed.data.proformaId, user.id)
+    : await unarchiveProformaCore(parsed.data.proformaId, user.id);
+  if (!result.ok) {
+    redirect(
+      `/proformas/${parsed.data.proformaId}?error=${encodeURIComponent(result.error ?? "Could not update archive")}`,
+    );
+  }
+  revalidatePath(`/proformas/${parsed.data.proformaId}`);
+  revalidatePath("/proformas");
+  redirect(`/proformas/${parsed.data.proformaId}?saved=1`);
 }
 
 export async function cancelProformaAction(formData: FormData): Promise<void> {

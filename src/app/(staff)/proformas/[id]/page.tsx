@@ -19,6 +19,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { SelectField } from "@/components/ui/select";
+import { canArchiveProforma } from "@/lib/archive";
 import { formatDate, formatDateTime, todayInAppZone } from "@/lib/dates";
 import { applyPaymentsToSchedule } from "@/lib/aged-debtors";
 import { hasCapability } from "@/lib/permissions";
@@ -27,7 +28,11 @@ import { parseSnapshot, type ProformaSnapshot } from "@/lib/documents";
 import { ProformaDocument } from "@/documents/proforma-document";
 import { requireCapableUser } from "@/server/auth";
 import { prisma } from "@/server/db";
-import { cancelProformaAction } from "@/server/actions/proformas";
+import {
+  archiveProformaAction,
+  cancelProformaAction,
+  unarchiveProformaAction,
+} from "@/server/actions/proformas";
 import { recordPaymentAction, reversePaymentAction } from "@/server/actions/payments";
 import { removeInstalmentsAction, saveInstalmentsAction } from "@/server/actions/instalments";
 import { paymentTermOptions } from "@/lib/schemas";
@@ -77,8 +82,9 @@ export default async function ProformaPage({
     paid,
     new Date(),
   );
+  const canManage = hasCapability(user, "manageDocuments");
   const canRecord = hasCapability(user, "recordPayments") && proforma.status !== "cancelled" && balance > 0n;
-  const canCancel = hasCapability(user, "manageDocuments") && proforma.status !== "cancelled";
+  const canCancel = canManage && proforma.status !== "cancelled";
   const canReverse = hasCapability(user, "recordPayments");
   const reversedIds = new Set(
     proforma.payments.filter((payment) => payment.reversesId).map((payment) => payment.reversesId as string),
@@ -95,6 +101,28 @@ export default async function ProformaPage({
         } · ${proforma.quotation.number}`}
         actions={
           <>
+            {canManage && !proforma.archivedAt && canArchiveProforma(proforma.status) ? (
+              <form action={archiveProformaAction}>
+                <Input type="hidden" name="proformaId" value={proforma.id} />
+                <ConfirmButton
+                  variant="secondary"
+                  message="Archive this pro forma? It is hidden from the active list but stays in reports, audit and the payment ledger. Archiving does not cancel it."
+                >
+                  Archive
+                </ConfirmButton>
+              </form>
+            ) : null}
+            {canManage && proforma.archivedAt ? (
+              <form action={unarchiveProformaAction}>
+                <Input type="hidden" name="proformaId" value={proforma.id} />
+                <ConfirmButton
+                  variant="secondary"
+                  message="Restore this pro forma to the active list?"
+                >
+                  Restore
+                </ConfirmButton>
+              </form>
+            ) : null}
             <Link href={`/quotations/${proforma.quotationId}`} className="btn-secondary">
               Quotation
             </Link>
@@ -113,6 +141,12 @@ export default async function ProformaPage({
 
       {query.error ? <Alert tone="error">{query.error}</Alert> : null}
       {query.saved ? <Alert tone="success">Saved.</Alert> : null}
+      {proforma.archivedAt ? (
+        <Alert tone="info" title="Archived">
+          Archived {formatDateTime(proforma.archivedAt)}. This pro forma is hidden from the active
+          list; it is not cancelled and its payments are unchanged. Use Restore to bring it back.
+        </Alert>
+      ) : null}
       {proforma.status === "cancelled" ? (
         <Alert tone="warning" title="Cancelled">
           {proforma.cancelledReason ?? "No reason recorded."}

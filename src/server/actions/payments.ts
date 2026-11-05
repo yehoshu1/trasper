@@ -136,6 +136,9 @@ export async function reversePaymentAction(formData: FormData): Promise<void> {
   if (!payment) back("/payments", "Payment not found");
   if (payment.amountMinor <= 0n) back("/payments", "A reversing entry cannot itself be reversed");
   if (payment.proforma.status === "cancelled") back("/payments", "The pro forma is cancelled");
+  if (payment.proforma.archivedAt) {
+    back(`/proformas/${payment.proformaId}`, "Restore this pro forma before reversing a payment");
+  }
 
   const alreadyReversed = await prisma.payment.findFirst({ where: { reversesId: payment.id } });
   if (alreadyReversed) back("/payments", "That payment has already been reversed");
@@ -155,6 +158,10 @@ export async function reversePaymentAction(formData: FormData): Promise<void> {
       }
       if (current.proforma.status === "cancelled") {
         rejection.message = "The pro forma is cancelled";
+        throw new Error("REVERSAL_REJECTED");
+      }
+      if (current.proforma.archivedAt) {
+        rejection.message = "Restore this pro forma before reversing a payment";
         throw new Error("REVERSAL_REJECTED");
       }
       const existing = await tx.payment.findFirst({ where: { reversesId: current.id } });

@@ -13,9 +13,13 @@ import { minorToDecimalString } from "@/lib/money";
 import { paymentTermOptions } from "@/lib/schemas";
 import {
   bulkArchiveContactsAction,
+  bulkArchiveProformasAction,
+  bulkArchiveQuotationsAction,
   bulkCancelProformasAction,
   bulkCancelQuotationsAction,
   bulkDuplicateQuotationsAction,
+  bulkUnarchiveProformasAction,
+  bulkUnarchiveQuotationsAction,
 } from "@/server/actions/bulk";
 import type { ActionResult } from "@/server/actions/types";
 import type { SavedTableViewState } from "@/lib/saved-views";
@@ -59,6 +63,7 @@ export interface QuotationTableRow {
   customerName: string;
   optionLabels: string;
   status: string;
+  archived: boolean;
   issuedIso: string;
   issued: string;
   validUntilIso: string;
@@ -73,11 +78,13 @@ export function QuotationsTable({
   initialSearch,
   initialStatus,
   initialView = null,
+  archivedView = false,
 }: {
   rows: QuotationTableRow[];
   initialSearch?: string;
   initialStatus?: string;
   initialView?: SavedTableViewState | null;
+  archivedView?: boolean;
 }) {
   const router = useRouter();
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
@@ -114,6 +121,11 @@ export function QuotationsTable({
           <Link href={`/quotations/${row.original.id}`} className="font-semibold text-foreground">
             {row.original.number}
           </Link>
+          {row.original.archived ? (
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Archived
+            </span>
+          ) : null}
           {row.original.referenceNo ? (
             <p className="text-xs text-muted-foreground">Ref {row.original.referenceNo}</p>
           ) : null}
@@ -215,6 +227,23 @@ export function QuotationsTable({
           >
             Duplicate
           </Button>
+          {archivedView ? (
+            <Button variant="secondary"
+              type="button" className="h-7 px-2 text-xs"
+              disabled={pending}
+              onClick={() => runBulk(() => bulkUnarchiveQuotationsAction(selected.map((row) => row.id)), clear)}
+            >
+              Restore
+            </Button>
+          ) : (
+            <Button variant="secondary"
+              type="button" className="h-7 px-2 text-xs"
+              disabled={pending}
+              onClick={() => runBulk(() => bulkArchiveQuotationsAction(selected.map((row) => row.id)), clear)}
+            >
+              Archive
+            </Button>
+          )}
           <Button variant="secondary"
             type="button" className="h-7 px-2 text-xs"
             disabled={pending}
@@ -245,6 +274,7 @@ export interface ProformaTableRow {
   dueIso: string;
   due: string;
   status: string;
+  archived: boolean;
   totalMinor: string;
   balanceMinor: string;
   currency: string;
@@ -255,11 +285,13 @@ export function ProformasTable({
   initialSearch,
   initialStatus,
   initialView = null,
+  archivedView = false,
 }: {
   rows: ProformaTableRow[];
   initialSearch?: string;
   initialStatus?: string;
   initialView?: SavedTableViewState | null;
+  archivedView?: boolean;
 }) {
   const router = useRouter();
   const [bulkMessage, setBulkMessage] = useState<string | null>(null);
@@ -299,6 +331,11 @@ export function ProformasTable({
           <Link href={`/proformas/${row.original.id}`} className="font-semibold text-foreground">
             {row.original.number}
           </Link>
+          {row.original.archived ? (
+            <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Archived
+            </span>
+          ) : null}
           {row.original.referenceNo ? (
             <p className="text-xs text-muted-foreground">Ref {row.original.referenceNo}</p>
           ) : null}
@@ -398,6 +435,23 @@ export function ProformasTable({
           >
             Export CSV
           </Button>
+          {archivedView ? (
+            <Button variant="secondary"
+              type="button" className="h-7 px-2 text-xs"
+              disabled={pending}
+              onClick={() => runBulk(() => bulkUnarchiveProformasAction(selected.map((row) => row.id)), clear)}
+            >
+              Restore
+            </Button>
+          ) : (
+            <Button variant="secondary"
+              type="button" className="h-7 px-2 text-xs"
+              disabled={pending}
+              onClick={() => runBulk(() => bulkArchiveProformasAction(selected.map((row) => row.id)), clear)}
+            >
+              Archive
+            </Button>
+          )}
           <Button variant="secondary"
             type="button" className="h-7 px-2 text-xs"
             disabled={pending}

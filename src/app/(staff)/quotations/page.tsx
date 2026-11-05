@@ -22,7 +22,14 @@ const STATUSES = ["draft", "sent", "accepted", "declined", "expired", "cancelled
 export default async function QuotationsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; filter?: string; saved?: string; error?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    q?: string;
+    filter?: string;
+    saved?: string;
+    error?: string;
+    archived?: string;
+  }>;
 }) {
   const user = await requireCapableUser("viewDocuments");
   const params = await searchParams;
@@ -31,6 +38,7 @@ export default async function QuotationsPage({
 
   const status = params.status && STATUSES.includes(params.status) ? params.status : "";
   const initialSearch = (params.q ?? "").trim();
+  const archived = params.archived === "1";
   const expiring = params.filter === "expiring";
   const deadline = params.filter === "deadline";
 
@@ -44,6 +52,7 @@ export default async function QuotationsPage({
 
   const quotations = await prisma.quotation.findMany({
     where: {
+      ...(archived ? { archivedAt: { not: null } } : { archivedAt: null }),
       ...(expiring ? { status: "sent", validUntil: { lte: soon } } : {}),
       ...(deadline
         ? { options: { some: { ticketingDeadline: { gte: now, lte: deadlineCutoff } } } }
@@ -62,6 +71,7 @@ export default async function QuotationsPage({
     customerName: quotation.contact.name,
     optionLabels: quotation.options.map((option) => option.label).join(" · "),
     status: quotation.status,
+    archived: Boolean(quotation.archivedAt),
     issuedIso: quotation.issueDate.toISOString(),
     issued: formatDate(quotation.issueDate),
     validUntilIso: quotation.validUntil.toISOString(),
@@ -108,6 +118,12 @@ export default async function QuotationsPage({
             Clear filter
           </Link>
         ) : null}
+        <Link
+          href={archived ? "/quotations" : "/quotations?archived=1"}
+          className={`ml-auto rounded-md border px-3 py-1 ${archived ? "border-brand-300 bg-secondary text-secondary-foreground" : "border-border bg-card text-muted-foreground"}`}
+        >
+          {archived ? "Show active quotations" : "Archived"}
+        </Link>
       </div>
 
       {quotations.length === 0 ? (
@@ -124,6 +140,7 @@ export default async function QuotationsPage({
           initialSearch={initialSearch}
           initialStatus={status}
           initialView={parseSavedView(savedView?.state)}
+          archivedView={archived}
         />
       )}
     </div>

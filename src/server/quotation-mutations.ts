@@ -1,4 +1,5 @@
 import type { Prisma } from "@/generated/prisma/client";
+import { canArchiveQuotation, quotationArchiveError } from "@/lib/archive";
 import { documentDateFromInput, toDateInput } from "@/lib/dates";
 import { actionError, actionOk, type ActionResult } from "@/server/actions/types";
 import { audit } from "@/server/audit";
@@ -171,4 +172,64 @@ export async function cancelQuotationCore(
     });
   });
   return actionOk(`Cancelled ${quotation.number}`);
+}
+
+/**
+ * Hide a closed quotation from the active work queue. The status, snapshot,
+ * documents and payments are untouched; financial reports still include it.
+ * Caller must authorise first.
+ */
+export async function archiveQuotationCore(
+  quotationId: string,
+  userId: string,
+): Promise<ActionResult> {
+  const quotation = await prisma.quotation.findUnique({ where: { id: quotationId } });
+  if (!quotation) return actionError("Quotation not found");
+  if (quotation.archivedAt) return actionError("This quotation is already archived");
+  if (!canArchiveQuotation(quotation.status)) {
+    return actionError(quotationArchiveError(quotation.status));
+  }
+
+  const archivedAt = new Date();
+  await prisma.$transaction(async (tx) => {
+    await tx.quotation.update({
+      where: { id: quotation.id },
+      data: { archivedAt, version: { increment: 1 } },
+    });
+    await audit(tx, {
+      userId,
+      action: "archiveQuotation",
+      entity: "Quotation",
+      entityId: quotation.id,
+      before: { status: quotation.status, archivedAt: null },
+      after: { status: quotation.status, archivedAt },
+    });
+  });
+  return actionOk(`Archived ${quotation.number}`);
+}
+
+/** Restore an archived quotation to the active lists. */
+export async function unarchiveQuotationCore(
+  quotationId: string,
+  userId: string,
+): Promise<ActionResult> {
+  const quotation = await prisma.quotation.findUnique({ where: { id: quotationId } });
+  if (!quotation) return actionError("Quotation not found");
+  if (!quotation.archivedAt) return actionError("This quotation is not archived");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.quotation.update({
+      where: { id: quotation.id },
+      data: { archivedAt: null, version: { increment: 1 } },
+    });
+    await audit(tx, {
+      userId,
+      action: "unarchiveQuotation",
+      entity: "Quotation",
+      entityId: quotation.id,
+      before: { status: quotation.status, archivedAt: quotation.archivedAt },
+      after: { status: quotation.status, archivedAt: null },
+    });
+  });
+  return actionOk(`Restored ${quotation.number}`);
 }

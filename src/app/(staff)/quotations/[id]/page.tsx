@@ -11,6 +11,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AttachmentPanel } from "@/components/attachment-panel";
+import { ConfirmButton } from "@/components/confirm-button";
 import { HistoryPanel } from "@/components/history-panel";
 import { QuotationEditor } from "@/components/quotation-editor";
 import {
@@ -22,6 +23,7 @@ import {
   StatusBadge,
 } from "@/components/ui";
 import { SelectField } from "@/components/ui/select";
+import { canArchiveQuotation } from "@/lib/archive";
 import { formatDate, formatDateTime } from "@/lib/dates";
 import { parseSnapshot, type QuotationSnapshot } from "@/lib/documents";
 import { formatRateMicro } from "@/lib/money";
@@ -31,6 +33,7 @@ import { requireCapableUser } from "@/server/auth";
 import { prisma } from "@/server/db";
 import { createItineraryFormAction } from "@/server/actions/itineraries";
 import { createProformaAction } from "@/server/actions/proformas";
+import { archiveQuotationAction, unarchiveQuotationAction } from "@/server/actions/quotations";
 import { buildQuotationSnapshot } from "@/server/documents";
 import {
   expireOverdueQuotations,
@@ -175,6 +178,28 @@ export default async function QuotationPage({
         subtitle="Options, flights, fares, margin and taxes. Sending locks the quotation and freezes its totals."
         actions={
           <>
+            {canManage && !quotation.archivedAt && canArchiveQuotation(quotation.status) ? (
+              <form action={archiveQuotationAction}>
+                <Input type="hidden" name="quotationId" value={quotation.id} />
+                <ConfirmButton
+                  variant="secondary"
+                  message="Archive this quotation? It is hidden from active lists but stays in reports and the audit log. Archiving does not cancel it or change its documents."
+                >
+                  Archive
+                </ConfirmButton>
+              </form>
+            ) : null}
+            {canManage && quotation.archivedAt ? (
+              <form action={unarchiveQuotationAction}>
+                <Input type="hidden" name="quotationId" value={quotation.id} />
+                <ConfirmButton
+                  variant="secondary"
+                  message="Restore this quotation to the active lists?"
+                >
+                  Restore
+                </ConfirmButton>
+              </form>
+            ) : null}
             {hasComparison ? (
               <Link href={`/quotations/${quotation.id}/diff`} className="btn-secondary">
                 Compare revisions
@@ -192,6 +217,13 @@ export default async function QuotationPage({
 
       {query.error ? <Alert tone="error">{query.error}</Alert> : null}
       {query.saved ? <Alert tone="success">Saved.</Alert> : null}
+      {quotation.archivedAt ? (
+        <Alert tone="info" title="Archived">
+          Archived {formatDateTime(quotation.archivedAt)}. This record is hidden from the active
+          quotation list; it is not cancelled and its documents and payments are unchanged. Use
+          Restore to bring it back.
+        </Alert>
+      ) : null}
       {quotation.supersedesId ? (
         <Alert tone="info">
           This revision supersedes{" "}

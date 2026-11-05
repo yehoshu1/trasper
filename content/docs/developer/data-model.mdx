@@ -34,7 +34,7 @@ stores a passenger type and quantity when the travellers are still unnamed.
 
 | Model | Purpose |
 | --- | --- |
-| `Quotation` | Number, revision, status, customer, branch, currency, dates, snapshot, bank, lock fields. |
+| `Quotation` | Number, revision, status, customer, branch, currency, dates, snapshot, bank, lock and archive fields. |
 | `QuoteOption` | Option label/type, PNR, deadline, cost currency, rate, margin, frozen totals. |
 | `Segment` | Flight segment with local wall-clock times. |
 | `FareLine` | Traveller cost in the option's cost currency: a named passenger, or a type plus quantity for an unnamed group. |
@@ -49,7 +49,7 @@ reference the quotation but keep their own snapshots.
 | Model | Purpose |
 | --- | --- |
 | `Itinerary` | Number, optional quotation/option/contact, branch, snapshot, issue time, supersede fields. |
-| `Proforma` | Number, quotation, option, bank, status, total, dates, terms, showVat, snapshot, cancellation. |
+| `Proforma` | Number, quotation, option, bank, status, total, dates, terms, showVat, snapshot, cancellation and archive fields. |
 | `ProformaLine` | Denormalised line rows for reporting/export. |
 | `Payment` | Append-only receipt or reversal, method, reference, `reversesId`. |
 | `Instalment` | Optional payment schedule target. |

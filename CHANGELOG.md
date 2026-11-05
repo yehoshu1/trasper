@@ -53,6 +53,9 @@ All notable changes to this project are documented here. The format follows
   records referenced by documents remain archive-only.
 - Administrators can cancel an accepted quotation with a reason from the **Accepted** panel.
   Issued documents and payments are left unchanged and must be handled separately.
+- Quotations and pro formas can be archived and restored. Archiving is a visibility flag only:
+  closed quotations and fully paid or cancelled pro formas leave the active list without changing
+  their status, documents, payments, numbers or report totals.
 - Administrators can also permanently delete an issued itinerary; its number is not reused and the
   linked quotation is left unchanged.
 - A public product landing page at `/`, focused on the workflow, features and

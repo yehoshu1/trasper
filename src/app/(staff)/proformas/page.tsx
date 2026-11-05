@@ -15,19 +15,21 @@ const STATUSES = ["unpaid", "part_paid", "paid", "cancelled"];
 export default async function ProformasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>;
+  searchParams: Promise<{ status?: string; q?: string; archived?: string }>;
 }) {
   const user = await requireCapableUser("viewCosts");
   const settings = await getSettings();
   const params = await searchParams;
   const status = params.status && STATUSES.includes(params.status) ? params.status : "";
   const initialSearch = (params.q ?? "").trim();
+  const archived = params.archived === "1";
 
   const savedView = await prisma.savedTableView.findUnique({
     where: { userId_listKey: { userId: user.id, listKey: "proformas" } },
   });
 
   const proformas = await prisma.proforma.findMany({
+    where: archived ? { archivedAt: { not: null } } : { archivedAt: null },
     include: {
       quotation: { include: { contact: true } },
       payments: true,
@@ -36,7 +38,11 @@ export default async function ProformasPage({
     take: 1000,
   });
 
-  const counts = await prisma.proforma.groupBy({ by: ["status"], _count: { _all: true } });
+  const counts = await prisma.proforma.groupBy({
+    by: ["status"],
+    where: archived ? { archivedAt: { not: null } } : { archivedAt: null },
+    _count: { _all: true },
+  });
   const countFor = (value: string) => counts.find((entry) => entry.status === value)?._count._all ?? 0;
   const outstanding = proformas
     .filter((proforma) => proforma.status !== "cancelled" && (!status || proforma.status === status))
@@ -59,6 +65,7 @@ export default async function ProformasPage({
       dueIso: proforma.dueDate ? proforma.dueDate.toISOString() : "",
       due: proforma.dueDate ? formatDate(proforma.dueDate) : "—",
       status: proforma.status,
+      archived: Boolean(proforma.archivedAt),
       totalMinor: proforma.totalMinor.toString(),
       balanceMinor: (proforma.totalMinor - paid).toString(),
       currency: proforma.currency,
@@ -78,7 +85,7 @@ export default async function ProformasPage({
           {STATUSES.map((entry) => (
             <Link
               key={entry}
-              href={`/proformas?status=${entry}`}
+              href={`/proformas?status=${entry}${archived ? "&archived=1" : ""}`}
               className={`rounded-full border px-3 py-1 ${
                 status === entry
                   ? "border-brand-300 bg-secondary text-secondary-foreground"
@@ -88,8 +95,23 @@ export default async function ProformasPage({
               {entry.replace("_", "-")} ({countFor(entry)})
             </Link>
           ))}
+          {!archived ? (
+            <Link
+              href="/proformas?archived=1"
+              className="rounded-full border border-border bg-card px-3 py-1 text-muted-foreground"
+            >
+              Archived
+            </Link>
+          ) : (
+            <Link
+              href="/proformas"
+              className="rounded-full border border-brand-300 bg-secondary px-3 py-1 text-secondary-foreground"
+            >
+              Show active
+            </Link>
+          )}
           {status ? (
-            <Link href="/proformas" className="btn-ghost h-7 px-2 text-xs">
+            <Link href={archived ? "/proformas?archived=1" : "/proformas"} className="btn-ghost h-7 px-2 text-xs">
               Clear status
             </Link>
           ) : null}
@@ -114,6 +136,7 @@ export default async function ProformasPage({
           initialSearch={initialSearch}
           initialStatus={status}
           initialView={parseSavedView(savedView?.state)}
+          archivedView={archived}
         />
       )}
     </div>

@@ -1,3 +1,5 @@
+import { canArchiveProforma, proformaArchiveError } from "@/lib/archive";
+import { actionError, actionOk, type ActionResult } from "@/server/actions/types";
 import { audit } from "@/server/audit";
 import { prisma } from "@/server/db";
 import { paidTotalForProforma } from "@/server/payments";
@@ -63,4 +65,63 @@ export async function cancelProformaCore(
     });
   if (rejection.message) return { ok: false, error: rejection.message };
   return { ok: true };
+}
+
+/**
+ * Hide a fully paid or cancelled pro forma from the active list. It remains
+ * readable, printable and part of financial reports. Caller must authorise.
+ */
+export async function archiveProformaCore(
+  proformaId: string,
+  userId: string,
+): Promise<ActionResult> {
+  const proforma = await prisma.proforma.findUnique({ where: { id: proformaId } });
+  if (!proforma) return actionError("Pro forma not found");
+  if (proforma.archivedAt) return actionError("This pro forma is already archived");
+  if (!canArchiveProforma(proforma.status)) {
+    return actionError(proformaArchiveError(proforma.status));
+  }
+
+  const archivedAt = new Date();
+  await prisma.$transaction(async (tx) => {
+    await tx.proforma.update({
+      where: { id: proforma.id },
+      data: { archivedAt },
+    });
+    await audit(tx, {
+      userId,
+      action: "archiveProforma",
+      entity: "Proforma",
+      entityId: proforma.id,
+      before: { status: proforma.status, archivedAt: null },
+      after: { status: proforma.status, archivedAt },
+    });
+  });
+  return actionOk(`Archived ${proforma.number}`);
+}
+
+/** Restore an archived pro forma to the active list. */
+export async function unarchiveProformaCore(
+  proformaId: string,
+  userId: string,
+): Promise<ActionResult> {
+  const proforma = await prisma.proforma.findUnique({ where: { id: proformaId } });
+  if (!proforma) return actionError("Pro forma not found");
+  if (!proforma.archivedAt) return actionError("This pro forma is not archived");
+
+  await prisma.$transaction(async (tx) => {
+    await tx.proforma.update({
+      where: { id: proforma.id },
+      data: { archivedAt: null },
+    });
+    await audit(tx, {
+      userId,
+      action: "unarchiveProforma",
+      entity: "Proforma",
+      entityId: proforma.id,
+      before: { status: proforma.status, archivedAt: proforma.archivedAt },
+      after: { status: proforma.status, archivedAt: null },
+    });
+  });
+  return actionOk(`Restored ${proforma.number}`);
 }

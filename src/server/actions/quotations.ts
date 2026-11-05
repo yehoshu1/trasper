@@ -26,9 +26,11 @@ import { actionUser } from "@/server/guard";
 import { prisma } from "@/server/db";
 import { allocateNumber, revisionNumber } from "@/server/numbering";
 import {
+  archiveQuotationCore,
   cancelQuotationCore,
   copyOptions,
   duplicateQuotationCore,
+  unarchiveQuotationCore,
 } from "@/server/quotation-mutations";
 import { getSettings } from "@/server/settings";
 import {
@@ -636,6 +638,36 @@ export async function cancelQuotationAction(formData: FormData): Promise<void> {
   if (!result.ok) fail(`/quotations/${parsed.data.quotationId}`, result.error ?? "Could not cancel");
   revalidatePath(`/quotations/${parsed.data.quotationId}`);
   revalidatePath("/quotations");
+  redirect(`/quotations/${parsed.data.quotationId}?saved=1`);
+}
+
+export async function archiveQuotationAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageQuotations");
+  const parsed = z
+    .object({ quotationId: z.string().min(1).max(64) })
+    .safeParse({ quotationId: formData.get("quotationId") });
+  if (!parsed.success) fail("/quotations", "Invalid quotation");
+
+  const result = await archiveQuotationCore(parsed.data.quotationId, user.id);
+  if (!result.ok) fail(`/quotations/${parsed.data.quotationId}`, result.error ?? "Could not archive");
+  revalidatePath(`/quotations/${parsed.data.quotationId}`);
+  revalidatePath("/quotations");
+  revalidatePath("/dashboard");
+  redirect(`/quotations/${parsed.data.quotationId}?saved=1`);
+}
+
+export async function unarchiveQuotationAction(formData: FormData): Promise<void> {
+  const user = await actionUser("manageQuotations");
+  const parsed = z
+    .object({ quotationId: z.string().min(1).max(64) })
+    .safeParse({ quotationId: formData.get("quotationId") });
+  if (!parsed.success) fail("/quotations", "Invalid quotation");
+
+  const result = await unarchiveQuotationCore(parsed.data.quotationId, user.id);
+  if (!result.ok) fail(`/quotations/${parsed.data.quotationId}`, result.error ?? "Could not restore");
+  revalidatePath(`/quotations/${parsed.data.quotationId}`);
+  revalidatePath("/quotations");
+  revalidatePath("/dashboard");
   redirect(`/quotations/${parsed.data.quotationId}?saved=1`);
 }
 

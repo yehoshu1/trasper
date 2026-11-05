@@ -161,6 +161,7 @@ model Quotation {
   notes            String?
   cancelledReason  String?
   cancelledAt      DateTime?
+  archivedAt       DateTime? // hidden from active lists; never a cancellation
   snapshot         String? // full document snapshot taken when sent
   sentAt           DateTime?
   lockedAt         DateTime?
@@ -177,6 +178,7 @@ model Quotation {
 
   @@index([contactId])
   @@index([status, validUntil])
+  @@index([archivedAt])
 }
 
 model QuoteOption {
@@ -304,6 +306,7 @@ model Proforma {
   snapshot        String
   cancelledReason String?
   cancelledAt     DateTime?
+  archivedAt      DateTime? // hidden from active lists; never a cancellation
   createdById     String
   createdBy       User           @relation(fields: [createdById], references: [id])
   createdAt       DateTime       @default(now())
@@ -314,6 +317,7 @@ model Proforma {
 
   @@index([quotationId])
   @@index([status])
+  @@index([archivedAt])
 }
 
 model ProformaLine {

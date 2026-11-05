@@ -109,6 +109,19 @@ every payment action and by the scheduled rollup.
 Cancelling a pro forma requires a zero net balance. Reverse the payments first. A cancelled pro forma
 keeps its number and snapshot.
 
+## Archiving
+
+Archiving is a visibility flag, not a lifecycle state. It never changes `status`, the snapshot,
+totals, payments or document numbers.
+
+- A quotation can be archived once it is `accepted`, `declined`, `expired`, `cancelled` or
+  `superseded`. Drafts are deleted instead, and sent quotations must be cancelled first.
+- A pro forma can be archived once it is `paid` or `cancelled`. Unpaid and part-paid pro formas stay
+  in the active list so the balance can still be followed.
+- Archived records disappear from the active quotation and pro forma lists and are reachable through
+  the **Archived** view, direct links, reports and the audit log.
+- Restoring clears the flag and returns the record to the active list. Both operations are audited.
+
 ## Optimistic locking
 
 Editable records carry a `version`. The editor sends the version it loaded; the write compares it in

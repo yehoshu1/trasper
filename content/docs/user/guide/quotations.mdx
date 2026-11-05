@@ -14,9 +14,10 @@ reference, customer, passenger, PNR or status.
 
 - Full-text search across numbers, references, customers, passengers and PNRs.
 - Status filters: draft, sent, accepted, declined, expired, cancelled, superseded.
+- An **Archived** view for closed quotations taken out of the active work queue.
 - Quick filters for **expiring** and **ticketing deadline**.
 - Column visibility, sorting and a saved per-user table view for the list.
-- Bulk actions for duplicating or cancelling selected quotations.
+- Bulk actions for duplicating, archiving/restoring or cancelling selected quotations.
 - CSV export of the selected rows.
 
 Saved views are stored per user in `SavedTableView`; they never change what another user sees.
@@ -29,6 +30,8 @@ Saved views are stored per user in `SavedTableView`; they never change what anot
 | Duplicate | Manage quotations | Creates a new draft copy with new numbers. |
 | Revise | Any non-draft quotation | Creates the next revision and supersedes the old record. |
 | Cancel | A draft or sent quotation | Cancels with a reason; the number is never reused. |
+| Archive | Accepted, declined, expired, cancelled or superseded | Hides it from the active list without changing its status or documents. |
+| Restore | Archived quotation | Returns it to the active list. |
 | Delete | An unsent draft with no issued documents | Permanently removes the draft and audits it. |
 
 ## Status meanings
@@ -62,6 +65,14 @@ by an administrator: open the quotation and use **Cancel accepted quotation** in
 panel. Issued itineraries and pro formas are not cancelled automatically and payments must be
 reversed separately. Declined, expired and superseded quotations cannot be cancelled. A revision of
 a cancelled quotation is allowed and creates a new draft.
+
+## Archive and restore
+
+Archiving is a visibility flag, not a status. A closed quotation can be archived from its page or
+from the list; drafts and sent quotations cannot. Archiving does not cancel the quotation, change its
+snapshot, supersede a revision, cancel a document or reverse a payment. The record stays readable,
+keeps its number, remains in the audit log and is still included in historical financial reports.
+Use **Archived** in the list to find it and **Restore** to return it to the active queue.
 
 ## Read-only view
 
