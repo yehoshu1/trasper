@@ -51,8 +51,8 @@ All notable changes to this project are documented here. The format follows
   documentation, with retry actions and an error reference when available.
 - Unreferenced customers and passengers can now be permanently deleted;
   records referenced by documents remain archive-only.
-- Administrators can cancel an accepted quotation with a reason from the **Accepted** panel.
-  Issued documents and payments are left unchanged and must be handled separately.
+- Administrators can cancel an accepted quotation with a reason from the admin control above the
+  quotation editor. Issued documents and payments are left unchanged and must be handled separately.
 - Quotations and pro formas can be archived and restored. Archiving is a visibility flag only:
   closed quotations and fully paid or cancelled pro formas leave the active list without changing
   their status, documents, payments, numbers or report totals.

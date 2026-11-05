@@ -1003,6 +1003,31 @@ export function QuotationEditor({
         </form>
       ) : null}
 
+      {canManage && quotation.status === "accepted" && isAdmin ? (
+        <form
+          action={cancelQuotationAction}
+          className="no-print mb-4 flex flex-wrap items-center justify-end gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 dark:border-amber-900/60 dark:bg-amber-950/40"
+        >
+          <Input type="hidden" name="quotationId" value={quotation.id} />
+          <p className="mr-auto text-xs font-medium text-amber-900 dark:text-amber-200">
+            Admin only: cancelling the accepted quotation does not cancel issued itineraries or pro
+            formas, or reverse payments.
+          </p>
+          <Input
+            name="reason" className="h-8 w-52 text-xs"
+            placeholder="Reason for cancelling"
+            required
+            minLength={3}
+          />
+          <ConfirmButton variant="destructive" className="px-3 py-1.5 text-xs"
+            title="Cancel accepted quotation?"
+            message="This quotation has already been accepted. Cancelling it does not cancel issued itineraries or pro formas, or reverse payments. Continue?"
+          >
+            Cancel accepted quotation
+          </ConfirmButton>
+        </form>
+      ) : null}
+
       {message ? (
         <div className="no-print mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200">
           {message}
@@ -1947,33 +1972,10 @@ export function QuotationEditor({
                   The accepted option is ready for an itinerary and pro forma on the quotation page.
                 </p>
                 {isAdmin ? (
-                  <div className="space-y-2 border-t border-border/70 pt-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Admin override
-                    </h3>
-                    <p className="text-[11px] text-muted-foreground">
-                      Cancelling the accepted quotation does not cancel issued itineraries or pro
-                      formas, or reverse payments.
-                    </p>
-                    <form action={cancelQuotationAction} className="space-y-2">
-                      <Input type="hidden" name="quotationId" value={quotation.id} />
-                      <Input
-                        name="reason"
-                        className="text-xs"
-                        placeholder="Reason for cancelling"
-                        required
-                        minLength={3}
-                      />
-                      <ConfirmButton
-                        variant="destructive"
-                        className="w-full"
-                        title="Cancel accepted quotation?"
-                        message="This quotation has already been accepted. Cancelling it does not cancel issued itineraries or pro formas, or reverse payments. Continue?"
-                      >
-                        Cancel accepted quotation
-                      </ConfirmButton>
-                    </form>
-                  </div>
+                  <p className="border-t border-border/70 pt-3 text-[11px] text-muted-foreground">
+                    Administrators can cancel this accepted quotation from the admin control at the
+                    top of the page. Issued itineraries, pro formas and payments are left unchanged.
+                  </p>
                 ) : null}
               </div>
             ) : null}

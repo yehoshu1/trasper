@@ -29,7 +29,7 @@ Saved views are stored per user in `SavedTableView`; they never change what anot
 | Open | Any visible quotation | Opens the editor or the read-only customer view. |
 | Duplicate | Manage quotations | Creates a new draft copy with new numbers. |
 | Revise | Any non-draft quotation | Creates the next revision and supersedes the old record. |
-| Cancel | A draft or sent quotation | Cancels with a reason; the number is never reused. |
+| Cancel | Draft or sent, or accepted by an admin | Cancels with a reason; the number is never reused. |
 | Archive | Accepted, declined, expired, cancelled or superseded | Hides it from the active list without changing its status or documents. |
 | Restore | Archived quotation | Returns it to the active list. |
 | Delete | An unsent draft with no issued documents | Permanently removes the draft and audits it. |
@@ -61,9 +61,9 @@ markup and VAT columns are hidden for roles without `viewCosts`.
 
 Cancellation requires a reason. It does not delete the document or release its number. Drafts and
 sent quotations can be cancelled by an agent. An accepted quotation can also be cancelled, but only
-by an administrator: open the quotation and use **Cancel accepted quotation** in the **Accepted**
-panel. Issued itineraries and pro formas are not cancelled automatically and payments must be
-reversed separately. Declined, expired and superseded quotations cannot be cancelled. A revision of
+by an administrator: open the quotation and use **Cancel accepted quotation** in the admin control
+above the editor, next to the other quotation actions. Issued itineraries and pro formas are not
+cancelled automatically and payments must be reversed separately. Declined, expired and superseded quotations cannot be cancelled. A revision of
 a cancelled quotation is allowed and creates a new draft.
 
 ## Archive and restore
