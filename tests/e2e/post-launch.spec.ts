@@ -124,8 +124,7 @@ async function downloadPdf(page: import("@playwright/test").Page): Promise<Buffe
   return bytes;
 }
 
-test("a non-default bank account is frozen into the issued PDF", async () => {
-
+test("quotations hide bank details and the pro forma freezes the chosen account", async () => {
   // Two accounts: one default, one deliberately not default.
   await page.goto("/settings/banks");
   await page.fill("#label", bankDefault);
@@ -133,7 +132,10 @@ test("a non-default bank account is frozen into the issued PDF", async () => {
   await page.fill("#accountName", "E2E Default");
   await page.fill("#accountNumber", `D-${stamp}`);
   await chooseOption(page, page.locator("#currency"), "MWK");
-  await page.check('input[name="isDefault"]');
+  const defaultInput = page.locator('input[name="isDefault"]');
+  if (!(await defaultInput.isChecked())) {
+    await page.locator('label:has-text("Default account for new documents")').click();
+  }
   await page.click('button:has-text("Save account")');
   await expect(page.getByText("Saved.").first()).toBeVisible();
 
@@ -143,7 +145,10 @@ test("a non-default bank account is frozen into the issued PDF", async () => {
   await page.fill("#accountName", "E2E Alternate");
   await page.fill("#accountNumber", `A-${stamp}`);
   await chooseOption(page, page.locator("#currency"), "MWK");
-  await page.uncheck('input[name="isDefault"]');
+  const alternateDefault = page.locator('input[name="isDefault"]');
+  if (await alternateDefault.isChecked()) {
+    await page.locator('label:has-text("Default account for new documents")').click();
+  }
   await page.click('button:has-text("Save account")');
   await expect(page.getByText("Saved.").first()).toBeVisible();
 
@@ -165,22 +170,39 @@ test("a non-default bank account is frozen into the issued PDF", async () => {
   await page.click('button:has-text("Mark sent")');
   await expect(page.getByRole("button", { name: "Accept Option A" })).toBeVisible({ timeout: 20_000 });
 
-  const before = await downloadPdf(page);
-  const beforeText = pdfContent(before);
-  expect(beforeText).toContain("E2E Alternate");
-  expect(beforeText).not.toContain("LIVE CHANGED");
+  // The quotation prints prices, but never payment details.
+  const quotationPdf = pdfContent(await downloadPdf(page));
+  expect(quotationPdf).not.toContain("E2E Alternate");
+  expect(quotationPdf).not.toContain("Payment details");
 
-  // Change the live account. The issued PDF must not change.
+  // Accept the option and issue the pro forma, which does print the account.
+  await page.click('button:has-text("Accept Option A")');
+  await expect(page.getByText("Accepted Option A").first()).toBeVisible({ timeout: 20_000 });
+  await page.click('button:has-text("Create pro forma")');
+  await expect(page).toHaveURL(/\/proformas\/[a-z0-9]+$/i, { timeout: 20_000 });
+  await expect(page.getByText("Draft pro forma").first()).toBeVisible();
+  await page.click('button:has-text("Mark sent")');
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Mark sent" })
+    .click();
+  await expect(page.getByText("Unpaid").first()).toBeVisible({ timeout: 20_000 });
+  const proformaUrl = page.url();
+
+  const before = pdfContent(await downloadPdf(page));
+  expect(before).toContain("E2E Alternate");
+  expect(before).not.toContain("LIVE CHANGED");
+
+  // Change the live account. The issued pro forma must not change.
   await page.goto(editHref!);
   await page.fill("#accountName", "LIVE CHANGED — MUST NOT PRINT");
   await page.fill("#accountNumber", `LIVE-${stamp}`);
   await page.click('button:has-text("Save account")');
   await expect(page.getByText("Saved.").first()).toBeVisible();
 
-  await page.goto(quotationUrl);
-  const after = await downloadPdf(page);
-  const afterText = pdfContent(after);
-  expect(afterText).toContain("E2E Alternate");
-  expect(afterText).not.toContain("LIVE CHANGED");
-  expect(afterText).not.toContain(`LIVE-${stamp}`);
+  await page.goto(proformaUrl);
+  const after = pdfContent(await downloadPdf(page));
+  expect(after).toContain("E2E Alternate");
+  expect(after).not.toContain("LIVE CHANGED");
+  expect(after).not.toContain(`LIVE-${stamp}`);
 });
