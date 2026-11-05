@@ -58,6 +58,8 @@ All notable changes to this project are documented here. The format follows
   their status, documents, payments, numbers or report totals.
 - Administrators can also permanently delete an issued itinerary; its number is not reused and the
   linked quotation is left unchanged.
+- The standalone itinerary form now has an always-visible **Import a PNR or itinerary** panel with
+  **Read / convert**, matching the quotation editor. The old "Already booked?" wording stays removed.
 - A public product landing page at `/`, focused on the workflow, features and
   value proposition. The authenticated staff dashboard now lives at
   `/dashboard`, and all post-sign-in redirects, navigation links and end-to-end

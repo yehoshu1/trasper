@@ -8,7 +8,7 @@ import { toDateInput } from "@/lib/dates";
 import { parseSnapshot, type ItinerarySnapshot } from "@/lib/documents";
 import { parsePnr } from "@/lib/pnr";
 import { convertToPnr } from "@/lib/pnr/convert";
-import { standaloneItinerarySchema } from "@/lib/schemas";
+import { pnrConvertInputSchema, standaloneItinerarySchema } from "@/lib/schemas";
 import { audit } from "@/server/audit";
 import { actionUser } from "@/server/guard";
 import { prisma } from "@/server/db";
@@ -155,6 +155,62 @@ export async function createItineraryAction(quotationId: string): Promise<Action
     return actionError(errorMessage(error));
   }
   redirect(`/itineraries/${itineraryId}`);
+}
+
+/**
+ * Read a PNR or itinerary for the standalone form without creating anything.
+ * The flights are applied to the client form, so the agent can review them
+ * before submitting. Read-only: no quotation or itinerary is written here.
+ */
+export async function parseItineraryPnrAction(
+  text: string,
+  referenceYear?: number,
+): Promise<{
+  ok: boolean;
+  error?: string;
+  result?: ReturnType<typeof parsePnr>;
+  pnrText?: string;
+  format?: "pnr" | "itinerary";
+}> {
+  try {
+    await actionUser("manageDocuments");
+    const parsed = pnrConvertInputSchema.safeParse({ text, referenceYear });
+    if (!parsed.success) {
+      return { ok: false, error: parsed.error.issues[0]?.message ?? "Paste a PNR or itinerary" };
+    }
+    const converted = convertToPnr(parsed.data.text, {
+      referenceYear: parsed.data.referenceYear,
+    });
+    const reparsed = parsePnr(converted.pnrText, {
+      referenceYear: parsed.data.referenceYear,
+    });
+    return {
+      ok: true,
+      result: {
+        ...reparsed,
+        // Keep the operating carrier from the source; canonical PNR text
+        // omits the free-text OPERATED BY line.
+        segments: converted.segments.map((segment) => ({
+          airline: segment.airline,
+          flightNo: segment.flightNo,
+          fromIata: segment.fromIata,
+          toIata: segment.toIata,
+          departLocal: segment.departLocal,
+          arriveLocal: segment.arriveLocal,
+          ...(segment.cabin ? { cabin: segment.cabin } : {}),
+          ...(segment.operatingCarrier
+            ? { operatingCarrier: segment.operatingCarrier }
+            : {}),
+          raw: "",
+        })),
+        warnings: [...new Set([...converted.warnings, ...reparsed.warnings])],
+      },
+      pnrText: converted.pnrText,
+      format: converted.format,
+    };
+  } catch (error) {
+    return { ok: false, error: errorMessage(error) };
+  }
 }
 
 /** Create an itinerary that is not attached to a quotation and has no prices. */

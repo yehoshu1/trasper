@@ -31,12 +31,14 @@ Fields:
 | Booking reference (PNR) | Optional short record locator printed on the document. |
 | Issue branch | Two digits, used in the itinerary number. |
 | Flights | Add segments by hand with **+ Add flight** — airline, flight number, airports and local times. At least one flight is required unless pasted text is supplied. |
-| Or paste a PNR or itinerary | Optional. Parsed deterministically and never guessed. Ignored when manual flights are present. |
+| Import a PNR or itinerary | Always visible. Paste booking-system output or itinerary lines and choose **Read / convert** to apply the flights to the rows above. Parsed deterministically and never guessed. |
 | Passengers | Optional selection from the passenger list. |
 | Travel notes | Blank uses the standard itinerary notes. |
 
-Either the manual flight rows or the pasted text must produce at least one segment. Adding the
-flights by hand is the path for an itinerary that has no booking text yet.
+Either the manual flight rows or the pasted text must produce at least one segment. **Read /
+convert** fills the flight rows for review before the itinerary is created; submitting pasted text
+without converting it also works. Adding the flights by hand is the path for an itinerary that has
+no booking text yet.
 
 The standalone snapshot has its own contact, passengers and flights. It has no quotation, option,
 prices, payments or pro forma. It cannot be converted into a quotation later; create a quotation if

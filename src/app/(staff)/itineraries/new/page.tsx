@@ -38,7 +38,7 @@ export default async function NewItineraryPage({
       <PageHeader
         eyebrow="Itineraries"
         title="New standalone itinerary"
-        subtitle="Create an itinerary without a quotation or prices. Add the flights by hand, or paste a PNR or itinerary text to read them."
+        subtitle="Create an itinerary without a quotation or prices. Add the flights by hand, or paste a PNR or itinerary and choose Read / convert."
         actions={
           <Link href="/itineraries" className="btn-secondary">
             Back to itineraries
@@ -85,20 +85,6 @@ export default async function NewItineraryPage({
         <Card title="Flights and passengers">
           <div className="space-y-4">
             <ItinerarySegmentFields />
-
-            <Field
-              label="Or paste a PNR or itinerary"
-              htmlFor="pnrText"
-              hint="Optional when flights are added above. Pasted booking-system output is read and never guessed; it is ignored when manual flights are present."
-            >
-              <Textarea
-                id="pnrText"
-                name="pnrText"
-                rows={7}
-                className="font-mono text-xs"
-                placeholder="Paste PNR or itinerary lines here"
-              />
-            </Field>
 
             <div>
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
