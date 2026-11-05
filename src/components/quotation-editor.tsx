@@ -377,8 +377,6 @@ export function QuotationEditor({
 }: QuotationEditorProps) {
   const router = useRouter();
   const canEdit = canEditProp && !quotation.locked;
-  const canCancel =
-    canManage && (quotation.status === "sent" || (quotation.status === "accepted" && isAdmin));
   const [header, setHeader] = useState<HeaderDraft>({
     referenceNo: quotation.referenceNo,
     branch: quotation.branch,
@@ -984,7 +982,7 @@ export function QuotationEditor({
         </div>
       </div>
 
-      {canCancel ? (
+      {canManage && quotation.status === "sent" ? (
         <form
           action={cancelQuotationAction}
           className="no-print mb-4 flex flex-wrap items-center justify-end gap-2"
@@ -997,12 +995,8 @@ export function QuotationEditor({
             minLength={3}
           />
           <ConfirmButton variant="destructive" className="px-3 py-1.5 text-xs"
-            title={quotation.status === "accepted" ? "Cancel accepted quotation?" : "Cancel quotation?"}
-            message={
-              quotation.status === "accepted"
-                ? "This quotation has already been accepted. Cancelling it does not cancel issued itineraries or pro formas, or reverse payments. Continue?"
-                : "This quotation is awaiting a reply and has not been accepted. The customer will no longer be able to accept it."
-            }
+            title="Cancel quotation?"
+            message="This quotation is awaiting a reply and has not been accepted. The customer will no longer be able to accept it."
           >
             Cancel quotation
           </ConfirmButton>
@@ -1947,11 +1941,40 @@ export function QuotationEditor({
             ) : null}
 
             {quotation.status === "accepted" ? (
-              <div className="card card-body">
+              <div className="card card-body space-y-3">
                 <h2 className="text-sm font-semibold text-foreground">Accepted</h2>
                 <p className="text-xs text-muted-foreground">
                   The accepted option is ready for an itinerary and pro forma on the quotation page.
                 </p>
+                {isAdmin ? (
+                  <div className="space-y-2 border-t border-border/70 pt-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Admin override
+                    </h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      Cancelling the accepted quotation does not cancel issued itineraries or pro
+                      formas, or reverse payments.
+                    </p>
+                    <form action={cancelQuotationAction} className="space-y-2">
+                      <Input type="hidden" name="quotationId" value={quotation.id} />
+                      <Input
+                        name="reason"
+                        className="text-xs"
+                        placeholder="Reason for cancelling"
+                        required
+                        minLength={3}
+                      />
+                      <ConfirmButton
+                        variant="destructive"
+                        className="w-full"
+                        title="Cancel accepted quotation?"
+                        message="This quotation has already been accepted. Cancelling it does not cancel issued itineraries or pro formas, or reverse payments. Continue?"
+                      >
+                        Cancel accepted quotation
+                      </ConfirmButton>
+                    </form>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </aside>

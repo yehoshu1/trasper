@@ -175,10 +175,10 @@ test("quotations download as a PDF", async () => {
 test("an admin cancels the accepted quotation", async () => {
   await page.goto(quotationUrl);
   await page.fill('input[name="reason"]', "Client cancelled after acceptance");
-  await page.click('button:has-text("Cancel quotation")');
+  await page.click('button:has-text("Cancel accepted quotation")');
   await page
     .getByRole("alertdialog")
-    .getByRole("button", { name: "Cancel quotation" })
+    .getByRole("button", { name: "Cancel accepted quotation" })
     .click();
   await expect(page.getByText(/Client cancelled after acceptance —/)).toBeVisible({
     timeout: 20_000,
