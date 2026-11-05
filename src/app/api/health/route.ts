@@ -7,6 +7,7 @@ export async function GET() {
       ok: true,
       time: new Date().toISOString(),
       version: process.env.APP_VERSION ?? "dev",
+      revision: process.env.APP_REVISION ?? "dev",
     },
     { headers: { "Cache-Control": "no-store" } },
   );

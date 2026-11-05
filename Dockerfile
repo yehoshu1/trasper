@@ -3,10 +3,12 @@ FROM node:26-bookworm-slim AS build
 
 WORKDIR /app
 
-# The release pipeline passes the package.json version. The default keeps
-# plain `docker build` usable without an argument.
+# The release pipeline passes the package.json version and commit SHA. The
+# defaults keep plain `docker build` usable without arguments.
 ARG APP_VERSION=0.0.0-dev
-ENV APP_VERSION=$APP_VERSION
+ARG APP_REVISION=dev
+ENV APP_VERSION=$APP_VERSION \
+    APP_REVISION=$APP_REVISION
 
 # Install dependencies first for layer caching. The postinstall step removes
 # the native SWC packages: this project builds with @next/swc-wasm-nodejs.
@@ -49,8 +51,11 @@ ENV NODE_ENV=production \
     PORT=3000
 
 ARG APP_VERSION=0.0.0-dev
-ENV APP_VERSION=$APP_VERSION
-LABEL org.opencontainers.image.version=$APP_VERSION
+ARG APP_REVISION=dev
+ENV APP_VERSION=$APP_VERSION \
+    APP_REVISION=$APP_REVISION
+LABEL org.opencontainers.image.version=$APP_VERSION \
+      org.opencontainers.image.revision=$APP_REVISION
 
 WORKDIR /app
 

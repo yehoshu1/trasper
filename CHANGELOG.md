@@ -60,6 +60,8 @@ All notable changes to this project are documented here. The format follows
   linked quotation is left unchanged.
 - The standalone itinerary form now has an always-visible **Import a PNR or itinerary** panel with
   **Read / convert**, matching the quotation editor. The old "Already booked?" wording stays removed.
+- Docker images now bake the commit SHA into `APP_REVISION` and report it from `/api/health`, so a
+  stale deployment can be identified immediately.
 - **+ Add passenger** on a draft quotation now works for any active passenger, not only passengers
   already linked to the customer. Linked passengers are offered first and unlinked ones are marked.
 - Added **Dodoma International Airport (DOD)** to the airport seed data and as a reference-data

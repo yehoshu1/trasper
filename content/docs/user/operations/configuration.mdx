@@ -19,6 +19,7 @@ Deployment values belong in the environment. Agency identity belongs in the data
 | `APP_IMAGE_REPO` | GHCR repository for the production stack, without a tag. |
 | `APP_IMAGE_TAG` | Production image tag and release version, for example `1.2.3`. |
 | `APP_VERSION` | Read-only build value baked into the image; reported by `/api/health`. |
+| `APP_REVISION` | Read-only commit SHA baked into the image; reported by `/api/health`. |
 | `AUTH_SECRET` | Session signing secret; 32+ random characters outside development. |
 | `BETTER_AUTH_SECRET` | Optional alias for `AUTH_SECRET`. |
 | `SETTINGS_SECRET` | Optional separate key for encrypting settings secrets; defaults to `AUTH_SECRET`. |

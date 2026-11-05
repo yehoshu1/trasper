@@ -67,6 +67,23 @@ APP_IMAGE_REPO="ghcr.io/<owner>/<repo>"
 APP_IMAGE_TAG="1.2.3"
 ```
 
+### Verify the deployed revision
+
+Every image reports its build version and commit SHA:
+
+```bash
+curl -fsS https://your-domain.example/api/health
+```
+
+```json
+{ "ok": true, "version": "1.2.3", "revision": "<full commit SHA>" }
+```
+
+If the revision is not the commit you intended to deploy, the platform is still running an old
+image tag. Set `APP_IMAGE_TAG` to `latest`, the release version, or the exact `sha-<commit>` tag and
+redeploy. For automatic updates, use a moving tag such as `latest` or let Dokploy build the Dockerfile
+from the repository, and trigger deployment after the image build finishes.
+
 `APP_IMAGE_REPO` has no tag. `APP_IMAGE_TAG` is the release tag without the leading `v`. Pin an exact
 version in production; `latest` works but makes an upgrade implicit.
 

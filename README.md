@@ -158,7 +158,8 @@ These are deployment values, not agency branding. Copy `.env.example` and set wh
 | `APP_NAME` | Optional display name used before settings load, e.g. for the TOTP issuer. |
 | `APP_PORT` | Optional host port for `docker-compose.dev.yml`; default `3000`. |
 | `APP_IMAGE_REPO` | GHCR repository for the production stack, e.g. `ghcr.io/<owner>/<repo>`. |
-| `APP_IMAGE_TAG` | Production image tag / release version, e.g. `0.1.0`. |
+| `APP_IMAGE_TAG` | Production image tag / release version, e.g. `0.1.0` or `sha-<commit>`. |
+| `APP_REVISION` | Read-only commit SHA baked into the image; reported by `/api/health`. |
 | `ACME_EMAIL` | Optional Let's Encrypt contact address for Caddy. |
 
 Seed-only variables initialise a fresh database. Once an admin saves the corresponding setting, the database is the source of truth:
