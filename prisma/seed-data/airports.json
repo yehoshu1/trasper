@@ -98,6 +98,13 @@
     "tz": "Africa/Dar_es_Salaam"
   },
   {
+    "iata": "DOD",
+    "name": "Dodoma International Airport",
+    "city": "Dodoma",
+    "country": "Tanzania",
+    "tz": "Africa/Dar_es_Salaam"
+  },
+  {
     "iata": "ZNZ",
     "name": "Abeid Amani Karume International Airport",
     "city": "Zanzibar",

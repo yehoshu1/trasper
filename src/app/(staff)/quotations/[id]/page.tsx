@@ -133,11 +133,19 @@ export default async function QuotationPage({
       select: { id: true, label: true, currency: true, isDefault: true },
     }),
     prisma.passenger.findMany({
-      where: {
-        OR: [
-          { contacts: { some: { id: quotation.contactId } } },
-          { fares: { some: { option: { quotationId: quotation.id } } } },
-        ],
+      // A draft may use any active passenger; ones linked to this customer
+      // are offered first. Read-only views stay limited to passengers already
+      // linked to the customer or already priced on this quotation.
+      where: canEdit
+        ? { archivedAt: null }
+        : {
+            OR: [
+              { contacts: { some: { id: quotation.contactId } } },
+              { fares: { some: { option: { quotationId: quotation.id } } } },
+            ],
+          },
+      include: {
+        contacts: { where: { id: quotation.contactId }, select: { id: true } },
       },
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
     }),
@@ -251,6 +259,7 @@ export default async function QuotationPage({
           id: passenger.id,
           name: [passenger.title, passenger.firstName, passenger.lastName].filter(Boolean).join(" "),
           type: passenger.type as "adult" | "child" | "infant",
+          linked: passenger.contacts.length > 0,
         }))}
         currencies={currencyCodes}
         branches={branchOptions}

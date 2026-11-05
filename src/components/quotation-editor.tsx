@@ -73,6 +73,7 @@ interface PassengerChoice {
   id: string;
   name: string;
   type: PassengerType;
+  linked: boolean;
 }
 
 export interface QuotationEditorProps {
@@ -648,9 +649,16 @@ export function QuotationEditor({
   function addFare() {
     if (!active) return;
     const used = new Set(active.fares.map((fare) => fare.passengerId));
-    const choice = passengers.find((passenger) => !used.has(passenger.id));
+    const unused = passengers.filter((passenger) => !used.has(passenger.id));
+    // Prefer a passenger already linked to this customer, but do not block a
+    // draft when the agent still has to link them.
+    const choice = unused.find((passenger) => passenger.linked) ?? unused[0];
     if (!choice) {
-      setError("Every linked passenger is already in this option. Link another passenger to the customer first.");
+      setError(
+        passengers.length === 0
+          ? "No active passengers yet. Create one under Passengers, then add the fare."
+          : "Every active passenger is already in this option. Add another passenger under Passengers.",
+      );
       return;
     }
     updateOption(activeIndex, {
@@ -1524,7 +1532,7 @@ export function QuotationEditor({
                                       }}
                                       options={passengers.map((passenger) => ({
                                         value: passenger.id,
-                                        label: `${passenger.name} (${passenger.type})`,
+                                        label: `${passenger.name} (${passenger.type})${passenger.linked ? "" : " · not linked"}`,
                                       }))}
                                     />
                                   ) : (

@@ -28,13 +28,15 @@ group with named passengers when the names arrive; if the quotation has already 
 
 ## Create and edit
 
-Use **Passengers → New passenger**, or create one while working on a quotation. Each save is
+Use **Passengers → New passenger**, or add one directly from the customer record. Each save is
 audited, and updates use optimistic locking.
 
 ## Link to customers
 
-Linking a passenger to a customer makes them available for that customer's quotations. The relation
-is many-to-many; the merge tools move links rather than copying people.
+Linking a passenger to a customer makes them appear first in that customer's quotation fare picker.
+A draft quotation can still use any active passenger; unlinked passengers are labelled **not linked**
+so the missing relationship is visible. The relation is many-to-many; the merge tools move links
+rather than copying people.
 
 ## Merge duplicates
 

@@ -60,6 +60,10 @@ All notable changes to this project are documented here. The format follows
   linked quotation is left unchanged.
 - The standalone itinerary form now has an always-visible **Import a PNR or itinerary** panel with
   **Read / convert**, matching the quotation editor. The old "Already booked?" wording stays removed.
+- **+ Add passenger** on a draft quotation now works for any active passenger, not only passengers
+  already linked to the customer. Linked passengers are offered first and unlinked ones are marked.
+- Added **Dodoma International Airport (DOD)** to the airport seed data and as a reference-data
+  migration so existing databases receive it on upgrade.
 - A public product landing page at `/`, focused on the workflow, features and
   value proposition. The authenticated staff dashboard now lives at
   `/dashboard`, and all post-sign-in redirects, navigation links and end-to-end
