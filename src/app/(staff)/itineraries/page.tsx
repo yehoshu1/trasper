@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { ItinerariesTable, type ItineraryTableRow } from "@/components/list-tables";
-import { EmptyState, PageHeader } from "@/components/ui";
+import { Alert, EmptyState, PageHeader } from "@/components/ui";
 import { formatDate } from "@/lib/dates";
 import { hasCapability } from "@/lib/permissions";
 import { requireCapableUser } from "@/server/auth";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function ItinerariesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; superseded?: string }>;
+  searchParams: Promise<{ q?: string; superseded?: string; deleted?: string }>;
 }) {
   const user = await requireCapableUser("viewDocuments");
   const params = await searchParams;
@@ -62,6 +62,8 @@ export default async function ItinerariesPage({
           ) : null
         }
       />
+
+      {params.deleted ? <Alert tone="success">Itinerary deleted.</Alert> : null}
 
       <div className="mb-4 flex justify-end">
         <div className="flex gap-1 rounded-lg border border-border bg-card p-1 text-xs font-semibold">

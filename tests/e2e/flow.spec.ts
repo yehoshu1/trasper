@@ -15,6 +15,7 @@ const contactName = `E2E Travel ${stamp}`;
 test.describe.configure({ mode: "serial" });
 
 let quotationUrl = "";
+let itineraryUrl = "";
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
@@ -128,6 +129,7 @@ test("issue an itinerary from the accepted option", async () => {
   await page.goto(quotationUrl);
   await page.click('button:has-text("Create itinerary")');
   await expect(page).toHaveURL(/\/itineraries\/[a-z0-9]+$/i, { timeout: 20_000 });
+  itineraryUrl = page.url();
 
   // Frozen snapshot: the itinerary shows the flight that was issued.
   await expect(page.getByText("ET").first()).toBeVisible();
@@ -183,6 +185,17 @@ test("an admin cancels the accepted quotation", async () => {
   await expect(page.getByText(/Client cancelled after acceptance —/)).toBeVisible({
     timeout: 20_000,
   });
+});
+
+test("an admin deletes an issued itinerary", async () => {
+  await page.goto(itineraryUrl);
+  await page.click('button:has-text("Delete itinerary")');
+  await page
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Delete itinerary" })
+    .click();
+  await expect(page).toHaveURL(/\/itineraries\?deleted=1/);
+  await expect(page.getByText("Itinerary deleted.")).toBeVisible();
 });
 
 test("does not offer permanent delete for a customer with documents", async () => {

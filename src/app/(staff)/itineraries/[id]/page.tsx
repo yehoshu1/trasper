@@ -11,7 +11,7 @@ import { parseSnapshot, type ItinerarySnapshot } from "@/lib/documents";
 import { ItineraryDocument } from "@/documents/itinerary-document";
 import { requireCapableUser } from "@/server/auth";
 import { prisma } from "@/server/db";
-import { reissueItineraryFormAction } from "@/server/actions/itineraries";
+import { reissueItineraryFormAction, deleteItineraryFormAction } from "@/server/actions/itineraries";
 import { loadQuotation } from "@/server/quotations";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +46,7 @@ export default async function ItineraryPage({
     hasCapability(user, "manageDocuments") &&
     !itinerary.supersededAt &&
     (standalone || quotation?.status === "accepted");
+  const isAdmin = user.role === "admin";
 
   return (
     <div>
@@ -89,15 +90,30 @@ export default async function ItineraryPage({
         {itinerary.referenceNo ? (
           <span className="text-xs text-muted-foreground">Reference {itinerary.referenceNo}</span>
         ) : null}
-        {canReissue ? (
-          <form action={reissueItineraryFormAction} className="ml-auto">
-            <Input type="hidden" name="itineraryId" value={itinerary.id} />
-            <ConfirmButton variant="secondary"
-              message="Re-issue this itinerary? A new number is allocated and this one is marked superseded."
-            >
-              Re-issue itinerary
-            </ConfirmButton>
-          </form>
+        {canReissue || isAdmin ? (
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            {canReissue ? (
+              <form action={reissueItineraryFormAction}>
+                <Input type="hidden" name="itineraryId" value={itinerary.id} />
+                <ConfirmButton variant="secondary"
+                  message="Re-issue this itinerary? A new number is allocated and this one is marked superseded."
+                >
+                  Re-issue itinerary
+                </ConfirmButton>
+              </form>
+            ) : null}
+            {isAdmin ? (
+              <form action={deleteItineraryFormAction}>
+                <Input type="hidden" name="itineraryId" value={itinerary.id} />
+                <ConfirmButton
+                  variant="destructive"
+                  message="Permanently delete this itinerary? Its number is not reused and the linked quotation is not affected. This cannot be undone."
+                >
+                  Delete itinerary
+                </ConfirmButton>
+              </form>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

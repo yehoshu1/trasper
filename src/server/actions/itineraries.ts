@@ -55,6 +55,49 @@ export async function reissueItineraryFormAction(formData: FormData): Promise<vo
   }
 }
 
+export async function deleteItineraryFormAction(formData: FormData): Promise<void> {
+  const id = formId(formData, "itineraryId");
+  const user = await actionUser("manageDocuments");
+  if (user.role !== "admin") {
+    redirect(`/itineraries/${id}?error=${encodeURIComponent("Only an administrator can delete an itinerary")}`);
+  }
+  const parsed = z.string().min(1).max(64).safeParse(id);
+  if (!parsed.success) redirect(`/itineraries?error=${encodeURIComponent("Invalid itinerary")}`);
+  const itinerary = await prisma.itinerary.findUnique({ where: { id: parsed.data } });
+  if (!itinerary) redirect(`/itineraries?error=${encodeURIComponent("Itinerary not found")}`);
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.itinerary.delete({ where: { id: itinerary.id } });
+      await audit(tx, {
+        userId: user.id,
+        action: "deleteItinerary",
+        entity: "Itinerary",
+        entityId: itinerary.id,
+        before: {
+          number: itinerary.number,
+          quotationId: itinerary.quotationId,
+          contactId: itinerary.contactId,
+          referenceNo: itinerary.referenceNo,
+          issuedAt: itinerary.issuedAt.toISOString(),
+          supersededAt: itinerary.supersededAt?.toISOString() ?? null,
+          supersededBy: itinerary.supersededBy,
+        },
+        after: null,
+      });
+    });
+  } catch (error) {
+    redirect(
+      `/itineraries/${itinerary.id}?error=${encodeURIComponent(errorMessage(error))}`,
+    );
+  }
+
+  revalidatePath("/itineraries");
+  if (itinerary.quotationId) revalidatePath(`/quotations/${itinerary.quotationId}`);
+  if (itinerary.contactId) revalidatePath(`/customers/${itinerary.contactId}`);
+  redirect("/itineraries?deleted=1");
+}
+
 export async function createItineraryAction(quotationId: string): Promise<ActionResult> {
   let itineraryId: string;
   try {
