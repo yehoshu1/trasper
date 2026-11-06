@@ -43,6 +43,7 @@ export const quotationInclude = {
     orderBy: { createdAt: "desc" },
     include: { payments: { orderBy: { createdAt: "asc" } } },
   },
+  tickets: { orderBy: { createdAt: "desc" } },
 } satisfies Prisma.QuotationInclude;
 
 export type QuotationWithRelations = Prisma.QuotationGetPayload<{

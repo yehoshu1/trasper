@@ -19,6 +19,7 @@ export function navGroupsFor(user: { role: string; capabilities?: readonly Capab
   if (hasCapability(user, "viewDocuments")) {
     sales.push({ href: "/quotations", label: "Quotations" });
     sales.push({ href: "/itineraries", label: "Itineraries" });
+    sales.push({ href: "/tickets", label: "Tickets" });
   }
   if (hasCapability(user, "viewCosts")) sales.push({ href: "/proformas", label: "Pro formas" });
   if (hasCapability(user, "viewContacts")) sales.push({ href: "/customers", label: "Customers" });

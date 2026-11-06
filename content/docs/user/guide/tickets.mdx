@@ -1,0 +1,58 @@
+---
+title: Tickets
+description: Import airline-issued electronic tickets, store coupons and print ticket receipts.
+---
+
+A ticket is issued by the airline or its ticketing system. Trasper does not issue airline tickets; it
+records the issued electronic ticket, keeps its coupons and produces a printable itinerary receipt.
+
+## What an airline ticket contains
+
+A standard electronic ticket has:
+
+- a **13-digit ticket number** (the last digit is a check digit);
+- the passenger name as held by the airline;
+- the issue date, form of payment, plating carrier, pseudo-city and IATA number;
+- one or more **coupons**, each with flight, class, date, route, departure time, status, fare basis,
+  not-valid-before/after dates and baggage allowance;
+- an electronic ticket record held by the airline, which is what airport staff scan at check-in.
+
+The paper or PDF itinerary receipt is only a summary of that airline record. It is not the ticket
+itself.
+
+## Import tickets
+
+Open **Tickets → Import tickets** and paste either:
+
+- the airline `TKT:` block with the passenger, issue details and coupon lines; or
+- the `*HTE` electronic ticket list with names and ticket numbers; or
+- both together.
+
+Choose **Read / convert** to preview the ticket numbers and coupon counts, then save. Trasper only
+accepts 13-digit ticket numbers and never invents a number. Duplicate ticket numbers already in the
+system are skipped.
+
+Optionally link the imported tickets to a customer and quotation. If a quotation is chosen, its
+customer is used automatically.
+
+## Ticket record
+
+The ticket page shows:
+
+- passenger, ticket number, issue date, form of payment and plating details;
+- every coupon with its flight, route, date, status, fare basis, validity and baggage;
+- the original pasted ticket text for audit and reconciliation.
+
+Tickets are immutable records. A void, refund or reissue is a new airline record; import the
+replacement ticket rather than editing the old one.
+
+## Preview and PDF
+
+- On-screen preview from the ticket record.
+- PDF at `/api/pdf/ticket/[id]`.
+- The receipt prints the ticket number, passenger, issue details and coupon table. It is not a
+  boarding pass and does not replace the airline's electronic ticket record.
+
+## Permissions
+
+`manageDocuments` can import tickets. `viewDocuments` can see and print them.

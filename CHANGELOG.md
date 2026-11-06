@@ -74,6 +74,9 @@ All notable changes to this project are documented here. The format follows
   **Mark sent**. Recording payments still requires the pro forma to be sent.
 - Pro forma invoices now print invoice line items (description, quantity, unit price, line total)
   and no longer print the flight itinerary.
+- Added **Tickets**: import airline `TKT:` blocks and `*HTE` electronic ticket lists, store 13-digit
+  ticket numbers and coupons, link them to a customer or quotation, and print a ticket itinerary
+  receipt PDF. Trasper records airline-issued tickets; it does not issue tickets.
 - Quotations now contain additive **journeys** instead of alternative options. Every journey has its
   own flights, fares and pricing, journey totals add to one quotation total, and accepting the
   quotation includes every journey. Itineraries and pro formas print one section per journey with a

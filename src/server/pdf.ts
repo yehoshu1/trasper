@@ -24,11 +24,13 @@ import type {
   ItinerarySnapshot,
   ProformaSnapshot,
   QuotationSnapshot,
+  TicketSnapshot,
 } from "../lib/documents";
 import { formatMoney } from "../lib/money";
 import { roundDiv } from "../lib/pricing";
 import type { PricePresentation } from "../lib/pricing/presentation";
 import { proformaInvoiceLines, type InvoiceLine } from "../lib/proforma-invoice";
+import { formatTicketNumber } from "../lib/tickets/parse";
 import {
   SERVICE_UNIT_PLURALS,
   isServiceUnit,
@@ -1372,6 +1374,85 @@ export async function renderItineraryPdf(snapshot: ItinerarySnapshot): Promise<U
   builder.gap(10);
   notesBlock(builder, snapshot.notes, "Travel notes");
   builder.gap(6);
+
+  return builder.finish(snapshot.company.name, snapshot.number);
+}
+
+export async function renderTicketPdf(snapshot: TicketSnapshot): Promise<Uint8Array> {
+  const builder = await PdfBuilder.create(snapshot.template);
+  await companyHeader(builder, snapshot.company, "Electronic ticket", snapshot.number);
+
+  builder.paragraph("ELECTRONIC TICKET ITINERARY RECEIPT", {
+    size: 13, font: "bold", lineHeight: 18,
+  });
+  builder.gap(4);
+  const columns = [24, 32, 74, 58, 52, 34, 32, 55, 100, 50];
+  const labels = ["CPN", "USE", "FLIGHT", "ROUTE", "DATE", "TIME", "STATUS", "FARE", "VALIDITY", "BAG"];
+  const top = builder.cursor;
+  builder.pageRef.drawRectangle({
+    x: MARGIN, y: top - 16, width: CONTENT, height: 16, color: builder.palette.tableHeadBg,
+  });
+  let x = MARGIN;
+  labels.forEach((label, index) => {
+    builder.at(label, x + 3, top - 5, {
+      size: 6.5, font: "bold", color: builder.palette.tableHeadText,
+    });
+    x += columns[index]!;
+  });
+  builder.gap(20);
+
+  if (snapshot.coupons.length === 0) {
+    builder.paragraph("Coupon details were not present in the pasted ticket list.", {
+      size: 8.5, color: COLORS.muted, lineHeight: 11,
+    });
+  } else {
+    for (const coupon of snapshot.coupons) {
+      builder.ensure(22);
+      const rowTop = builder.cursor;
+      let col = MARGIN;
+      const values = [
+        coupon.coupon ?? String(coupon.position + 1),
+        coupon.useType === "ARPT" ? "ARPT" : "OPEN",
+        `${coupon.carrier} ${coupon.flightNo} ${coupon.bookingClass}`,
+        `${coupon.fromIata}-${coupon.toIata}`,
+        coupon.travelDate ? displayDate(coupon.travelDate) : "-",
+        coupon.departTime,
+        coupon.status,
+        coupon.fareBasis ?? "-",
+        [coupon.notValidBefore, coupon.notValidAfter]
+          .filter(Boolean)
+          .map((value) => displayDate(value))
+          .join(" - ") || "-",
+        coupon.baggage ?? "-",
+      ];
+      values.forEach((value, index) => {
+        const text = builder.wrap(value, 7.5, columns[index]! - 5)[0] ?? "";
+        builder.at(text, col + 3, rowTop - 3, { size: 7.5 });
+        col += columns[index]!;
+      });
+      builder.cursor = rowTop - 20;
+      builder.rule();
+    }
+  }
+
+  builder.gap(12);
+  const details = [
+    ["Passenger", snapshot.passengerName],
+    ["Ticket number", formatTicketNumber(snapshot.number)],
+    ["Date of issue", snapshot.issueDate ? displayDate(snapshot.issueDate) : "-"],
+    ["Form of payment", snapshot.formOfPayment || "-"],
+    ["Plating carrier / IATA", `${snapshot.platingCarrier || "-"}${snapshot.iata ? ` / ${snapshot.iata}` : ""}`],
+    ["Pseudo / ISO", `${snapshot.pseudo || "-"}${snapshot.iso ? ` / ${snapshot.iso}` : ""}`],
+  ];
+  for (const [label, value] of details) {
+    builder.paragraph(`${label}: ${value}`, { size: 8.5, lineHeight: 12 });
+  }
+
+  builder.gap(12);
+  builder.paragraph(
+    "This is an electronic ticket itinerary receipt. Present valid travel documents at check-in. Flight times are local at each airport; reconfirm schedules with the airline before travel.",
+    { size: 7.5, color: COLORS.muted, lineHeight: 10 },
+  );
 
   return builder.finish(snapshot.company.name, snapshot.number);
 }

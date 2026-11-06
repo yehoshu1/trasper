@@ -35,6 +35,7 @@ model User {
   activities       Activity[]
   savedViews       SavedTableView[]
   attachments      Attachment[]
+  tickets          Ticket[]
   twoFactors       TwoFactor[]
 }
 
@@ -117,6 +118,7 @@ model Contact {
   quotations      Quotation[]
   itineraries     Itinerary[]
   activities      Activity[]
+  tickets         Ticket[]
 
   @@index([name])
 }
@@ -133,6 +135,7 @@ model Passenger {
   updatedAt  DateTime   @updatedAt
   contacts   Contact[]
   fares      FareLine[]
+  tickets    Ticket[]
 
   @@index([lastName, firstName])
 }
@@ -173,6 +176,7 @@ model Quotation {
   options          QuoteOption[]
   itineraries      Itinerary[]
   proformas        Proforma[]
+  tickets          Ticket[]
   activities       Activity[]
   attachments      Attachment[]
 
@@ -336,6 +340,57 @@ model ProformaLine {
   amountMinor BigInt
 
   @@index([proformaId])
+}
+
+model Ticket {
+  id             String         @id @default(cuid())
+  number         String         @unique // 13 digits, spaces removed
+  passengerName  String         // as printed by the airline
+  passengerId    String?
+  passenger      Passenger?     @relation(fields: [passengerId], references: [id])
+  contactId      String?
+  contact        Contact?       @relation(fields: [contactId], references: [id])
+  quotationId    String?
+  quotation      Quotation?     @relation(fields: [quotationId], references: [id])
+  issueDate      DateTime?
+  formOfPayment  String?
+  pseudo         String?
+  platingCarrier String?
+  iso            String?
+  iata           String?
+  rawText        String
+  createdById    String
+  createdBy      User           @relation(fields: [createdById], references: [id])
+  createdAt      DateTime       @default(now())
+  coupons        TicketCoupon[]
+
+  @@index([contactId])
+  @@index([quotationId])
+  @@index([passengerId])
+}
+
+model TicketCoupon {
+  id              String   @id @default(cuid())
+  ticketId        String
+  ticket          Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  position        Int
+  useType         String // ARPT | OPEN
+  carrier         String
+  flightNo        String
+  bookingClass    String
+  travelDate      String? // YYYY-MM-DD
+  fromIata        String
+  toIata          String
+  departTime      String // local wall-clock HH:mm
+  status          String
+  fareBasis       String?
+  coupon          String?
+  notValidBefore  String? // YYYY-MM-DD
+  notValidAfter   String? // YYYY-MM-DD
+  baggage         String?
+  raw             String
+
+  @@index([ticketId])
 }
 
 model Payment {

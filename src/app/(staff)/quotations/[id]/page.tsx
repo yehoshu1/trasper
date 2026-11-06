@@ -335,6 +335,23 @@ export default async function QuotationPage({
                 </ul>
               )}
             </div>
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Tickets</h3>
+              {quotation.tickets.length === 0 ? (
+                <p className="mt-1 text-sm text-muted-foreground">None imported yet.</p>
+              ) : (
+                <ul className="mt-1 divide-y divide-border">
+                  {quotation.tickets.map((ticket) => (
+                    <li key={ticket.id} className="flex items-center justify-between gap-2 py-1.5">
+                      <Link href={`/tickets/${ticket.id}`} className="font-semibold text-foreground">
+                        {ticket.number}
+                      </Link>
+                      <span className="text-xs text-muted-foreground">{ticket.passengerName}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             {quotation.status === "accepted" && hasCapability(user, "manageDocuments") ? (
               <div className="space-y-3 border-t border-border/70 pt-3">
                 <div>

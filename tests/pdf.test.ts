@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { PDFDocument } from "pdf-lib";
 
-import type { QuotationSnapshot } from "../src/lib/documents";
+import type { QuotationSnapshot, TicketSnapshot } from "../src/lib/documents";
 import { calculateOption } from "../src/lib/pricing";
 import { presentPricing } from "../src/lib/pricing/presentation";
-import { renderQuotationPdf } from "../src/server/pdf";
+import { renderQuotationPdf, renderTicketPdf } from "../src/server/pdf";
 
 const snapshot: QuotationSnapshot = {
   kind: "quotation",
@@ -81,6 +81,47 @@ const snapshot: QuotationSnapshot = {
   bank: null,
   createdAt: "2026-10-31T10:00:00.000Z",
 };
+
+const ticketSnapshot: TicketSnapshot = {
+  kind: "ticket",
+  number: "7063956175087",
+  passengerName: "DZIWENI KASAMBA/YVONNE",
+  issueDate: "2026-11-06",
+  company: snapshot.company,
+  formOfPayment: "CASH",
+  pseudo: "3QJ9",
+  platingCarrier: "KQ",
+  iso: "GA",
+  iata: "21209963",
+  coupons: [
+    {
+      position: 0,
+      useType: "ARPT",
+      carrier: "KQ",
+      flightNo: "756",
+      bookingClass: "L",
+      travelDate: "2026-11-07",
+      fromIata: "LLW",
+      toIata: "NBO",
+      departTime: "14:15",
+      status: "OK",
+      fareBasis: "LSFMW",
+      coupon: "1",
+      notValidBefore: "2026-11-07",
+      notValidAfter: "2026-11-07",
+      baggage: "2PC",
+    },
+  ],
+  createdAt: "2026-11-06T00:00:00.000Z",
+};
+
+describe("ticket PDF", () => {
+  it("renders a real, loadable ticket receipt", async () => {
+    const bytes = await renderTicketPdf(ticketSnapshot);
+    const pdf = await PDFDocument.load(bytes);
+    assert.equal(pdf.getPageCount(), 1);
+  });
+});
 
 describe("quotation PDF", () => {
   it("renders a real, loadable PDF", async () => {

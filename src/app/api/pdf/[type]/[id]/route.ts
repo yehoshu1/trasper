@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { contentDisposition } from "@/lib/download";
-import { parseSnapshot, type ItinerarySnapshot, type ProformaSnapshot, type QuotationSnapshot } from "@/lib/documents";
+import {
+  parseSnapshot,
+  type ItinerarySnapshot,
+  type ProformaSnapshot,
+  type QuotationSnapshot,
+} from "@/lib/documents";
 import { hasCapability } from "@/lib/permissions";
 import { getCurrentUser, sessionNeedsTwoFactorEnrolment } from "@/server/auth";
 import { prisma } from "@/server/db";
@@ -12,9 +17,11 @@ import {
   renderItineraryPdf,
   renderProformaPdf,
   renderQuotationPdf,
+  renderTicketPdf,
 } from "@/server/pdf";
 import { loadQuotation } from "@/server/quotations";
 import { getSettings } from "@/server/settings";
+import { buildTicketSnapshot, loadTicket } from "@/server/tickets";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +73,12 @@ export async function GET(
       }
       number = itinerary.number;
       pdf = await renderItineraryPdf(snapshot);
+    } else if (type === "ticket") {
+      const ticket = await loadTicket(id);
+      if (!ticket) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      const snapshot = buildTicketSnapshot(ticket, settings);
+      number = snapshot.number;
+      pdf = await renderTicketPdf(snapshot);
     } else if (type === "proforma") {
       const proforma = await prisma.proforma.findUnique({
         where: { id },

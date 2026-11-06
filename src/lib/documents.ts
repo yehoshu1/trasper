@@ -260,6 +260,41 @@ export interface ItinerarySnapshot {
   notes: string;
 }
 
+export interface TicketCouponSnapshot {
+  position: number;
+  useType: string;
+  carrier: string;
+  flightNo: string;
+  bookingClass: string;
+  travelDate?: string;
+  fromIata: string;
+  toIata: string;
+  departTime: string;
+  status: string;
+  fareBasis?: string;
+  coupon?: string;
+  notValidBefore?: string;
+  notValidAfter?: string;
+  baggage?: string;
+}
+
+export interface TicketSnapshot {
+  kind: "ticket";
+  number: string;
+  passengerName: string;
+  issueDate?: string;
+  template?: DocumentTemplate;
+  company: DocumentCompany;
+  contact?: DocumentContact;
+  formOfPayment?: string;
+  pseudo?: string;
+  platingCarrier?: string;
+  iso?: string;
+  iata?: string;
+  coupons: TicketCouponSnapshot[];
+  createdAt: string;
+}
+
 export interface ProformaSnapshot {
   kind: "proforma";
   number: string;
@@ -404,7 +439,7 @@ export function splitFlightLegs(flights: DocumentFlight[]): FlightLegs {
   return { outbound: [...flights], returnLeg: null };
 }
 
-export function parseSnapshot<T extends QuotationSnapshot | ItinerarySnapshot | ProformaSnapshot>(
+export function parseSnapshot<T extends QuotationSnapshot | ItinerarySnapshot | ProformaSnapshot | TicketSnapshot>(
   raw: string | null | undefined,
 ): T | null {
   if (!raw) return null;
