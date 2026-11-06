@@ -26,7 +26,7 @@ Never use `number` for money. Decimal strings cross the server-action boundary a
 ```text
 1. convert each cost line at the option's stored rate
 2. sum to the cost total
-3. markup = cost total × margin %   OR   the lump-sum margin
+3. markup = cost total × margin %   OR   the lump-sum margin × number of travellers
 4. VAT = markup × VAT rate          (only when enabled)
 5. optional taxes on their configured base
 6. total = cost + markup + VAT + taxes

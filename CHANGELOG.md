@@ -66,6 +66,9 @@ All notable changes to this project are documented here. The format follows
 - Quotations no longer print bank details; the chosen account is only a default for the pro forma.
 - Quotations and pro forma invoices end with a **Signed by** area for the issuer's name, signature
   and date.
+- The per-traveller price is now a document row immediately before the total, not subtext.
+- A lump-sum margin is now a per-traveller amount and is multiplied by the traveller count.
+- Added the **MIL** Milan metropolitan-area code to the airport reference data.
 - **+ Add passenger** on a draft quotation now works for any active passenger, not only passengers
   already linked to the customer. Linked passengers are offered first and unlinked ones are marked.
 - Added **Dodoma International Airport (DOD)** to the airport seed data and as a reference-data

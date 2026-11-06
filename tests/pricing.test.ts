@@ -120,6 +120,18 @@ describe("margins and taxes", () => {
     assert.equal(result.lines[0].priceMinor, 125_000n);
   });
 
+  it("applies a lump-sum margin per traveller", () => {
+    const result = calculateOption({
+      ...base,
+      marginKind: "lump",
+      marginValue: 25_000n,
+      marginUnits: 3,
+    });
+    assert.equal(result.markupMinor, 75_000n);
+    assert.equal(result.totalMinor, 175_000n);
+    assert.equal(result.lines[0].priceMinor, 175_000n);
+  });
+
   it("supports fixed and percentage taxes, and ignores disabled ones", () => {
     const result = calculateOption({
       ...base,

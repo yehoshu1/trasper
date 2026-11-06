@@ -29,4 +29,12 @@ describe("airport reference data", () => {
     assert.equal(dodoma.country, "Tanzania");
     assert.equal(dodoma.tz, "Africa/Dar_es_Salaam");
   });
+
+  it("includes the Milan metropolitan-area code", () => {
+    const milan = airports.find((airport) => airport.iata === "MIL");
+    assert.ok(milan, "MIL is missing from the airport seed data");
+    assert.equal(milan.city, "Milan");
+    assert.equal(milan.country, "Italy");
+    assert.equal(milan.tz, "Europe/Rome");
+  });
 });

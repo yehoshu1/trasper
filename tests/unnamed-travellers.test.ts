@@ -60,6 +60,16 @@ describe("unnamed traveller groups", () => {
     assert.equal(invariantLineTotal(computed), true);
   });
 
+  it("applies a lump-sum margin per traveller", () => {
+    const computed = computeOption(
+      { ...optionWith([unnamedAdult]), marginKind: "lump", marginValue: "10000" },
+      vat,
+    );
+    assert.equal(computed.result.costTotalMinor, 200000n);
+    assert.equal(computed.result.markupMinor, 20000n);
+    assert.equal(computed.totalMinor, 220000n);
+  });
+
   it("counts group quantities for per-person layouts", () => {
     const option = optionWith([
       unnamedAdult,

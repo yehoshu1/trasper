@@ -1362,7 +1362,7 @@ export function QuotationEditor({
                           }}
                           options={[
                             { value: "percent", label: "Percent" },
-                            { value: "lump", label: "Lump sum" },
+                            { value: "lump", label: "Lump sum each" },
                           ]}
                         />
                         <Input
@@ -1372,7 +1372,9 @@ export function QuotationEditor({
                         />
                       </span>
                       <span className="mt-1 block text-[10px] font-normal normal-case text-muted-foreground">
-                        {active.marginKind === "percent" ? "Percent of converted cost" : `Amount in ${header.currency}`}
+                        {active.marginKind === "percent"
+                          ? "Percent of converted cost"
+                          : `Lump sum per traveller in ${header.currency}`}
                       </span>
                     </label>
                   </div>

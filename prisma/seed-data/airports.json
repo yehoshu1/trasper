@@ -959,6 +959,13 @@
     "tz": "Europe/Rome"
   },
   {
+    "iata": "MIL",
+    "name": "Milan Metropolitan Area",
+    "city": "Milan",
+    "country": "Italy",
+    "tz": "Europe/Rome"
+  },
+  {
     "iata": "VCE",
     "name": "Venice Marco Polo Airport",
     "city": "Venice",

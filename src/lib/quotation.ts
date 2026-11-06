@@ -244,6 +244,9 @@ export function computeOption(option: EditorOption, vat: VatContext): ComputedOp
     rateMicro: BigInt(option.rateMicro || "0"),
     marginKind: option.marginKind,
     marginValue: BigInt(option.marginValue || "0"),
+    // A lump sum is a markup per traveller; percentage margins already scale
+    // with the cost of every fare line.
+    marginUnits: optionPassengerCount(option) ?? 1,
     vatEnabled: vat.enabled,
     vatRateBps: vat.rateBps,
     taxes: option.taxes.map((tax, index) => ({

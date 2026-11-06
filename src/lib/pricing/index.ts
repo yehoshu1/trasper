@@ -7,7 +7,7 @@
  * Calculation order:
  *   1. convert each cost line at the option's stored rate
  *   2. sum to the cost total
- *   3. markup = cost total x percentage, or the lump sum
+ *   3. markup = cost total x percentage, or the lump sum x travellers
  *   4. VAT = markup x rate, only when switched on (never on cost or taxes)
  *   5. enabled optional taxes are added
  *   6. customer total = cost + markup + VAT + taxes
@@ -63,6 +63,11 @@ export interface PricingInput {
   marginKind: MarginKind;
   /** Basis points when percent, quotation minor units when lump. */
   marginValue: bigint;
+  /**
+   * Number of travellers a lump-sum margin applies to. Percentage margins
+   * already scale with the cost, so this is ignored for them. Defaults to 1.
+   */
+  marginUnits?: number;
   vatEnabled: boolean;
   /** Basis points, e.g. 16.5% = 1650. */
   vatRateBps: bigint;
@@ -162,6 +167,7 @@ export function calculateOption(input: PricingInput): PricingResult {
     taxes,
     roundingUnit,
   } = input;
+  const marginUnits = Math.max(1, Math.trunc(input.marginUnits ?? 1));
 
   if (roundingUnit <= 0n) throw new PricingError("Rounding unit must be positive");
   if (lines.length === 0) throw new PricingError("At least one cost line is required");
@@ -186,7 +192,7 @@ export function calculateOption(input: PricingInput): PricingResult {
   const markupMinor =
     marginKind === "percent"
       ? percentOf(costTotalMinor, marginValue)
-      : marginValue;
+      : marginValue * BigInt(marginUnits);
 
   const vatMinor = vatEnabled ? percentOf(markupMinor, vatRateBps) : 0n;
 
