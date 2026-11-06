@@ -1,12 +1,10 @@
 import type { ProformaSnapshot } from "@/lib/documents";
 import { formatMoney } from "@/lib/money";
+import { proformaInvoiceLines, type InvoiceLine } from "@/lib/proforma-invoice";
 
 import {
   BankDetails,
   DocumentFrame,
-  FlightSummary,
-  FlightsTable,
-  MoneyLines,
   NotesBlock,
   PartyBlock,
   SectionHeading,
@@ -30,6 +28,48 @@ const PAYMENT_METHODS: Record<string, string> = {
   cheque: "Cheque",
   card: "Card",
 };
+
+function InvoiceTable({
+  lines,
+  currency,
+  totalMinor,
+  totalLabel,
+}: {
+  lines: InvoiceLine[];
+  currency: string;
+  totalMinor: string;
+  totalLabel: string;
+}) {
+  const format = (value: string) => formatMoney(BigInt(value), currency);
+  return (
+    <table className="doc-table doc-money-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th className="w-14 text-right">Qty</th>
+          <th className="w-32 text-right">Unit price</th>
+          <th className="w-32 text-right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        {lines.map((line, index) => (
+          <tr key={`${line.description}-${index}`} className="break-inside-avoid">
+            <td>{line.description}</td>
+            <td className="text-right tabular-nums">{line.quantity}</td>
+            <td className="text-right tabular-nums">{format(line.unitAmountMinor)}</td>
+            <td className="text-right tabular-nums">{format(line.amountMinor)}</td>
+          </tr>
+        ))}
+        <tr className="doc-grand-total">
+          <td colSpan={3} className="font-bold">
+            {totalLabel}
+          </td>
+          <td className="text-right font-bold tabular-nums">{format(totalMinor)}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
 
 /** Pro forma invoice. VAT is hidden unless its own switch is on. */
 export function ProformaDocument({
@@ -72,21 +112,15 @@ export function ProformaDocument({
           {snapshot.journeys.map((journey, index) => (
             <section key={`${journey.label}-${index}`} className="doc-section">
               <SectionHeading>{journey.label}</SectionHeading>
-              {snapshot.showFlights && journey.flights.length > 0 ? (
-                <>
-                  <FlightSummary flights={journey.flights} />
-                  <FlightsTable flights={journey.flights} />
-                </>
-              ) : null}
-              <MoneyLines
-                lines={journey.lines}
+              <InvoiceTable
+                lines={proformaInvoiceLines({
+                  lines: journey.lines,
+                  presentation: journey.presentation,
+                  totalMinor: journey.totalMinor,
+                })}
                 currency={snapshot.currency}
                 totalMinor={journey.totalMinor}
-                vatMinor={journey.vatMinor}
-                vatRateBps={snapshot.vatRateBps}
-                showVat={snapshot.showVat}
-                presentation={journey.presentation}
-                totalLabelOverride="Journey total"
+                totalLabel="Journey total"
               />
             </section>
           ))}
@@ -116,23 +150,18 @@ export function ProformaDocument({
               ) : null}
               <p className="ml-auto text-xs text-slate-500">Quotation {snapshot.quotationNumber}</p>
             </div>
-            {snapshot.showFlights && snapshot.flights.length > 0 ? (
-              <>
-                <FlightSummary flights={snapshot.flights} />
-                <FlightsTable flights={snapshot.flights} />
-              </>
-            ) : null}
           </section>
 
           <div className="doc-section">
-            <MoneyLines
-              lines={snapshot.lines}
+            <InvoiceTable
+              lines={proformaInvoiceLines({
+                lines: snapshot.lines,
+                presentation: snapshot.presentation,
+                totalMinor: snapshot.totalMinor,
+              })}
               currency={snapshot.currency}
               totalMinor={snapshot.totalMinor}
-              vatMinor={snapshot.vatMinor}
-              vatRateBps={snapshot.vatRateBps}
-              showVat={snapshot.showVat}
-              presentation={snapshot.presentation}
+              totalLabel="Total"
             />
             {snapshot.showVat && snapshot.vatRegistrationNumber ? (
               <p className="mt-1 text-[11px] text-slate-500">

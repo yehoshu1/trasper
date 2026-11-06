@@ -72,6 +72,8 @@ All notable changes to this project are documented here. The format follows
 - Bundled the Air Tanzania (`TC`) logo; the seed copies it into the uploads volume when missing.
 - Draft pro formas can now edit their customer-facing price lines and set a payment schedule before
   **Mark sent**. Recording payments still requires the pro forma to be sent.
+- Pro forma invoices now print invoice line items (description, quantity, unit price, line total)
+  and no longer print the flight itinerary.
 - Quotations now contain additive **journeys** instead of alternative options. Every journey has its
   own flights, fares and pricing, journey totals add to one quotation total, and accepting the
   quotation includes every journey. Itineraries and pro formas print one section per journey with a

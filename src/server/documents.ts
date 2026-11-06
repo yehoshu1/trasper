@@ -485,9 +485,9 @@ export async function buildProformaSnapshot(
     if (index === 0 && totals.frozen?.vatRateBps) {
       vatRateBps = totals.frozen.vatRateBps;
     }
-    const flights = settings.proformaShowFlights
-      ? await flightsForSegments(option.segments)
-      : [];
+    // A pro forma is an invoice, not an itinerary. It deliberately carries no
+    // flight table, so missing airports cannot block issuing it.
+    const flights: DocumentFlight[] = [];
     allLines.push(...totals.lines);
     totalMinor += totals.totalMinor;
     vatMinor += totals.vatMinor;
@@ -519,9 +519,9 @@ export async function buildProformaSnapshot(
     passengers: uniquePassengers(quotation),
     optionLabel: options.length === 1 ? options[0]?.label ?? "Journey" : "Journeys",
     showOptionLabel: options.length > 1,
-    flights: journeys.flatMap((journey) => journey.flights),
+    flights: [],
     journeys,
-    showFlights: settings.proformaShowFlights,
+    showFlights: false,
     showVat: input.showVat,
     vatMinor: vatMinor.toString(),
     vatRateBps,

@@ -211,15 +211,17 @@ function fareDescription(fare: EditorFare): string {
  * the option has not been saved yet. */
 export function computeOption(option: EditorOption, vat: VatContext): ComputedOption {
   const lines = [
-    ...option.fares.map((fare, index) => ({
-      id: fare.id ?? `fare-${index}-${fare.passengerId || fare.passengerType}`,
-      description: fareDescription(fare),
-      costMinor:
-        BigInt(fare.costMinor || "0") *
-        BigInt(fare.passengerId ? 1 : fareQuantity(fare)),
-      kind: "fare" as const,
-      passengerId: fare.passengerId || undefined,
-    })),
+    ...option.fares.map((fare, index) => {
+      const quantity = fare.passengerId ? 1 : fareQuantity(fare);
+      return {
+        id: fare.id ?? `fare-${index}-${fare.passengerId || fare.passengerType}`,
+        description: fareDescription(fare),
+        costMinor: BigInt(fare.costMinor || "0") * BigInt(quantity),
+        kind: "fare" as const,
+        passengerId: fare.passengerId || undefined,
+        ...(quantity > 1 ? { quantity, unit: "person" } : {}),
+      };
+    }),
     ...option.services.map((service, index) => {
       const quantity = Math.max(1, Number.parseInt(service.quantity || "1", 10) || 1);
       return {

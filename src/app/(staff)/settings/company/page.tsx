@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 
-import { Checkbox } from "@/components/ui/checkbox";
 
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -179,10 +178,6 @@ export default async function CompanySettingsPage({
                   defaultValue={settings.ticketingWarningHours}
                 />
               </Field>
-              <label className="flex items-center gap-2 self-end text-sm text-foreground">
-                <Checkbox name="proformaShowFlights" defaultChecked={settings.proformaShowFlights} />
-                Show flights on pro formas
-              </label>
               <Field label="Payment terms" htmlFor="paymentTerms" className="sm:col-span-2">
                 <Textarea id="paymentTerms" name="paymentTerms" rows={2} defaultValue={settings.paymentTerms} />
               </Field>

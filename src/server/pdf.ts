@@ -28,6 +28,7 @@ import type {
 import { formatMoney } from "../lib/money";
 import { roundDiv } from "../lib/pricing";
 import type { PricePresentation } from "../lib/pricing/presentation";
+import { proformaInvoiceLines, type InvoiceLine } from "../lib/proforma-invoice";
 import {
   SERVICE_UNIT_PLURALS,
   isServiceUnit,
@@ -1078,6 +1079,84 @@ function moneyTable(
   }
 }
 
+function invoiceTable(
+  builder: PdfBuilder,
+  lines: InvoiceLine[],
+  currency: string,
+  totalMinor: string,
+  totalLabel: string,
+): void {
+  const format = (value: string) => formatMoney(BigInt(value), currency);
+  const qtyWidth = 42;
+  const unitWidth = 88;
+  const totalWidth = 88;
+  const descWidth = CONTENT - qtyWidth - unitWidth - totalWidth;
+  const xDesc = MARGIN;
+  const xQty = xDesc + descWidth;
+  const xUnit = xQty + qtyWidth;
+  const xTotal = xUnit + unitWidth;
+
+  const top = builder.cursor;
+  builder.pageRef.drawRectangle({
+    x: MARGIN, y: top - 15, width: CONTENT, height: 15, color: builder.palette.tableHeadBg,
+  });
+  builder.at("DESCRIPTION", xDesc + 4, top - 6, {
+    size: 6.5, font: "bold", color: builder.palette.tableHeadText,
+  });
+  builder.at("QTY", xQty, top - 6, {
+    size: 6.5, font: "bold", color: builder.palette.tableHeadText, right: true, maxWidth: qtyWidth,
+  });
+  builder.at("UNIT PRICE", xUnit, top - 6, {
+    size: 6.5, font: "bold", color: builder.palette.tableHeadText, right: true, maxWidth: unitWidth,
+  });
+  builder.at("TOTAL", xTotal, top - 6, {
+    size: 6.5, font: "bold", color: builder.palette.tableHeadText, right: true, maxWidth: totalWidth,
+  });
+  if (builder.palette.tableHeadBorder) {
+    builder.pageRef.drawLine({
+      start: { x: MARGIN, y: top - 15 },
+      end: { x: MARGIN + CONTENT, y: top - 15 },
+      thickness: 0.75,
+      color: builder.palette.tableHeadBorder,
+    });
+  }
+  builder.gap(19);
+
+  const wrappedRows = lines.map((line) => {
+    const wrapped = builder.wrap(line.description, 8.5, descWidth - 8);
+    return { line, wrapped, height: Math.max(15, wrapped.length * 11 + 4) };
+  });
+  for (let index = 0; index < wrappedRows.length; index += 1) {
+    const entry = wrappedRows[index]!;
+    const isLast = index === wrappedRows.length - 1;
+    builder.ensure(entry.height + (isLast ? 42 : 0));
+    const rowTop = builder.cursor;
+    entry.wrapped.forEach((part, lineIndex) => {
+      builder.at(part, xDesc + 4, rowTop - 2 - lineIndex * 11, { size: 8.5 });
+    });
+    builder.at(String(entry.line.quantity), xQty, rowTop - 2, {
+      size: 8.5, right: true, maxWidth: qtyWidth,
+    });
+    builder.at(format(entry.line.unitAmountMinor), xUnit, rowTop - 2, {
+      size: 8.5, right: true, maxWidth: unitWidth,
+    });
+    builder.at(format(entry.line.amountMinor), xTotal, rowTop - 2, {
+      size: 8.5, right: true, maxWidth: totalWidth,
+    });
+    builder.cursor = rowTop - entry.height;
+    builder.rule();
+  }
+
+  builder.ensure(26);
+  builder.rule(COLORS.ink, 1.25);
+  builder.gap(3);
+  builder.at(totalLabel.toUpperCase(), MARGIN + 4, builder.cursor, { size: 10, font: "bold" });
+  builder.at(format(totalMinor), MARGIN, builder.cursor, {
+    size: 11, font: "bold", right: true,
+  });
+  builder.gap(18);
+}
+
 function bankBlock(
   builder: PdfBuilder,
   bank: DocumentBank | null,
@@ -1329,20 +1408,17 @@ export async function renderProformaPdf(
     for (const journey of snapshot.journeys) {
       builder.ensure(50);
       builder.paragraph(journey.label, { size: 11, font: "bold", lineHeight: 15 });
-      if (snapshot.showFlights && journey.flights.length > 0) {
-        builder.paragraph(flightSummary(journey.flights), {
-          size: 8.5, color: COLORS.slate, lineHeight: 12,
-        });
-        builder.gap(4);
-        await drawFlights(builder, journey.flights);
-      }
-      moneyTable(builder, journey.lines, snapshot.currency, journey.totalMinor, {
-        vatMinor: journey.vatMinor,
-        vatRateBps: snapshot.vatRateBps,
-        showVat: snapshot.showVat,
-        presentation: journey.presentation,
-        totalLabelOverride: "Journey total",
-      });
+      invoiceTable(
+        builder,
+        proformaInvoiceLines({
+          lines: journey.lines,
+          presentation: journey.presentation,
+          totalMinor: journey.totalMinor,
+        }),
+        snapshot.currency,
+        journey.totalMinor,
+        "Journey total",
+      );
       builder.gap(10);
     }
     builder.ensure(34);
@@ -1360,18 +1436,17 @@ export async function renderProformaPdf(
       builder.paragraph(snapshot.optionLabel, { size: 11, font: "bold", lineHeight: 15 });
     }
 
-    if (snapshot.showFlights && snapshot.flights.length > 0) {
-      builder.paragraph(flightSummary(snapshot.flights), { size: 8.5, color: COLORS.slate, lineHeight: 12 });
-      builder.gap(4);
-      await drawFlights(builder, snapshot.flights);
-    }
-
-    moneyTable(builder, snapshot.lines, snapshot.currency, snapshot.totalMinor, {
-      vatMinor: snapshot.vatMinor,
-      vatRateBps: snapshot.vatRateBps,
-      showVat: snapshot.showVat,
-      presentation: snapshot.presentation,
-    });
+    invoiceTable(
+      builder,
+      proformaInvoiceLines({
+        lines: snapshot.lines,
+        presentation: snapshot.presentation,
+        totalMinor: snapshot.totalMinor,
+      }),
+      snapshot.currency,
+      snapshot.totalMinor,
+      "Total",
+    );
   }
 
   const paid = BigInt(options.paidMinor ?? "0");
