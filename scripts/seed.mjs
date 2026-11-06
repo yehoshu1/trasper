@@ -5,7 +5,13 @@
  * Environment: ADMIN_EMAIL, ADMIN_PASSWORD, SEED_DEMO=0 to skip demo contacts.
  */
 import { randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+} from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { hashPassword } from "better-auth/crypto";
@@ -142,6 +148,29 @@ const insertAirport = db.prepare(
 );
 for (const airport of airports) {
   insertAirport.run(airport.iata, airport.name, airport.city, airport.country, airport.tz);
+}
+
+// Bundle a few first-copy airline logos so a fresh or existing volume has the
+// carrier mark immediately. Settings → Airlines can still replace them.
+const bundledLogosDir = path.join(root, "prisma", "seed-data", "airline-logos");
+if (existsSync(bundledLogosDir)) {
+  const airlineUploadDir = path.resolve(
+    root,
+    process.env.UPLOAD_DIR ?? "./uploads",
+    "airlines",
+  );
+  mkdirSync(airlineUploadDir, { recursive: true });
+  for (const fileName of readdirSync(bundledLogosDir)) {
+    if (!/\.(png|jpe?g)$/i.test(fileName)) continue;
+    const iata = path.basename(fileName, path.extname(fileName)).toUpperCase();
+    const target = path.join(airlineUploadDir, fileName);
+    if (!existsSync(target)) {
+      copyFileSync(path.join(bundledLogosDir, fileName), target);
+    }
+    db.prepare(
+      "UPDATE Airline SET logoPath = ? WHERE iata = ? AND (logoPath IS NULL OR logoPath = '')",
+    ).run(`/uploads/airlines/${fileName}`, iata);
+  }
 }
 
 const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@example.com").toLowerCase();

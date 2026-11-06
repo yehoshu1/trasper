@@ -35,12 +35,14 @@ logos.
 - Upload a logo from the airline row (PNG or JPEG, max 2 MB).
 - The repository includes `npm run logos:fetch`, which searches Wikimedia Commons for airline logos
   and downloads missing ones into `uploads/airlines/`. Use `--force` to re-download all.
+- The seed copies a small bundled set from `prisma/seed-data/airline-logos/` into
+  `uploads/airlines/` when the file is missing. Air Tanzania (`TC`) is bundled.
 - The logo path is copied into an issued document snapshot, so replacing a logo later does not alter
   old documents.
 
-A fresh deployment has **no logos**. `uploads/` is not committed and the image does not copy it, so
-the `app-data` volume starts empty. After the first start, either upload logos from
-**Settings → Airlines**, or fetch them inside the running container:
+A fresh deployment starts with the bundled logos only. `uploads/` is not committed and the image
+does not copy it, so the `app-data` volume starts empty apart from the seed copies. After the first
+start, either upload logos from **Settings → Airlines**, or fetch them inside the running container:
 
 ```bash
 docker exec -it <app-container> node scripts/fetch-airline-logos.mjs
