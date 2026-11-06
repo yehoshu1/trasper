@@ -13,10 +13,13 @@ From an accepted quotation:
 1. Choose **Create pro forma**. It is created as a **draft** with a reserved number.
 2. Add or edit the traveller names (one per line). Names may be supplied later; blank lines stay
    unnamed.
-3. Confirm the due date (default: 14 days after issue).
-4. Edit the payment terms if needed; blank uses the standard payment terms.
-5. Choose whether to show VAT explicitly and which bank account to print.
-6. Choose **Save draft** to keep editing, or **Mark sent** to issue and lock it.
+3. Edit the customer-facing price lines and their amounts while it is a draft. The pro forma total
+   becomes the sum of those lines.
+4. Set the optional deposit-and-balance payment schedule.
+5. Confirm the due date (default: 14 days after issue).
+6. Edit the payment terms if needed; blank uses the standard payment terms.
+7. Choose whether to show VAT explicitly and which bank account to print.
+8. Choose **Save draft** to keep editing, or **Mark sent** to issue and lock it.
 
 Rules:
 
@@ -25,7 +28,8 @@ Rules:
 - only one active (non-cancelled) pro forma per quotation is allowed; cancel the old one before
   issuing another;
 - the number comes from the pro forma sequence and is never reused;
-- a draft can be edited and cannot take payments; once sent, the snapshot is locked.
+- a draft can be edited, including price lines and the payment schedule, but cannot take payments;
+  once sent, the snapshot is locked.
 
 ## What it contains
 

@@ -180,6 +180,26 @@ async function prepareProformaDraft(proformaId: string, input: ProformaDraftInpu
   if (names.error) throw new Error(names.error);
   snapshot.passengers = names.passengers;
 
+  const baselineLines = snapshot.lines.map((line) => ({
+    description: line.description,
+    amountMinor: line.amountMinor,
+  }));
+  if (JSON.stringify(input.lines) !== JSON.stringify(baselineLines)) {
+    // Once the draft's price lines are edited they become the document's
+    // authoritative lines. The quotation's per-journey presentation can no
+    // longer be assumed, so print the edited lines with one total instead.
+    snapshot.lines = input.lines.map((line) => ({
+      description: line.description,
+      amountMinor: line.amountMinor,
+    }));
+    snapshot.totalMinor = snapshot.lines
+      .reduce((sum, line) => sum + BigInt(line.amountMinor), 0n)
+      .toString();
+    snapshot.presentation = undefined;
+    snapshot.journeys = undefined;
+    snapshot.vatMinor = "0";
+  }
+
   return {
     proforma,
     snapshot,
@@ -204,6 +224,15 @@ function proformaDraftData(prepared: Awaited<ReturnType<typeof prepareProformaDr
 
 export async function updateProformaDraftAction(formData: FormData): Promise<void> {
   const user = await actionUser("manageDocuments");
+  let lines: unknown = [];
+  const rawLines = formData.get("lines");
+  if (typeof rawLines === "string" && rawLines.trim()) {
+    try {
+      lines = JSON.parse(rawLines);
+    } catch {
+      redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent("Could not read the price lines")}`);
+    }
+  }
   const parsed = updateProformaDraftSchema.safeParse({
     proformaId: formData.get("proformaId"),
     dueDate: formData.get("dueDate") ?? "",
@@ -211,6 +240,7 @@ export async function updateProformaDraftAction(formData: FormData): Promise<voi
     showVat: formData.get("showVat") === "on",
     bankAccountId: formData.get("bankAccountId") || undefined,
     travellerNames: formData.get("travellerNames") ?? "",
+    lines,
   });
   if (!parsed.success) {
     redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the draft")}`);
@@ -263,6 +293,15 @@ export async function updateProformaDraftAction(formData: FormData): Promise<voi
 
 export async function sendProformaAction(formData: FormData): Promise<void> {
   const user = await actionUser("manageDocuments");
+  let lines: unknown = [];
+  const rawLines = formData.get("lines");
+  if (typeof rawLines === "string" && rawLines.trim()) {
+    try {
+      lines = JSON.parse(rawLines);
+    } catch {
+      redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent("Could not read the price lines")}`);
+    }
+  }
   const parsed = updateProformaDraftSchema.safeParse({
     proformaId: formData.get("proformaId"),
     dueDate: formData.get("dueDate") ?? "",
@@ -270,6 +309,7 @@ export async function sendProformaAction(formData: FormData): Promise<void> {
     showVat: formData.get("showVat") === "on",
     bankAccountId: formData.get("bankAccountId") || undefined,
     travellerNames: formData.get("travellerNames") ?? "",
+    lines,
   });
   if (!parsed.success) {
     redirect(`/proformas/${formData.get("proformaId")}?error=${encodeURIComponent(parsed.error.issues[0]?.message ?? "Check the draft")}`);

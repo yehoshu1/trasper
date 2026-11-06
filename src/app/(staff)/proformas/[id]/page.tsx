@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { AttachmentPanel } from "@/components/attachment-panel";
 import { ConfirmButton } from "@/components/confirm-button";
 import { HistoryPanel } from "@/components/history-panel";
+import { ProformaLinesEditor } from "@/components/proforma-lines-editor";
 import {
   Alert,
   Card,
@@ -64,6 +65,7 @@ export default async function ProformaPage({
         orderBy: { createdAt: "asc" },
         include: { recordedBy: { select: { name: true } } },
       },
+      lines: { orderBy: { position: "asc" } },
       createdBy: { select: { name: true } },
     },
   });
@@ -254,6 +256,13 @@ export default async function ProformaPage({
                       placeholder="One traveller name per line"
                     />
                   </Field>
+                  <ProformaLinesEditor
+                    lines={proforma.lines.map((line) => ({
+                      description: line.description,
+                      amountMinor: line.amountMinor.toString(),
+                    }))}
+                    currency={proforma.currency}
+                  />
                   <Field label="Due date" htmlFor="dueDate">
                     <DatePicker
                       id="dueDate"
@@ -391,7 +400,6 @@ export default async function ProformaPage({
             </Card>
           ) : null}
 
-          {!isDraft ? (
           <Card
             title="Payment schedule"
             subtitle="A target only. Status and balances still come from the payments."
@@ -446,7 +454,6 @@ export default async function ProformaPage({
               <p className="text-sm text-muted-foreground">No schedule set.</p>
             )}
           </Card>
-          ) : null}
 
           {canCancel ? (
             <Card title="Cancel pro forma">

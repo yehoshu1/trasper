@@ -311,6 +311,11 @@ export const createProformaSchema = z.object({
   bankAccountId: optionalText(64),
 });
 
+export const proformaDraftLineSchema = z.object({
+  description: z.string().trim().min(1, "Every line needs a description").max(500),
+  amountMinor: z.string().trim().regex(/^-?\d+$/, "Invalid line amount"),
+});
+
 export const updateProformaDraftSchema = z.object({
   proformaId: z.string().min(1).max(64),
   dueDate: z
@@ -324,6 +329,8 @@ export const updateProformaDraftSchema = z.object({
   bankAccountId: optionalText(64),
   /** One name per traveller, in the order the quotation recorded them. */
   travellerNames: z.string().max(6000).optional().default(""),
+  /** Draft price lines. An empty list removes every line. */
+  lines: z.array(proformaDraftLineSchema).max(200).optional().default([]),
 });
 
 export const paymentTermOptions = [
