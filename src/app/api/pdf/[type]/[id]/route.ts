@@ -76,7 +76,7 @@ export async function GET(
     } else if (type === "ticket") {
       const ticket = await loadTicket(id);
       if (!ticket) return NextResponse.json({ error: "Not found" }, { status: 404 });
-      const snapshot = buildTicketSnapshot(ticket, settings);
+      const snapshot = await buildTicketSnapshot(ticket, settings);
       number = snapshot.number;
       pdf = await renderTicketPdf(snapshot);
     } else if (type === "proforma") {

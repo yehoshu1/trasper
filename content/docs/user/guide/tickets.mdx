@@ -22,15 +22,30 @@ itself.
 
 ## Import tickets
 
-Open **Tickets → Import tickets** and paste either:
+Open **Tickets → Import tickets**. You can paste either or both:
 
-- the airline `TKT:` block with the passenger, issue details and coupon lines; or
-- the `*HTE` electronic ticket list with names and ticket numbers; or
-- both together.
+- the airline `TKT:` block with the passenger, issue details and coupon lines;
+- the `*HTE` electronic ticket list with names and ticket numbers;
+- the airline **booking confirmation** (the “E-Ticket & Itinerary Details” document).
 
-Choose **Read / convert** to preview the ticket numbers and coupon counts, then save. Trasper only
-accepts 13-digit ticket numbers and never invents a number. Duplicate ticket numbers already in the
-system are skipped.
+The ticket text and the booking confirmation do different jobs:
+
+- the ticket text supplies the ticket numbers, passenger names, issue date, form of payment and
+  fare basis;
+- the booking confirmation supplies the full itinerary — arrival times, terminals, aircraft, meal
+  service, baggage allowance and the booking and check-in references.
+
+A group booking normally has one itinerary for every passenger. Leave **Apply the first itinerary to
+every passenger** ticked so the same flights and references are stored on each ticket. Clear it to
+keep only the first passenger's itinerary.
+
+When a passenger has two ticket stocks, for example a Kenya Airways ticket and an Air Tanzania
+ticket, paste the booking confirmation: it carries both numbers and Trasper stores them on one
+ticket record. The primary ticket is the stock that matches the first flight.
+
+Choose **Read / convert** to preview the ticket numbers, passenger names and flight counts, then
+save. Trasper only accepts 13-digit ticket numbers and never invents a number. Duplicate ticket
+numbers already in the system are skipped.
 
 Optionally link the imported tickets to a customer and quotation. If a quotation is chosen, its
 customer is used automatically.
@@ -39,8 +54,10 @@ customer is used automatically.
 
 The ticket page shows:
 
-- passenger, ticket number, issue date, form of payment and plating details;
-- every coupon with its flight, route, date, status, fare basis, validity and baggage;
+- passenger, both ticket numbers, issue date, form of payment and plating details;
+- booking and check-in references;
+- every coupon with its flight, route, dates, departure and arrival times, terminals, class,
+  aircraft, status, fare basis, baggage and meal service;
 - the original pasted ticket text for audit and reconciliation.
 
 Tickets are immutable records. A void, refund or reissue is a new airline record; import the
@@ -50,8 +67,12 @@ replacement ticket rather than editing the old one.
 
 - On-screen preview from the ticket record.
 - PDF at `/api/pdf/ticket/[id]`.
-- The receipt prints the ticket number, passenger, issue details and coupon table. It is not a
-  boarding pass and does not replace the airline's electronic ticket record.
+- **Print all** on the ticket list renders every matching ticket into one PDF, one page per
+  passenger. Search first to print a single group or batch.
+- The receipt prints the company letterhead, passenger information, both ticket numbers, booking
+  and check-in references, the itinerary with layover rows, standard travel notes and the closing
+  thank-you line. Longer connections over 24 hours are destination stays, not layovers.
+- It is not a boarding pass and does not replace the airline's electronic ticket record.
 
 ## Permissions
 

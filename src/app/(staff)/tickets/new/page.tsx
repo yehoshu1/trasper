@@ -39,7 +39,7 @@ export default async function NewTicketPage({
       <PageHeader
         eyebrow="Tickets"
         title="Import electronic tickets"
-        subtitle="Paste the airline ticket block, the *HTE electronic ticket list, or both."
+        subtitle="Paste the airline ticket block, the *HTE electronic ticket list, the booking confirmation, or any combination."
         actions={
           <Link href="/tickets" className="btn-secondary">
             Back to tickets
@@ -49,8 +49,8 @@ export default async function NewTicketPage({
       {params.error ? <Alert tone="error">{params.error}</Alert> : null}
 
       <Card
-        title="Ticket text"
-        subtitle="Deterministic parser: only 13-digit airline ticket numbers are accepted."
+        title="Ticket text and booking confirmation"
+        subtitle="Deterministic parser: only 13-digit airline ticket numbers are accepted. The booking confirmation adds the full itinerary."
       >
         <TicketImportForm
           contacts={contacts}

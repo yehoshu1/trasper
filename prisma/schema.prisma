@@ -345,7 +345,12 @@ model ProformaLine {
 model Ticket {
   id             String         @id @default(cuid())
   number         String         @unique // 13 digits, spaces removed
+  secondaryNumber String?       @unique // second ticket stock for the same passenger
   passengerName  String         // as printed by the airline
+  bookingRef     String?
+  checkInRef     String?
+  secondaryCheckInRef String?
+  secondaryCarrier String?
   passengerId    String?
   passenger      Passenger?     @relation(fields: [passengerId], references: [id])
   contactId      String?
@@ -378,10 +383,17 @@ model TicketCoupon {
   carrier         String
   flightNo        String
   bookingClass    String
+  cabin           String?
   travelDate      String? // YYYY-MM-DD
   fromIata        String
   toIata          String
   departTime      String // local wall-clock HH:mm
+  arriveTime      String? // local wall-clock HH:mm
+  fromTerminal    String?
+  toTerminal      String?
+  aircraft        String?
+  stopInfo        String?
+  meal            String?
   status          String
   fareBasis       String?
   coupon          String?

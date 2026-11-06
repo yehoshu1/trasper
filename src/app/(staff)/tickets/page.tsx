@@ -46,11 +46,22 @@ export default async function TicketsPage({
         title="Tickets"
         subtitle="Electronic tickets imported from airline or GDS output. Coupons are stored exactly as issued."
         actions={
-          canManage ? (
-            <Link href="/tickets/new" className="btn-primary">
-              Import tickets
-            </Link>
-          ) : null
+          <>
+            {tickets.length > 0 ? (
+              <Link
+                href={`/api/pdf/tickets${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+                target="_blank"
+                className="btn-secondary"
+              >
+                Print {query ? "results" : "all"}
+              </Link>
+            ) : null}
+            {canManage ? (
+              <Link href="/tickets/new" className="btn-primary">
+                Import tickets
+              </Link>
+            ) : null}
+          </>
         }
       />
 
@@ -109,6 +120,11 @@ export default async function TicketsPage({
                     <Link href={`/tickets/${ticket.id}`} className="text-foreground">
                       {formatTicketNumber(ticket.number)}
                     </Link>
+                    {ticket.secondaryNumber ? (
+                      <p className="font-mono text-[11px] text-muted-foreground">
+                        + {formatTicketNumber(ticket.secondaryNumber)}
+                      </p>
+                    ) : null}
                   </td>
                   <td>{ticket.passengerName}</td>
                   <td>{ticket.issueDate ? formatDate(ticket.issueDate) : "—"}</td>

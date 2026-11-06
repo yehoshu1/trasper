@@ -1,0 +1,240 @@
+                                        E-Ticket & Itinerary Details
+CHECK-IN COMMENCES 3 HOURS PRIOR TO THE SCHEDULED DEPARTURE.
+
+PASSENGER DETAILS
+
+ Passenger Type           Last Name/First         Loyalty Program             Disabilities           Electronic Ticket nbr
+                          Name
+
+                          DZIWENI KASAMBA                                     -                      1973929054335
+                          YVONNE                                                                     7063956175087
+
+                          NZUNDA MUNTHANZI                                    -                      1973929054336
+                                                                                                     7063956175088
+
+                          YASSIN BLESSINGS                                    -                      1973929054337
+                                                                                                     7063956175089
+
+                          MWINAMA                                             -                      1973929054338
+                          EMMANUEL                                                                   7063956175090
+
+                          MILAZI MILTON                                       -                      1973929054339
+                          KUDZALA                                                                    7063956175091
+
+                          MTITIMILA JACOB                                     -                      1973929054340
+                          ALINAFE                                                                    7063956175092
+
+                          MHANGO                                              -                      1973929054341
+                          MONAOSYILE VILLA                                                           7063956175093
+
+
+
+BOOKING DETAILS
+
+ Agency Name                   Agency Number                  Agency Reference               Check-in Reference
+
+                               265 995802301                  JMC9NY                         KQ/9H3TXP
+                                                                                             TC/1D8A5Z
+
+
+
+FLIGHT DETAILS
+
+ Airline                       Departure                      Arrival                        Other Information
+
+
+
+ Outbound 1                                                                                     Total Duration: 15h 5m
+
+                               Lilongwe Intl Arpt (LLW)       Jomo Kenyatta Intl (NBO)       Status             Confirmed
+                               Lilongwe                       Nairobi
+                                                                                             Cabin                Economy
+ Kenya Airways                 Malawi                         Kenya
+ KQ 756                                                                                      Booking Class               L
+                               Departing At                   Arriving At
+ Aircraft : EMBRAER 190        Sat, 07 Nov 2026, 14:15        Sat, 07 Nov 2026, 19:45
+ Stop : 1                      Terminal :                     Terminal : 1A
+ Nampula
+                               Operated By
+ Duration : 2h 30m
+                               Kenya Airways
+
+                                     ----------Stopover: 5h:35m in Nairobi----------
+                           Jomo Kenyatta Intl (NBO)         Es Salaam Intl (DAR)          Status              Confirmed
+                           Nairobi                          Dar Es Salaam
+                                                                                          Cabin                Economy
+Kenya Airways              Kenya                            United Republic Of Tanzania
+KQ 488                                                                                    Booking Class               L
+                           Departing At                     Arriving At
+Aircraft : EMBRAER 190                                                                    In Flight Service       Meal
+                           Sun, 08 Nov 2026, 01:20          Sun, 08 Nov 2026, 02:50
+Stop : Non-Stop            Terminal : 1A                    Terminal : 3
+Duration : 1h 30m          Operated By
+                           Kenya Airways
+
+                             ----------Stopover: 3h:10m in Dar Es Salaam----------
+
+Air Tanzania Company Ltd   Es Salaam Intl (DAR)             Dodoma Airport (DOD)          Status              Confirmed
+TC 108                     Dar Es Salaam                    Dodoma
+                                                                                          Cabin                Economy
+Aircraft : DHC8 Dash 8     United Republic Of Tanzania      United Republic Of Tanzania
+                                                                                          Booking Class               H
+Stop : Non-Stop            Departing At                     Arriving At
+
+Duration : 1h 10m          Sun, 08 Nov 2026, 06:00          Sun, 08 Nov 2026, 07:10
+                           Terminal :                       Terminal :
+                           Operated By
+                           Air Tanzania Company Ltd
+
+
+
+Outbound 2                                                                                   Total Duration: 1h 10m
+
+
+Air Tanzania Company Ltd   Dodoma Airport (DOD)             Es Salaam Intl (DAR)          Status              Confirmed
+TC 175                     Dodoma                           Dar Es Salaam
+                                                                                          Cabin                Economy
+Aircraft : DHC8 Dash 8     United Republic Of Tanzania      United Republic Of Tanzania
+                                                                                          Booking Class               L
+Stop : Non-Stop            Departing At                     Arriving At
+
+Duration : 1h 10m          Sat, 14 Nov 2026, 01:30          Sat, 14 Nov 2026, 02:40
+                           Terminal :                       Terminal :
+                           Operated By
+                           Air Tanzania Company Ltd
+
+
+
+Outbound 3                                                                                   Total Duration: 4h 30m
+
+                           Es Salaam Intl (DAR)             Jomo Kenyatta Intl (NBO)      Status              Confirmed
+                           Dar Es Salaam                    Nairobi
+                                                                                          Cabin                Economy
+Kenya Airways              United Republic Of Tanzania      Kenya
+KQ 483                                                                                    Booking Class               T
+                           Departing At                     Arriving At
+Aircraft : EMBRAER 190                                                                    In Flight Service       Meal
+                           Sat, 14 Nov 2026, 09:55          Sat, 14 Nov 2026, 11:20
+Stop : Non-Stop            Terminal : 3                     Terminal : 1A
+Duration : 1h 25m          Operated By
+                           Kenya Airways
+
+                                   ----------Stopover: 0h:50m in Nairobi----------
+                         Jomo Kenyatta Intl (NBO)   Lilongwe Intl Arpt (LLW)   Status              Confirmed
+                         Nairobi                    Lilongwe
+                                                                               Cabin                Economy
+Kenya Airways            Kenya                      Malawi
+KQ 756                                                                         Booking Class              T
+                         Departing At               Arriving At
+Aircraft : EMBRAER 190                                                         In Flight Service       Meal
+                         Sat, 14 Nov 2026, 12:10    Sat, 14 Nov 2026, 13:25
+Stop : Non-Stop          Terminal : 1A              Terminal :
+Duration : 2h 15m        Operated By
+                         Kenya Airways
+PASSENGER'S OTHER DETAILS
+
+Last Name/First Name        Origin/       Seat Number   Baggage   Meal         Wheelchair
+                            Destination                           Preference
+
+DZIWENI KASAMBA YVONNE      LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+NZUNDA MUNTHANZI            LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+YASSIN BLESSINGS            LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+MWINAMA EMMANUEL            LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+MILAZI MILTON KUDZALA       LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+MTITIMILA JACOB ALINAFE     LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+
+MHANGO MONAOSYILE VILLA     LLW - NBO     -             -         -            -
+                            NBO - DAR     -             -         -            -
+                            DAR - DOD     -             23K       -            -
+                            DOD - DAR     -             23K       -            -
+                            DAR - NBO     -             -         -            -
+                            NBO - LLW     -             -         -            -
+BAGGAGE AND CARRY ON ALLOWANCE
+
+Baggage Allowance
+
+ Passenger Type       Origin/       Baggage                     Information
+                      Destination
+
+ ADT
+
+                      LLW - DAR     1st Checked Bag: Included   UPTO50LB/23KG
+                                    2nd Checked Bag: Included
+
+                      DAR - LLW     1st Checked Bag: Included   UPTO50LB/23KG
+                                    2nd Checked Bag: Included
+
+                      DAR - DOD     1st Checked Bag: Included   CHGS MAY APPLY IF BAGS EXCEED TTL WT
+                                    2nd Checked Bag: Included   ALLOWANCE
+
+                      DOD - DAR     1st Checked Bag: Included   CHGS MAY APPLY IF BAGS EXCEED TTL WT
+                                    2nd Checked Bag: Included   ALLOWANCE
+
+
+Carry On Allowance
+
+ Origin/Destination                     Baggage                     Information
+
+ DAR - DOD                              1P                          UPTO15LB/7KG AND UPTO41LI/105LCM
+
+ DOD - DAR                              1P                          UPTO15LB/7KG AND UPTO41LI/105LCM
+
+
+
+REMARK INFORMATION
+
+Unassociated Remarks
+
+FARE SUBJECT TO CHANGE ANYTIME WITHOUT PRIOR NOTICE
+
+FARES GUARANTEED IF TICKETED AT TIME OF MAKING BOOKING
+
+PSGR NAME MUST BE SAME AS IN PASSPORT USED TO TRAVEL
+
+WE RECOMMEND TRAVEL INSURANCE
+
+PLEASE ENSURE YOU HAVE VALID TRAVEL DOCUMENTS
+
+CHECK IN 3HOURS BEFORE ALL FLIGHT DEPARTURES
+
+ENSURE YOU TRAVEL WITH YELLOW FEVER CERTIFICATE
+
+NOTE THAT MOST DISCOUNTED FARES ARE NON REFUNDABLE
+
+ONCE AN E-TICKET IS ISSUED NAME CHANGES ARE NOT ALLOWED
+

@@ -1,5 +1,6 @@
 import { lstat, readFile } from "node:fs/promises";
 import path from "node:path";
+import { DateTime } from "luxon";
 import {
   PDFDocument,
   StandardFonts,
@@ -1378,81 +1379,219 @@ export async function renderItineraryPdf(snapshot: ItinerarySnapshot): Promise<U
   return builder.finish(snapshot.company.name, snapshot.number);
 }
 
+function ticketDateLines(value: string | undefined): string[] {
+  if (!value) return ["-"];
+  const date = DateTime.fromISO(value);
+  return date.isValid ? [date.toFormat("ccc,"), date.toFormat("dd LLL yy")] : [value];
+}
+
+function ticketArrivalLines(coupon: TicketSnapshot["coupons"][number]): string[] {
+  if (!coupon.arriveTime) return ["-"];
+  let date = coupon.travelDate ? DateTime.fromISO(coupon.travelDate) : DateTime.invalid("missing");
+  if (!date.isValid) return ["-"];
+  if (coupon.departTime && coupon.arriveTime < coupon.departTime) date = date.plus({ days: 1 });
+  return [date.toFormat("ccc,"), date.toFormat("dd LLL yy"), coupon.arriveTime];
+}
+
+function ticketDuration(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const rest = Math.round(minutes % 60);
+  return `${hours}h ${String(rest).padStart(2, "0")}m`;
+}
+
+function ticketLayover(
+  coupon: TicketSnapshot["coupons"][number],
+  next: TicketSnapshot["coupons"][number],
+): string | null {
+  if (!coupon.arriveTime || !coupon.travelDate || coupon.toIata !== next.fromIata) return null;
+  const arrive = DateTime.fromISO(`${coupon.travelDate}T${coupon.arriveTime}`);
+  let departDate = next.travelDate ? DateTime.fromISO(next.travelDate) : arrive;
+  if (!arrive.isValid || !departDate.isValid) return null;
+  if (next.departTime && next.departTime < coupon.arriveTime) departDate = departDate.plus({ days: 1 });
+  const depart = DateTime.fromISO(`${departDate.toISODate()}T${next.departTime}`);
+  if (!depart.isValid) return null;
+  const minutes = depart.diff(arrive, "minutes").minutes;
+  // More than 24 hours is a stopover at the destination, not a layover.
+  if (minutes <= 0 || minutes >= 24 * 60) return null;
+  return `Layover in ${coupon.toCity || coupon.toIata} (${coupon.toIata}) - ${ticketDuration(minutes)}`;
+}
+
 export async function renderTicketPdf(snapshot: TicketSnapshot): Promise<Uint8Array> {
   const builder = await PdfBuilder.create(snapshot.template);
-  await companyHeader(builder, snapshot.company, "Electronic ticket", snapshot.number);
-
-  builder.paragraph("ELECTRONIC TICKET ITINERARY RECEIPT", {
-    size: 13, font: "bold", lineHeight: 18,
-  });
+  await companyHeader(builder, snapshot.company, "Itinerary", snapshot.number);
+  builder.paragraph("Itinerary", { size: 14, font: "bold", lineHeight: 18 });
   builder.gap(4);
-  const columns = [24, 32, 74, 58, 52, 34, 32, 55, 100, 50];
-  const labels = ["CPN", "USE", "FLIGHT", "ROUTE", "DATE", "TIME", "STATUS", "FARE", "VALIDITY", "BAG"];
-  const top = builder.cursor;
-  builder.pageRef.drawRectangle({
-    x: MARGIN, y: top - 16, width: CONTENT, height: 16, color: builder.palette.tableHeadBg,
-  });
-  let x = MARGIN;
-  labels.forEach((label, index) => {
-    builder.at(label, x + 3, top - 5, {
-      size: 6.5, font: "bold", color: builder.palette.tableHeadText,
+
+  const drawHeader = (labels: string[], widths: number[]) => {
+    const top = builder.cursor;
+    builder.pageRef.drawRectangle({
+      x: MARGIN, y: top - 16, width: CONTENT, height: 16, color: builder.palette.tableHeadBg,
     });
-    x += columns[index]!;
-  });
-  builder.gap(20);
+    let x = MARGIN;
+    labels.forEach((label, index) => {
+      builder.at(label, x + 3, top - 5, {
+        size: 6.5, font: "bold", color: builder.palette.tableHeadText,
+      });
+      x += widths[index]!;
+    });
+    builder.gap(19);
+  };
+
+  const drawRow = (cells: string[][], widths: number[], minHeight = 18) => {
+    const wrappedCells = cells.map((cell, index) =>
+      cell.flatMap((line) => builder.wrap(line, 7, widths[index]! - 6)),
+    );
+    const height = Math.max(
+      minHeight,
+      Math.max(...wrappedCells.map((cell) => cell.length)) * 7.5 + 6,
+    );
+    builder.ensure(height);
+    const top = builder.cursor;
+    let x = MARGIN;
+    wrappedCells.forEach((lines, index) => {
+      lines.forEach((line, lineIndex) => {
+        builder.at(line, x + 3, top - 3 - lineIndex * 7.5, { size: 7 });
+      });
+      x += widths[index]!;
+    });
+    builder.cursor = top - height;
+    builder.rule();
+  };
+
+  builder.paragraph("Passenger Information", { size: 9, font: "bold", lineHeight: 13 });
+  builder.gap(2);
+  const passengerWidths = [150, 180, 181];
+  drawHeader(
+    [
+      "Passenger Information",
+      snapshot.platingCarrier
+        ? `${snapshot.platingCarrierName ?? snapshot.platingCarrier} (${snapshot.platingCarrier}) Ticket`
+        : "Ticket 1",
+      snapshot.secondaryCarrier
+        ? `${snapshot.secondaryCarrierName ?? snapshot.secondaryCarrier} (${snapshot.secondaryCarrier}) Ticket`
+        : "Second ticket",
+    ],
+    passengerWidths,
+  );
+  drawRow(
+    [
+      [snapshot.passengerName],
+      [formatTicketNumber(snapshot.number)],
+      [snapshot.secondaryNumber ? formatTicketNumber(snapshot.secondaryNumber) : "-"],
+    ],
+    passengerWidths,
+    16,
+  );
+
+  builder.gap(4);
+  const bookingWidths = [80, 85, 110, 110, 126];
+  drawHeader(
+    [
+      "Booking Ref",
+      snapshot.platingCarrier ? `${snapshot.platingCarrier} Check-in Ref` : "Check-in Ref",
+      snapshot.secondaryCarrier
+        ? `${snapshot.secondaryCarrier} Check-in Ref`
+        : "Secondary Check-in Ref",
+      "Form of Payment",
+      "Date of Issue",
+    ],
+    bookingWidths,
+  );
+  drawRow(
+    [
+      [snapshot.bookingRef ?? "-"],
+      [snapshot.checkInRef ?? "-"],
+      [snapshot.secondaryCheckInRef ?? "-"],
+      [snapshot.formOfPayment ?? "-"],
+      [snapshot.issueDate ? DateTime.fromISO(snapshot.issueDate).toFormat("ddLLLyy") : "-"],
+    ],
+    bookingWidths,
+    16,
+  );
+
+  builder.gap(8);
+  builder.paragraph("Itinerary Information", { size: 9, font: "bold", lineHeight: 13 });
+  builder.gap(2);
+  const widths = [72, 88, 90, 58, 58, 26, 119];
+  const labels = ["Flight #", "From", "To", "Depart", "Arrive", "Seat", "Info"];
+  const drawItineraryHeader = () => drawHeader(labels, widths);
+  drawItineraryHeader();
 
   if (snapshot.coupons.length === 0) {
     builder.paragraph("Coupon details were not present in the pasted ticket list.", {
-      size: 8.5, color: COLORS.muted, lineHeight: 11,
+      size: 8, color: COLORS.muted, lineHeight: 11,
     });
   } else {
-    for (const coupon of snapshot.coupons) {
-      builder.ensure(22);
-      const rowTop = builder.cursor;
-      let col = MARGIN;
-      const values = [
-        coupon.coupon ?? String(coupon.position + 1),
-        coupon.useType === "ARPT" ? "ARPT" : "OPEN",
-        `${coupon.carrier} ${coupon.flightNo} ${coupon.bookingClass}`,
-        `${coupon.fromIata}-${coupon.toIata}`,
-        coupon.travelDate ? displayDate(coupon.travelDate) : "-",
-        coupon.departTime,
-        coupon.status,
-        coupon.fareBasis ?? "-",
-        [coupon.notValidBefore, coupon.notValidAfter]
-          .filter(Boolean)
-          .map((value) => displayDate(value))
-          .join(" - ") || "-",
-        coupon.baggage ?? "-",
-      ];
-      values.forEach((value, index) => {
-        const text = builder.wrap(value, 7.5, columns[index]! - 5)[0] ?? "";
-        builder.at(text, col + 3, rowTop - 3, { size: 7.5 });
-        col += columns[index]!;
-      });
-      builder.cursor = rowTop - 20;
-      builder.rule();
+    for (let index = 0; index < snapshot.coupons.length; index += 1) {
+      const coupon = snapshot.coupons[index]!;
+      const next = snapshot.coupons[index + 1];
+      const info = [
+        coupon.bookingClass
+          ? `Class : ${coupon.bookingClass}-${coupon.cabin ?? "Economy"}`
+          : "",
+        coupon.status ? `Status : ${coupon.status === "OK" ? "Confirmed" : coupon.status}` : "",
+        coupon.baggage ? `Baggage : ${coupon.baggage}` : "",
+        coupon.aircraft ? `Aircraft : ${coupon.aircraft}` : "",
+        coupon.stopInfo && !/^non-?stop$/i.test(coupon.stopInfo)
+          ? `Stop : ${coupon.stopInfo}`
+          : "",
+        coupon.meal ?? "",
+      ].filter(Boolean);
+      const dep = ticketDateLines(coupon.travelDate);
+      const arr = ticketArrivalLines(coupon);
+      if (builder.cursor < MARGIN + 90) {
+        builder.newPage();
+        drawItineraryHeader();
+      }
+      drawRow(
+        [
+          [coupon.carrierName ?? coupon.carrier, `${coupon.carrier} ${coupon.flightNo}`],
+          [coupon.fromCity ?? "", coupon.fromName ?? coupon.fromIata, `(${coupon.fromIata})`, coupon.fromTerminal ? `Terminal ${coupon.fromTerminal}` : ""].filter(Boolean),
+          [coupon.toCity ?? "", coupon.toName ?? coupon.toIata, `(${coupon.toIata})`, coupon.toTerminal ? `Terminal ${coupon.toTerminal}` : ""].filter(Boolean),
+          [...dep, coupon.departTime],
+          arr,
+          [""],
+          info,
+        ],
+        widths,
+        46,
+      );
+      const layover = next ? ticketLayover(coupon, next) : null;
+      if (layover) {
+        builder.ensure(13);
+        const top = builder.cursor;
+        builder.pageRef.drawRectangle({
+          x: MARGIN, y: top - 12, width: CONTENT, height: 12, color: COLORS.pale,
+        });
+        builder.at(layover, MARGIN + 4, top - 2, {
+          size: 7, font: "italic", color: COLORS.slate,
+        });
+        builder.gap(14);
+      }
     }
   }
 
   builder.gap(12);
-  const details = [
-    ["Passenger", snapshot.passengerName],
-    ["Ticket number", formatTicketNumber(snapshot.number)],
-    ["Date of issue", snapshot.issueDate ? displayDate(snapshot.issueDate) : "-"],
-    ["Form of payment", snapshot.formOfPayment || "-"],
-    ["Plating carrier / IATA", `${snapshot.platingCarrier || "-"}${snapshot.iata ? ` / ${snapshot.iata}` : ""}`],
-    ["Pseudo / ISO", `${snapshot.pseudo || "-"}${snapshot.iso ? ` / ${snapshot.iso}` : ""}`],
-  ];
-  for (const [label, value] of details) {
-    builder.paragraph(`${label}: ${value}`, { size: 8.5, lineHeight: 12 });
-  }
-
-  builder.gap(12);
   builder.paragraph(
-    "This is an electronic ticket itinerary receipt. Present valid travel documents at check-in. Flight times are local at each airport; reconfirm schedules with the airline before travel.",
-    { size: 7.5, color: COLORS.muted, lineHeight: 10 },
+    "Air Tanzania (TC 108 / TC 175): charges may apply if bags exceed the total weight allowance. Carry-on: 1 piece up to 7KG.",
+    { size: 7, color: COLORS.slate, lineHeight: 9 },
   );
+  builder.gap(4);
+  for (const note of [
+    "WE RECOMMEND TRAVEL INSURANCE",
+    "PLEASE ENSURE YOU HAVE VALID TRAVEL DOCUMENTS",
+    "PSGR NAME MUST BE SAME AS IN PASSPORT USED TO TRAVEL",
+    "CHECK IN 3HOURS BEFORE ALL FLIGHT DEPARTURES",
+    "NOTE THAT MOST DISCOUNTED FARES ARE NON REFUNDABLE",
+    "ENSURE YOU TRAVEL WITH YELLOW FEVER CERTIFICATE",
+    "ONCE AN E-TICKET IS ISSUED NAME CHANGES ARE NOT ALLOWED",
+  ]) {
+    builder.paragraph(note, { size: 7, color: COLORS.slate, lineHeight: 9 });
+  }
+  builder.gap(4);
+  builder.paragraph("Thank you for choosing our service. We look forward to serving you", {
+    size: 7, color: COLORS.slate, lineHeight: 9,
+  });
 
   return builder.finish(snapshot.company.name, snapshot.number);
 }

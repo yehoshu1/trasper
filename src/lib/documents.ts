@@ -264,23 +264,36 @@ export interface TicketCouponSnapshot {
   position: number;
   useType: string;
   carrier: string;
+  carrierName?: string;
   flightNo: string;
   bookingClass: string;
+  cabin?: string;
   travelDate?: string;
   fromIata: string;
+  fromName?: string;
+  fromCity?: string;
+  fromTerminal?: string;
   toIata: string;
+  toName?: string;
+  toCity?: string;
+  toTerminal?: string;
   departTime: string;
+  arriveTime?: string;
   status: string;
   fareBasis?: string;
   coupon?: string;
   notValidBefore?: string;
   notValidAfter?: string;
   baggage?: string;
+  aircraft?: string;
+  stopInfo?: string;
+  meal?: string;
 }
 
 export interface TicketSnapshot {
   kind: "ticket";
   number: string;
+  secondaryNumber?: string;
   passengerName: string;
   issueDate?: string;
   template?: DocumentTemplate;
@@ -289,6 +302,12 @@ export interface TicketSnapshot {
   formOfPayment?: string;
   pseudo?: string;
   platingCarrier?: string;
+  platingCarrierName?: string;
+  secondaryCarrier?: string;
+  secondaryCarrierName?: string;
+  bookingRef?: string;
+  checkInRef?: string;
+  secondaryCheckInRef?: string;
   iso?: string;
   iata?: string;
   coupons: TicketCouponSnapshot[];

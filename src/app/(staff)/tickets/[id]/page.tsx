@@ -35,6 +35,7 @@ export default async function TicketPage({
         title={`${formatTicketNumber(ticket.number)} · ${ticket.passengerName}`}
         subtitle={[
           ticket.issueDate ? `Issued ${formatDate(ticket.issueDate)}` : null,
+          ticket.secondaryNumber ? `Second ticket ${formatTicketNumber(ticket.secondaryNumber)}` : null,
           ticket.platingCarrier ? `Plated ${ticket.platingCarrier}` : null,
           ticket.quotation ? `Quotation ${ticket.quotation.number}` : null,
         ]
@@ -81,10 +82,12 @@ export default async function TicketPage({
                     <th>Route</th>
                     <th>Date</th>
                     <th>Departs</th>
+                    <th>Arrives</th>
                     <th>Status</th>
                     <th>Fare basis</th>
                     <th>Validity</th>
                     <th>Baggage</th>
+                    <th>Details</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -96,10 +99,19 @@ export default async function TicketPage({
                         {coupon.carrier} {coupon.flightNo} {coupon.bookingClass}
                       </td>
                       <td>
-                        {coupon.fromIata} → {coupon.toIata}
+                        <span className="block">
+                          {coupon.fromIata} → {coupon.toIata}
+                        </span>
+                        {coupon.fromTerminal || coupon.toTerminal ? (
+                          <span className="block text-[11px] text-muted-foreground">
+                            {coupon.fromTerminal ? `Terminal ${coupon.fromTerminal}` : "—"} →{" "}
+                            {coupon.toTerminal ? `Terminal ${coupon.toTerminal}` : "—"}
+                          </span>
+                        ) : null}
                       </td>
                       <td>{dateOnly(coupon.travelDate)}</td>
                       <td className="tabular-nums">{coupon.departTime}</td>
+                      <td className="tabular-nums">{coupon.arriveTime ?? "—"}</td>
                       <td>{coupon.status}</td>
                       <td>{coupon.fareBasis ?? "—"}</td>
                       <td>
@@ -109,11 +121,16 @@ export default async function TicketPage({
                           .join(" – ") || "—"}
                       </td>
                       <td>{coupon.baggage ?? "—"}</td>
+                      <td>
+                        {[coupon.aircraft, coupon.stopInfo, coupon.meal]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
+                      </td>
                     </tr>
                   ))}
                   {ticket.coupons.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="text-muted-foreground">
+                      <td colSpan={12} className="text-muted-foreground">
                         No coupon details were present in the imported ticket list.
                       </td>
                     </tr>
@@ -138,8 +155,24 @@ export default async function TicketPage({
                 <dd className="font-mono font-semibold">{formatTicketNumber(ticket.number)}</dd>
               </div>
               <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Second ticket</dt>
+                <dd className="font-mono">
+                  {ticket.secondaryNumber ? formatTicketNumber(ticket.secondaryNumber) : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
                 <dt className="text-muted-foreground">Passenger</dt>
                 <dd>{ticket.passengerName}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Booking ref</dt>
+                <dd>{ticket.bookingRef ?? "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted-foreground">Check-in refs</dt>
+                <dd>
+                  {[ticket.checkInRef, ticket.secondaryCheckInRef].filter(Boolean).join(" / ") || "—"}
+                </dd>
               </div>
               <div className="flex justify-between gap-3">
                 <dt className="text-muted-foreground">Issued</dt>

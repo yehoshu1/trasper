@@ -11,16 +11,23 @@ export interface ParsedTicketCoupon {
   carrier: string;
   flightNo: string;
   bookingClass: string;
+  cabin?: string;
   travelDate?: string;
   fromIata: string;
   toIata: string;
   departTime: string;
+  arriveTime?: string;
+  fromTerminal?: string;
+  toTerminal?: string;
   status: string;
   fareBasis?: string;
   coupon?: string;
   notValidBefore?: string;
   notValidAfter?: string;
   baggage?: string;
+  aircraft?: string;
+  stopInfo?: string;
+  meal?: string;
   raw: string;
 }
 
@@ -236,8 +243,10 @@ export function parseTickets(text: string): TicketParseResult {
 
   // Electronic ticket list entries, usually introduced by *HTE.
   for (const line of lines) {
-    if (!/^\s*>\*/.test(line)) continue;
-    const match = /^>\*\S+\s+(.+?)\s+(\d{13})\s*$/i.exec(line.trim());
+    if (!/^\s*(?:>\*\S*|\*[A-Z]{2}\d+\S*)[\s·:]/i.test(line)) continue;
+    const match = /^\s*(?:>\*\S*|\*[A-Z]{2}\d+\S*)\s*[·:]?\s*(.+?)\s+(\d{13})\s*$/i.exec(
+      line.trim(),
+    );
     if (!match) {
       unparsed.push(line.trim());
       continue;
@@ -266,6 +275,73 @@ export function parseTickets(text: string): TicketParseResult {
     unparsed,
     warnings: [...new Set(warnings)],
   };
+}
+
+export interface GroupedTicket {
+  primary: ParsedTicket;
+  secondary?: ParsedTicket;
+}
+
+/**
+ * Two ticket stocks are often issued for one passenger (for example KQ and TC).
+ * Pair them by surname, then by a compatible given name so two passengers who
+ * share a surname are never merged.
+ */
+export function groupParsedTickets(tickets: ParsedTicket[]): {
+  groups: GroupedTicket[];
+  warnings: string[];
+} {
+  const bucketBySurname = new Map<string, { given: string; tickets: ParsedTicket[] }[]>();
+
+  for (const ticket of tickets) {
+    const [surnamePart, givenPart] = ticket.passengerName.split("/");
+    const surname = (surnamePart ?? ticket.passengerName).trim().toUpperCase();
+    const given = (givenPart ?? "").trim().toUpperCase();
+    const buckets = bucketBySurname.get(surname) ?? [];
+    // A truncated given name ("MILTON KU") still belongs to the same passenger
+    // as the fuller form ("MILTON KUDZALA"); two different given names do not.
+    const bucket = buckets.find(
+      (candidate) =>
+        !candidate.given ||
+        !given ||
+        candidate.given === given ||
+        candidate.given.startsWith(given) ||
+        given.startsWith(candidate.given),
+    );
+    if (bucket) {
+      bucket.tickets.push(ticket);
+      if (given.length > bucket.given.length) bucket.given = given;
+    } else {
+      buckets.push({ given, tickets: [ticket] });
+    }
+    bucketBySurname.set(surname, buckets);
+  }
+
+  const warnings: string[] = [];
+  const groups: GroupedTicket[] = [];
+  for (const buckets of bucketBySurname.values()) {
+    for (const bucket of buckets) {
+      const list = bucket.tickets;
+      const primary = list.find((ticket) => ticket.coupons.length > 0) ?? list[0]!;
+      const secondary = list.find((ticket) => ticket.number !== primary.number);
+      if (list.length > 2) {
+        warnings.push(
+          `${primary.passengerName}: ${list.length} ticket numbers found; only the first two were kept.`,
+        );
+      }
+      // Prefer a fuller name from the ticket block over a truncated list name.
+      const name = list.reduce(
+        (longest, ticket) =>
+          ticket.passengerName.length > longest.length ? ticket.passengerName : longest,
+        primary.passengerName,
+      );
+      groups.push({
+        primary: { ...primary, passengerName: name },
+        secondary,
+      });
+    }
+  }
+  return { groups, warnings };
 }
 
 export function formatTicketNumber(number: string): string {
