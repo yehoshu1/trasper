@@ -189,6 +189,7 @@ export interface DocumentJourney {
   flights: DocumentFlight[];
   lines: DocumentLine[];
   presentation?: PricePresentation;
+  passengers: DocumentPassenger[];
   totalMinor: string;
   vatMinor: string;
 }

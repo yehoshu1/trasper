@@ -402,6 +402,7 @@ export async function buildItinerarySnapshot(
       pnr: option.pnr ?? undefined,
       flights: await flightsForSegments(option.segments),
       lines: [],
+      passengers: passengersForOption(option),
       totalMinor: "0",
       vatMinor: "0",
     });
@@ -499,6 +500,7 @@ export async function buildProformaSnapshot(
       // The legacy "show VAT" switch keeps its explicit row; otherwise the
       // quotation's frozen presentation (including tax layout) is reused.
       presentation: input.showVat ? undefined : totals.presentation ?? undefined,
+      passengers: passengersForOption(option),
       totalMinor: totals.totalMinor.toString(),
       vatMinor: totals.vatMinor.toString(),
     });

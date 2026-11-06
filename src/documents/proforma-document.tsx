@@ -54,7 +54,7 @@ function InvoiceTable({
       <tbody>
         {lines.map((line, index) => (
           <tr key={`${line.description}-${index}`} className="break-inside-avoid">
-            <td>{line.description}</td>
+            <td className="whitespace-pre-line">{line.description}</td>
             <td className="text-right tabular-nums">{line.quantity}</td>
             <td className="text-right tabular-nums">{format(line.unitAmountMinor)}</td>
             <td className="text-right tabular-nums">{format(line.amountMinor)}</td>
@@ -116,6 +116,7 @@ export function ProformaDocument({
                 lines={proformaInvoiceLines({
                   lines: journey.lines,
                   presentation: journey.presentation,
+                  passengers: journey.passengers,
                   totalMinor: journey.totalMinor,
                 })}
                 currency={snapshot.currency}
@@ -157,6 +158,7 @@ export function ProformaDocument({
               lines={proformaInvoiceLines({
                 lines: snapshot.lines,
                 presentation: snapshot.presentation,
+                passengers: snapshot.passengers,
                 totalMinor: snapshot.totalMinor,
               })}
               currency={snapshot.currency}

@@ -1413,6 +1413,7 @@ export async function renderProformaPdf(
         proformaInvoiceLines({
           lines: journey.lines,
           presentation: journey.presentation,
+          passengers: journey.passengers,
           totalMinor: journey.totalMinor,
         }),
         snapshot.currency,
@@ -1441,6 +1442,7 @@ export async function renderProformaPdf(
       proformaInvoiceLines({
         lines: snapshot.lines,
         presentation: snapshot.presentation,
+        passengers: snapshot.passengers,
         totalMinor: snapshot.totalMinor,
       }),
       snapshot.currency,
