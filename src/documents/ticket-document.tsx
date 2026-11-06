@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { DateTime } from "luxon";
 
 import type { TicketCouponSnapshot, TicketSnapshot } from "@/lib/documents";
+import { layoverLabel } from "@/lib/tickets/itinerary";
 
 import { DocumentFrame } from "./shared";
 
@@ -27,27 +28,6 @@ function arrivalDate(coupon: TicketCouponSnapshot): [string, string] {
   if (!date.isValid) return ["—", ""];
   if (coupon.departTime && coupon.arriveTime < coupon.departTime) date = date.plus({ days: 1 });
   return [date.toFormat("ccc,"), date.toFormat("dd LLL yy")];
-}
-
-function durationLabel(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = Math.round(minutes % 60);
-  return `${hours}h ${String(rest).padStart(2, "0")}m`;
-}
-
-function layover(coupon: TicketCouponSnapshot, next: TicketCouponSnapshot): string | null {
-  if (!coupon.arriveTime || !coupon.travelDate || coupon.toIata !== next.fromIata) return null;
-  const arrive = DateTime.fromISO(`${coupon.travelDate}T${coupon.arriveTime}`);
-  let departDate = next.travelDate ? DateTime.fromISO(next.travelDate) : arrive;
-  if (!arrive.isValid || !departDate.isValid) return null;
-  if (next.departTime && next.departTime < coupon.arriveTime) departDate = departDate.plus({ days: 1 });
-  const depart = DateTime.fromISO(`${departDate.toISODate()}T${next.departTime}`);
-  if (!depart.isValid) return null;
-  const minutes = depart.diff(arrive, "minutes").minutes;
-  // More than 24 hours is a stopover at the destination, not a layover.
-  if (minutes <= 0 || minutes >= 24 * 60) return null;
-  const city = coupon.toCity || coupon.toIata;
-  return `Layover in ${city} (${coupon.toIata}) - ${durationLabel(minutes)}`;
 }
 
 function airportLabel(coupon: TicketCouponSnapshot, side: "from" | "to"): string[] {
@@ -165,7 +145,7 @@ export function TicketDocument({ snapshot }: { snapshot: TicketSnapshot }) {
             <tbody>
               {snapshot.coupons.map((coupon, index) => {
                 const next = snapshot.coupons[index + 1];
-                const layoverText = next ? layover(coupon, next) : null;
+                const layoverText = next ? layoverLabel(coupon, next) : null;
                 const dep = dayDate(coupon.travelDate);
                 const arr = arrivalDate(coupon);
                 const info = infoLines(coupon);

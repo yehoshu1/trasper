@@ -8,6 +8,7 @@ import {
   isBookingDocument,
   parseBookingDocument,
 } from "../src/lib/tickets/booking";
+import { layoverLabel, layoverMinutes } from "../src/lib/tickets/itinerary";
 import { mergeTicketSources } from "../src/lib/tickets/merge";
 import { formatTicketNumber, parseTickets } from "../src/lib/tickets/parse";
 
@@ -236,5 +237,54 @@ describe("booking confirmation parser", () => {
     assert.equal(carrierForTicketNumber("7063956175087"), "KQ");
     assert.equal(carrierForTicketNumber("1973929054335"), "TC");
     assert.equal(carrierForTicketNumber("9990000000000"), undefined);
+  });
+});
+
+describe("ticket layovers", () => {
+  const coupon = (
+    fromIata: string,
+    toIata: string,
+    toCity: string,
+    travelDate: string,
+    departTime: string,
+    arriveTime: string,
+  ) => ({
+    position: 0,
+    useType: "ARPT",
+    carrier: "KQ",
+    flightNo: "1",
+    bookingClass: "L",
+    travelDate,
+    fromIata,
+    toIata,
+    toCity,
+    departTime,
+    arriveTime,
+    status: "Confirmed",
+  });
+
+  it("shows an overnight connection on the next calendar date", () => {
+    const first = coupon("LLW", "NBO", "Nairobi", "2026-11-07", "14:15", "19:45");
+    const second = coupon("NBO", "DAR", "Dar es Salaam", "2026-11-08", "01:20", "02:50");
+    assert.equal(layoverMinutes(first, second), 5 * 60 + 35);
+    assert.equal(layoverLabel(first, second), "Layover in Nairobi (NBO) - 5h 35m");
+  });
+
+  it("formats a short connection without an hour part", () => {
+    const first = coupon("DAR", "NBO", "Nairobi", "2026-11-14", "09:55", "11:20");
+    const second = coupon("NBO", "LLW", "Lilongwe", "2026-11-14", "12:10", "13:25");
+    assert.equal(layoverLabel(first, second), "Layover in Nairobi (NBO) - 50m");
+  });
+
+  it("does not print a destination stay as a layover", () => {
+    const first = coupon("DAR", "DOD", "Dodoma", "2026-11-08", "06:00", "07:10");
+    const second = coupon("DOD", "DAR", "Dar es Salaam", "2026-11-14", "01:30", "02:40");
+    assert.equal(layoverLabel(first, second), null);
+  });
+
+  it("requires the coupons to connect at the same airport", () => {
+    const first = coupon("LLW", "NBO", "Nairobi", "2026-11-07", "14:15", "19:45");
+    const second = coupon("DAR", "NBO", "Nairobi", "2026-11-08", "01:20", "02:50");
+    assert.equal(layoverLabel(first, second), null);
   });
 });

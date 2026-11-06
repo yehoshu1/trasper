@@ -32,6 +32,7 @@ import { roundDiv } from "../lib/pricing";
 import type { PricePresentation } from "../lib/pricing/presentation";
 import { proformaInvoiceLines, type InvoiceLine } from "../lib/proforma-invoice";
 import { formatTicketNumber } from "../lib/tickets/parse";
+import { layoverLabel } from "../lib/tickets/itinerary";
 import {
   SERVICE_UNIT_PLURALS,
   isServiceUnit,
@@ -1393,29 +1394,6 @@ function ticketArrivalLines(coupon: TicketSnapshot["coupons"][number]): string[]
   return [date.toFormat("ccc,"), date.toFormat("dd LLL yy"), coupon.arriveTime];
 }
 
-function ticketDuration(minutes: number): string {
-  const hours = Math.floor(minutes / 60);
-  const rest = Math.round(minutes % 60);
-  return `${hours}h ${String(rest).padStart(2, "0")}m`;
-}
-
-function ticketLayover(
-  coupon: TicketSnapshot["coupons"][number],
-  next: TicketSnapshot["coupons"][number],
-): string | null {
-  if (!coupon.arriveTime || !coupon.travelDate || coupon.toIata !== next.fromIata) return null;
-  const arrive = DateTime.fromISO(`${coupon.travelDate}T${coupon.arriveTime}`);
-  let departDate = next.travelDate ? DateTime.fromISO(next.travelDate) : arrive;
-  if (!arrive.isValid || !departDate.isValid) return null;
-  if (next.departTime && next.departTime < coupon.arriveTime) departDate = departDate.plus({ days: 1 });
-  const depart = DateTime.fromISO(`${departDate.toISODate()}T${next.departTime}`);
-  if (!depart.isValid) return null;
-  const minutes = depart.diff(arrive, "minutes").minutes;
-  // More than 24 hours is a stopover at the destination, not a layover.
-  if (minutes <= 0 || minutes >= 24 * 60) return null;
-  return `Layover in ${coupon.toCity || coupon.toIata} (${coupon.toIata}) - ${ticketDuration(minutes)}`;
-}
-
 export async function renderTicketPdf(snapshot: TicketSnapshot): Promise<Uint8Array> {
   const builder = await PdfBuilder.create(snapshot.template);
   await companyHeader(builder, snapshot.company, "Itinerary", snapshot.number);
@@ -1556,7 +1534,7 @@ export async function renderTicketPdf(snapshot: TicketSnapshot): Promise<Uint8Ar
         widths,
         46,
       );
-      const layover = next ? ticketLayover(coupon, next) : null;
+      const layover = next ? layoverLabel(coupon, next) : null;
       if (layover) {
         builder.ensure(13);
         const top = builder.cursor;
