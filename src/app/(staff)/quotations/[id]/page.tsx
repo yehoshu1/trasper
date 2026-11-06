@@ -183,7 +183,7 @@ export default async function QuotationPage({
       <PageHeader
         eyebrow="Quotation"
         title={`${quotation.number} · ${quotation.contact.name}`}
-        subtitle="Options, flights, fares, margin and taxes. Sending locks the quotation and freezes its totals."
+        subtitle="Journeys, flights, fares, margin and taxes. Sending locks the quotation and freezes every journey total."
         actions={
           <>
             {canManage && !quotation.archivedAt && canArchiveQuotation(quotation.status) ? (
@@ -282,7 +282,7 @@ export default async function QuotationPage({
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <Card title="Documents" subtitle="Issued from the accepted option">
+        <Card title="Documents" subtitle="Issued from every journey on the accepted quotation">
           <div className="space-y-4">
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Itineraries</h3>
@@ -290,7 +290,7 @@ export default async function QuotationPage({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {quotation.status === "accepted"
                     ? "None issued yet."
-                    : "Available once an option is accepted."}
+                    : "Available once the quotation is accepted."}
                 </p>
               ) : (
                 <ul className="mt-1 divide-y divide-border">
@@ -314,7 +314,7 @@ export default async function QuotationPage({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {quotation.status === "accepted"
                     ? "None issued yet."
-                    : "Available once an option is accepted."}
+                    : "Available once the quotation is accepted."}
                 </p>
               ) : (
                 <ul className="mt-1 divide-y divide-border">
@@ -342,7 +342,7 @@ export default async function QuotationPage({
                     Issue documents
                   </h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Both documents are copied from the accepted option and frozen when issued.
+                    Both documents include every journey and are frozen when issued.
                   </p>
                 </div>
                 <form action={createItineraryFormAction}>

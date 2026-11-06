@@ -82,7 +82,7 @@ export default async function ProformasPage({
       <PageHeader
         eyebrow="Money"
         title="Pro forma invoices"
-        subtitle="Issued from an accepted option. Status comes from the payments, never typed."
+        subtitle="Issued from an accepted quotation with every journey. Status comes from the payments, never typed."
       />
 
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

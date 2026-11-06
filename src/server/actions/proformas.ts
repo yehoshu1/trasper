@@ -49,13 +49,12 @@ export async function createProformaAction(formData: FormData): Promise<void> {
     if (quotation.status !== "accepted") {
       redirect(`/quotations/${quotation.id}?error=${encodeURIComponent("Only an accepted quotation can produce a pro forma")}`);
     }
-    const option = quotation.options.find((entry) => entry.id === quotation.acceptedOptionId);
-    if (!option) {
-      redirect(`/quotations/${quotation.id}?error=${encodeURIComponent("The accepted option could not be found")}`);
+    if (quotation.options.length === 0) {
+      redirect(`/quotations/${quotation.id}?error=${encodeURIComponent("Add at least one journey before creating a pro forma")}`);
     }
 
     const existing = await prisma.proforma.findFirst({
-      where: { quotationId: quotation.id, optionId: option.id, status: { not: "cancelled" } },
+      where: { quotationId: quotation.id, status: { not: "cancelled" } },
     });
     if (existing) {
       redirect(`/quotations/${quotation.id}?error=${encodeURIComponent(`Pro forma ${existing.number} is already active; cancel it before issuing another`)}`);
@@ -71,19 +70,24 @@ export async function createProformaAction(formData: FormData): Promise<void> {
     const bank = chooseBankAccount(bankAccounts, data.bankAccountId);
     const created = await prisma.$transaction(async (tx) => {
       const number = await allocateNumber(tx, "proforma", issueDate, quotation.branch);
-      const snapshot = await buildProformaSnapshot(quotation, option, settings, {
-        number,
-        issueDate,
-        dueDate,
-        terms: data.terms || settings.paymentTerms,
-        showVat: data.showVat,
-        bankAccountId: bank?.id ?? null,
-      });
+      const snapshot = await buildProformaSnapshot(
+        quotation,
+        quotation.options,
+        settings,
+        {
+          number,
+          issueDate,
+          dueDate,
+          terms: data.terms || settings.paymentTerms,
+          showVat: data.showVat,
+          bankAccountId: bank?.id ?? null,
+        },
+      );
       const proforma = await tx.proforma.create({
         data: {
           number,
           quotationId: quotation.id,
-          optionId: option.id,
+          optionId: quotation.options[0]!.id,
           bankAccountId: bank?.id ?? quotation.bankAccountId,
           referenceNo: quotation.referenceNo,
           status: "draft",
@@ -114,7 +118,8 @@ export async function createProformaAction(formData: FormData): Promise<void> {
           status: "draft",
           totalMinor: proforma.totalMinor,
           quotationId: quotation.id,
-          optionId: option.id,
+          optionId: quotation.options[0]!.id,
+          journeyCount: quotation.options.length,
           showVat: data.showVat,
         },
       });
@@ -137,7 +142,7 @@ export async function createProformaAction(formData: FormData): Promise<void> {
 type ProformaDraftInput = z.infer<typeof updateProformaDraftSchema>;
 
 /**
- * Rebuild a draft pro forma from the accepted option, then apply the traveller
+ * Rebuild a draft pro forma from every journey, then apply the traveller
  * names typed into the draft. No number is allocated here: the pro forma
  * already has one from creation.
  */
@@ -150,22 +155,26 @@ async function prepareProformaDraft(proformaId: string, input: ProformaDraftInpu
 
   const quotation = await loadQuotation(proforma.quotationId);
   if (!quotation) throw new Error("Quotation not found");
-  const option = quotation.options.find((entry) => entry.id === proforma.optionId);
-  if (!option) throw new Error("The pro forma option could not be found");
+  if (quotation.options.length === 0) throw new Error("The quotation has no journeys");
 
   const settings = await getSettings();
   const bankAccounts = await prisma.bankAccount.findMany({ where: { isArchived: false } });
   const bank = chooseBankAccount(bankAccounts, input.bankAccountId);
   const dueDate = input.dueDate ? documentDateFromInput(input.dueDate) : undefined;
   const terms = input.terms || settings.paymentTerms;
-  const snapshot = await buildProformaSnapshot(quotation, option, settings, {
-    number: proforma.number,
-    issueDate: proforma.issueDate,
-    dueDate,
-    terms,
-    showVat: input.showVat,
-    bankAccountId: bank?.id ?? proforma.bankAccountId,
-  });
+  const snapshot = await buildProformaSnapshot(
+    quotation,
+    quotation.options,
+    settings,
+    {
+      number: proforma.number,
+      issueDate: proforma.issueDate,
+      dueDate,
+      terms,
+      showVat: input.showVat,
+      bankAccountId: bank?.id ?? proforma.bankAccountId,
+    },
+  );
 
   const names = applyTravellerNames(snapshot.passengers, input.travellerNames);
   if (names.error) throw new Error(names.error);

@@ -376,6 +376,9 @@ export async function buildQuotationSnapshot(
     passengers: uniquePassengers(quotation),
     flights: options.flatMap((option) => option.flights),
     options,
+    totalMinor: options
+      .reduce((sum, option) => sum + BigInt(option.totalMinor), 0n)
+      .toString(),
     heading: quotation.heading?.trim() || "QUOTATION",
     notes: quotation.notes || settings.quotationNotes,
     validityStatement: settings.quotationValidityStatement || undefined,
@@ -388,10 +391,22 @@ export async function buildQuotationSnapshot(
 
 export async function buildItinerarySnapshot(
   quotation: QuotationWithRelations,
-  option: QuotationOptionWithRelations,
+  options: QuotationOptionWithRelations[],
   settings: AppSettings,
   number: string,
 ): Promise<ItinerarySnapshot> {
+  const journeys = [];
+  for (const option of options) {
+    journeys.push({
+      label: option.label,
+      pnr: option.pnr ?? undefined,
+      flights: await flightsForSegments(option.segments),
+      lines: [],
+      totalMinor: "0",
+      vatMinor: "0",
+    });
+  }
+  const first = options[0];
   return {
     kind: "itinerary",
     number,
@@ -402,11 +417,12 @@ export async function buildItinerarySnapshot(
     quotationNumber: quotation.number,
     company: companySnapshot(settings),
     contact: contactSnapshot(quotation.contact),
-    passengers: passengersForOption(option),
-    optionLabel: option.label,
-    showOptionLabel: quotation.options.length > 1,
-    pnr: option.pnr ?? undefined,
-    flights: await flightsForSegments(option.segments),
+    passengers: uniquePassengers(quotation),
+    optionLabel: options.length === 1 ? first?.label ?? "Journey" : "Journeys",
+    showOptionLabel: true,
+    pnr: options.length === 1 ? first?.pnr ?? undefined : undefined,
+    flights: journeys.flatMap((journey) => journey.flights),
+    journeys,
     notes: settings.itineraryNotes,
   };
 }
@@ -448,7 +464,7 @@ export function buildStandaloneItinerarySnapshot(input: {
 
 export async function buildProformaSnapshot(
   quotation: QuotationWithRelations,
-  option: QuotationOptionWithRelations,
+  options: QuotationOptionWithRelations[],
   settings: AppSettings,
   input: {
     number: string;
@@ -459,9 +475,35 @@ export async function buildProformaSnapshot(
     bankAccountId?: string | null;
   },
 ): Promise<ProformaSnapshot> {
-  const totals = optionTotalsForPrint(quotation, option, settings);
-  const frozen = totals.frozen;
-  const flights = settings.proformaShowFlights ? await flightsForSegments(option.segments) : [];
+  const journeys = [];
+  const allLines: DocumentLine[] = [];
+  let totalMinor = 0n;
+  let vatMinor = 0n;
+  let vatRateBps = settings.vatRateBps.toString();
+  for (const [index, option] of options.entries()) {
+    const totals = optionTotalsForPrint(quotation, option, settings);
+    if (index === 0 && totals.frozen?.vatRateBps) {
+      vatRateBps = totals.frozen.vatRateBps;
+    }
+    const flights = settings.proformaShowFlights
+      ? await flightsForSegments(option.segments)
+      : [];
+    allLines.push(...totals.lines);
+    totalMinor += totals.totalMinor;
+    vatMinor += totals.vatMinor;
+    journeys.push({
+      label: option.label,
+      pnr: option.pnr ?? undefined,
+      flights,
+      lines: totals.lines,
+      // The legacy "show VAT" switch keeps its explicit row; otherwise the
+      // quotation's frozen presentation (including tax layout) is reused.
+      presentation: input.showVat ? undefined : totals.presentation ?? undefined,
+      totalMinor: totals.totalMinor.toString(),
+      vatMinor: totals.vatMinor.toString(),
+    });
+  }
+
   return {
     kind: "proforma",
     number: input.number,
@@ -474,20 +516,20 @@ export async function buildProformaSnapshot(
     currency: quotation.currency,
     company: companySnapshot(settings),
     contact: contactSnapshot(quotation.contact),
-    passengers: passengersForOption(option),
-    optionLabel: option.label,
-    showOptionLabel: quotation.options.length > 1,
-    flights,
+    passengers: uniquePassengers(quotation),
+    optionLabel: options.length === 1 ? options[0]?.label ?? "Journey" : "Journeys",
+    showOptionLabel: options.length > 1,
+    flights: journeys.flatMap((journey) => journey.flights),
+    journeys,
     showFlights: settings.proformaShowFlights,
     showVat: input.showVat,
-    vatMinor: totals.vatMinor.toString(),
-    vatRateBps: frozen?.vatRateBps ?? settings.vatRateBps.toString(),
+    vatMinor: vatMinor.toString(),
+    vatRateBps,
     vatRegistrationNumber: settings.vatRegistrationNumber || undefined,
-    lines: totals.lines,
-    // The legacy "show VAT" switch keeps its explicit row; otherwise the
-    // quotation's frozen presentation (including tax layout) is reused.
-    presentation: input.showVat ? undefined : totals.presentation ?? undefined,
-    totalMinor: totals.totalMinor.toString(),
+    lines: allLines,
+    presentation:
+      journeys.length === 1 ? journeys[0]?.presentation : undefined,
+    totalMinor: totalMinor.toString(),
     bank: await bankSnapshot(
       input.bankAccountId ?? quotation.bankAccountId,
       quotation.currency,

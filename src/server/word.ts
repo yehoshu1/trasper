@@ -181,6 +181,25 @@ export async function buildQuotationDocx(snapshot: QuotationSnapshot): Promise<B
     children.push(new Paragraph({ text: "", spacing: { after: 160 } }));
   }
 
+  if (snapshot.options.length > 1) {
+    const grandTotal =
+      BigInt(snapshot.totalMinor ?? "0") !== 0n
+        ? BigInt(snapshot.totalMinor!)
+        : snapshot.options.reduce((sum, option) => sum + BigInt(option.totalMinor), 0n);
+    children.push(
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          row(
+            ["Quotation total", formatMoney(grandTotal, snapshot.currency)],
+            { bold: true, right: [1] },
+          ),
+        ],
+      }),
+    );
+    children.push(new Paragraph({ text: "", spacing: { after: 160 } }));
+  }
+
   children.push(
     new Paragraph({
       children: [text("Internal document. Do not send this Word file to a customer.", { bold: true, size: 18 })],

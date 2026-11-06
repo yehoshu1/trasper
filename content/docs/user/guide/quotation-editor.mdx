@@ -7,7 +7,7 @@ The editor is where an option becomes a priced proposal. It recalculates on the 
 then the server recalculates from the same pure engine when the quotation is saved or sent.
 
 <div className="docs-shot">
-  <img src="/docs/screenshots/quotation-editor.jpg" alt="Quotation editor with options and pricing" />
+  <img src="/docs/screenshots/quotation-editor.jpg" alt="Quotation editor with journeys and pricing" />
 </div>
 
 ## Header fields
@@ -20,7 +20,7 @@ then the server recalculates from the same pure engine when the quotation is sav
 | Currency | Quotation currency; all customer amounts use it. |
 | Issue date / Valid until | Calendar dates, stored at UTC midnight and shown in the agency time zone. New quotations default to one day. |
 | VAT | Inherit the agency default, force on, or force off for this quotation. |
-| Heading | Optional printed heading above the options. |
+| Heading | Optional printed heading above the journeys. |
 | Notes | Customer-facing notes. Blank uses the standard quotation notes. |
 | Price layout / Tax layout | Per-quotation overrides of the agency defaults. |
 | Preferred pro forma account | Preselects the account for the later pro forma. Quotations never print bank details. |
@@ -28,14 +28,15 @@ then the server recalculates from the same pure engine when the quotation is sav
 The quotation also prints the agency's **Quotation validity statement** from Settings → Company. It
 defaults to the 24-hour wording; the text is frozen into the snapshot when the quotation is sent.
 
-## Options
+## Journeys
 
-A quotation can hold several options. Each has its own label (`Option A`, `Option B`, ...), option
-type and complete pricing context.
+A quotation is an ordered list of additive journeys (`Journey 1`, `Journey 2`, ...). Every journey
+has its own flights, fares and complete pricing context, and all journey totals add to one quotation
+total. The customer accepts the quotation as a whole; there is no alternative-option choice.
 
 | Field | Notes |
 | --- | --- |
-| Option type | Flight, accommodation, package, tour, cruise or other. Flight options require segments; land options do not. |
+| Journey type | Flight, accommodation, package, tour, cruise or other. Flight journeys require segments; land journeys do not. |
 | PNR | Optional record locator. Shown in staff views and the itinerary. Leave it blank when you are quoting before a booking exists. |
 | Ticketing deadline | Local wall-clock time at the agency; drives dashboard and notification warnings. |
 | Cost currency | Currency of the supplier costs. |
@@ -62,7 +63,7 @@ booking is held.
 **Fares** can be recorded in two ways:
 
 - **Named passenger** — one traveller with a name, priced individually. The same passenger cannot be
-  charged twice in one option. The line reads `Adult — Name`. A draft can use any active passenger;
+  charged twice in one journey. The line reads `Adult — Name`. A draft can use any active passenger;
   passengers linked to the customer are offered first, and unlinked ones are marked **not linked**.
 - **Traveller group** — a count of adults, children or infants whose names are still to be advised.
   One group per type per option, for example `2 Adults`. The cost is the **cost per traveller**, not

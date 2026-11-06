@@ -76,7 +76,7 @@ export async function loadReport(
     }),
     prisma.auditLog.findMany({
       where: {
-        action: "acceptOption",
+        action: { in: ["acceptOption", "acceptQuotation"] },
         entity: "Quotation",
         at: { gte: start, lt: end },
       },
@@ -167,11 +167,18 @@ export async function loadReport(
   const airlineRows = new Map<string, ReportBreakdownRow>();
 
   for (const quotation of acceptedQuotations) {
-    const option = quotation.options.find((entry) => entry.id === quotation.acceptedOptionId);
-    const frozen = parseFrozenTotals(option?.frozenTotals);
-    const totalMinor = frozen ? BigInt(frozen.totals.totalMinor) : 0n;
-    const profitMinor = frozen ? BigInt(frozen.totals.profitMinor) : 0n;
-    if (!frozen) summary.frozenMissing += 1;
+    const frozenJourneys = quotation.options
+      .map((entry) => parseFrozenTotals(entry.frozenTotals))
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+    const totalMinor = frozenJourneys.reduce(
+      (sum, frozen) => sum + BigInt(frozen.totals.totalMinor),
+      0n,
+    );
+    const profitMinor = frozenJourneys.reduce(
+      (sum, frozen) => sum + BigInt(frozen.totals.profitMinor),
+      0n,
+    );
+    if (frozenJourneys.length !== quotation.options.length) summary.frozenMissing += 1;
 
     addMoney(summary.acceptedValue, quotation.currency, totalMinor);
     if (summary.profit) addMoney(summary.profit, quotation.currency, profitMinor);
@@ -197,7 +204,7 @@ export async function loadReport(
     addMoney(branch.value, quotation.currency, totalMinor);
     if (branch.profit) addMoney(branch.profit, quotation.currency, profitMinor);
 
-    const airlineCode = option?.segments[0]?.airline ?? "Unknown";
+    const airlineCode = quotation.options[0]?.segments[0]?.airline ?? "Unknown";
     const airline = breakdownRow(
       airlineRows,
       `${airlineCode}|${quotation.currency}`,
@@ -258,9 +265,9 @@ export async function loadReport(
     const row = trendByKey.get(bucketKey(acceptedAt, range.grain));
     if (!row) continue;
     row.accepted += 1;
-    const option = quotation.options.find((entry) => entry.id === quotation.acceptedOptionId);
-    const frozen = parseFrozenTotals(option?.frozenTotals);
-    if (frozen) {
+    for (const option of quotation.options) {
+      const frozen = parseFrozenTotals(option.frozenTotals);
+      if (!frozen) continue;
       addMoney(row.acceptedValue, quotation.currency, BigInt(frozen.totals.totalMinor));
       if (row.profit) {
         addMoney(row.profit, quotation.currency, BigInt(frozen.totals.profitMinor));

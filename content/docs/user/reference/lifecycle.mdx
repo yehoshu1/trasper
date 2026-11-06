@@ -51,8 +51,8 @@ than freezing half-old data.
 ## Accepting
 
 Only a `sent` quotation can be accepted. The action claims `status = sent` with an atomic
-`updateMany`; a concurrent accept or decline loses with a friendly message. Accepting stores
-`acceptedOptionId`.
+`updateMany`; a concurrent accept or decline loses with a friendly message. Accepting includes every
+journey on the quotation. Issued itineraries and pro formas copy all journeys into their snapshots.
 
 ## Declining
 
@@ -91,7 +91,7 @@ The old revision's snapshot, documents and payments remain intact.
 
 ## Duplicating
 
-**Duplicate** creates a fresh draft with a new number (revision 1) and copies the options. It does
+**Duplicate** creates a fresh draft with a new number (revision 1) and copies the journeys. It does
 not supersede the source. Use it for a similar trip, not for a correction.
 
 ## Pro forma states

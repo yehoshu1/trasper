@@ -162,7 +162,7 @@ export function QuotationsTable({
     },
     {
       accessorKey: "optionCount",
-      header: "Options",
+      header: "Journeys",
       meta: { align: "right" },
     },
     {
@@ -186,7 +186,7 @@ export function QuotationsTable({
       initialSearch={initialSearch}
       initialFilters={initialStatus ? [{ id: "status", value: initialStatus }] : []}
       initialSorting={[{ id: "issuedIso", desc: true }]}
-      searchPlaceholder="Search number, reference, customer, option or status"
+      searchPlaceholder="Search number, reference, customer, journey or status"
       filters={[
         { id: "status", label: "Statuses", options: statusOptions(QUOTATION_STATUSES) },
       ]}
@@ -203,7 +203,7 @@ export function QuotationsTable({
             onClick={() =>
               downloadCsv(
                 "quotations.csv",
-                ["Number", "Reference", "Customer", "Status", "Issued", "Valid until", "Options", "Total", "Currency"],
+                ["Number", "Reference", "Customer", "Status", "Issued", "Valid until", "Journeys", "Total", "Currency"],
                 selected.map((row) => [
                   row.number,
                   row.referenceNo,

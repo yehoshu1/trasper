@@ -1,6 +1,6 @@
 ---
 title: Pro forma invoices
-description: Issue, print, cancel and reconcile a pro forma from an accepted quotation option.
+description: Issue, print, cancel and reconcile a pro forma from an accepted quotation.
 ---
 
 A pro forma is a request for payment before ticketing. It always comes from an **accepted quotation
@@ -21,17 +21,17 @@ From an accepted quotation:
 Rules:
 
 - the quotation must be accepted;
-- the accepted option must exist;
-- only one active (non-cancelled) pro forma per quotation option is allowed; cancel the old one
-  before issuing another;
+- at least one journey must exist;
+- only one active (non-cancelled) pro forma per quotation is allowed; cancel the old one before
+  issuing another;
 - the number comes from the pro forma sequence and is never reused;
 - a draft can be edited and cannot take payments; once sent, the snapshot is locked.
 
 ## What it contains
 
 - Frozen customer, company and bank details.
-- The customer-facing price presentation from the accepted option.
-- The total and, optionally, an explicit VAT row.
+- One section per journey, with its own flights, price lines and journey total.
+- One combined total across every journey, with an optional explicit VAT row.
 - Payment terms and due date.
 - Any flight summary if the agency setting enables it.
 - The number and issue date.

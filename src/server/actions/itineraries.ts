@@ -110,18 +110,24 @@ export async function createItineraryAction(quotationId: string): Promise<Action
     if (quotation.status !== "accepted") {
       return actionError("Itineraries can only be created from an accepted quotation");
     }
-    const option = quotation.options.find((entry) => entry.id === quotation.acceptedOptionId);
-    if (!option) return actionError("The accepted option could not be found");
+    if (quotation.options.length === 0) {
+      return actionError("Add at least one journey before creating an itinerary");
+    }
 
     const settings = await getSettings();
     const created = await prisma.$transaction(async (tx) => {
       const number = await allocateNumber(tx, "itinerary", new Date(), quotation.branch);
-      const snapshot = await buildItinerarySnapshot(quotation, option, settings, number);
+      const snapshot = await buildItinerarySnapshot(
+        quotation,
+        quotation.options,
+        settings,
+        number,
+      );
       const itinerary = await tx.itinerary.create({
         data: {
           number,
           quotationId: quotation.id,
-          optionId: option.id,
+          optionId: quotation.options[0]!.id,
           contactId: quotation.contactId,
           branch: quotation.branch,
           referenceNo: quotation.referenceNo,
@@ -132,7 +138,6 @@ export async function createItineraryAction(quotationId: string): Promise<Action
       await tx.itinerary.updateMany({
         where: {
           quotationId: quotation.id,
-          optionId: option.id,
           id: { not: itinerary.id },
           supersededAt: null,
         },
@@ -143,7 +148,11 @@ export async function createItineraryAction(quotationId: string): Promise<Action
         action: "createItinerary",
         entity: "Itinerary",
         entityId: itinerary.id,
-        after: { number: itinerary.number, quotationId: quotation.id, optionId: option.id },
+        after: {
+          number: itinerary.number,
+          quotationId: quotation.id,
+          journeyCount: quotation.options.length,
+        },
       });
       return itinerary;
     });
@@ -390,8 +399,9 @@ export async function reissueItineraryAction(itineraryId: string): Promise<Actio
         return actionError("The quotation is no longer accepted");
       }
     }
-    const option = quotation?.options.find((entry) => entry.id === existing.optionId);
-    if (existing.quotationId && !option) return actionError("The option could not be found");
+    if (existing.quotationId && quotation && quotation.options.length === 0) {
+      return actionError("The quotation has no journeys to re-issue");
+    }
 
     const standaloneSnapshot = existing.quotationId
       ? null
@@ -404,8 +414,8 @@ export async function reissueItineraryAction(itineraryId: string): Promise<Actio
     const created = await prisma.$transaction(async (tx) => {
       const branch = existing.branch || quotation?.branch || "01";
       const number = await allocateNumber(tx, "itinerary", new Date(), branch);
-      const snapshot = quotation && option
-        ? await buildItinerarySnapshot(quotation, option, settings, number)
+      const snapshot = quotation
+        ? await buildItinerarySnapshot(quotation, quotation.options, settings, number)
         : {
             ...standaloneSnapshot!,
             number,
@@ -415,7 +425,7 @@ export async function reissueItineraryAction(itineraryId: string): Promise<Actio
         data: {
           number,
           quotationId: existing.quotationId,
-          optionId: existing.optionId,
+          optionId: quotation?.options[0]?.id ?? existing.optionId,
           contactId: existing.contactId ?? quotation?.contactId ?? null,
           branch,
           referenceNo: existing.referenceNo,

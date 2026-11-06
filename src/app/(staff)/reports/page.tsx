@@ -345,7 +345,7 @@ export default async function ReportsPage({
       <div className="mt-4">
         <BreakdownTable
           title="By airline"
-          subtitle="Attributed to the first outbound flight of each accepted option"
+          subtitle="Attributed to the first outbound flight of each accepted journey"
           rows={data.byAirline}
           includeProfit={includeProfit}
           empty="No accepted quotations in this period"

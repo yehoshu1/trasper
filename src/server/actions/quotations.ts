@@ -10,7 +10,6 @@ import { documentDateFromInput, appTimeZone, toDateInput } from "@/lib/dates";
 import { parseLocalWallClock } from "@/lib/time";
 import { validateQuotationDraft, type EditorOption } from "@/lib/quotation";
 import {
-  acceptOptionSchema,
   cancelQuotationSchema,
   declineSchema,
   pnrConvertInputSchema,
@@ -176,7 +175,7 @@ export async function createQuotationAction(formData: FormData): Promise<void> {
           create: [
             {
               position: 0,
-              label: "Option A",
+              label: "Journey 1",
               optionType: "flight",
               costCurrency: data.currency,
               rateMicro: 1_000_000n,
@@ -493,49 +492,49 @@ export async function sendQuotationAction(
   }
 }
 
-export async function acceptOptionAction(
-  quotationId: string,
-  optionId: string,
-): Promise<ActionResult> {
+export async function acceptQuotationAction(quotationId: string): Promise<ActionResult> {
   try {
     const user = await actionUser("manageQuotations");
-    const parsed = acceptOptionSchema.safeParse({ quotationId, optionId });
-    if (!parsed.success) return actionError("Check the quotation option");
+    const parsed = z.string().min(1).max(64).safeParse(quotationId);
+    if (!parsed.success) return actionError("Invalid quotation");
     await expireOverdueQuotations();
-    const quotation = await loadQuotation(parsed.data.quotationId);
+    const quotation = await loadQuotation(parsed.data);
     if (!quotation) return actionError("Quotation not found");
     if (quotation.status !== "sent") {
       return actionError("Only a sent quotation can be accepted");
     }
-    const option = quotation.options.find((entry) => entry.id === parsed.data.optionId);
-    if (!option) return actionError("Choose an option from this quotation");
 
     const rejection: { message: string | null } = { message: null };
-    await prisma.$transaction(async (tx) => {
-      const claimed = await tx.quotation.updateMany({
-        where: { id: quotation.id, status: "sent" },
-        data: { status: "accepted", acceptedOptionId: option.id },
+    await prisma
+      .$transaction(async (tx) => {
+        const claimed = await tx.quotation.updateMany({
+          where: { id: quotation.id, status: "sent" },
+          data: { status: "accepted", acceptedOptionId: null },
+        });
+        if (claimed.count === 0) {
+          rejection.message = "This quotation is no longer awaiting acceptance";
+          throw new Error("ACCEPT_REJECTED");
+        }
+        await audit(tx, {
+          userId: user.id,
+          action: "acceptQuotation",
+          entity: "Quotation",
+          entityId: quotation.id,
+          before: { status: "sent" },
+          after: {
+            status: "accepted",
+            journeyCount: quotation.options.length,
+          },
+        });
+      })
+      .catch((error) => {
+        if (rejection.message) return;
+        throw error;
       });
-      if (claimed.count === 0) {
-        rejection.message = "This quotation is no longer awaiting acceptance";
-        throw new Error("ACCEPT_REJECTED");
-      }
-      await audit(tx, {
-        userId: user.id,
-        action: "acceptOption",
-        entity: "Quotation",
-        entityId: quotation.id,
-        before: { status: "sent", acceptedOptionId: null },
-        after: { status: "accepted", acceptedOptionId: option.id, optionLabel: option.label },
-      });
-    }).catch((error) => {
-      if (rejection.message) return;
-      throw error;
-    });
     if (rejection.message) return actionError(rejection.message);
     revalidatePath(`/quotations/${quotation.id}`);
     revalidatePath("/quotations");
-    return actionOk(`Accepted ${option.label}`);
+    return actionOk("Quotation accepted");
   } catch (error) {
     return actionError(errorMessage(error));
   }

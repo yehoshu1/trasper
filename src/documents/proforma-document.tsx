@@ -66,38 +66,83 @@ export function ProformaDocument({
         }}
       />
 
-      <section className="doc-section">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          {snapshot.showOptionLabel !== false ? (
-            <SectionHeading>{snapshot.optionLabel}</SectionHeading>
-          ) : null}
-          <p className="ml-auto text-xs text-slate-500">Quotation {snapshot.quotationNumber}</p>
-        </div>
-        {snapshot.showFlights && snapshot.flights.length > 0 ? (
-          <>
-            <FlightSummary flights={snapshot.flights} />
-            <FlightsTable flights={snapshot.flights} />
-          </>
-        ) : null}
-      </section>
+      {snapshot.journeys && snapshot.journeys.length > 1 ? (
+        <>
+          <p className="text-xs text-slate-500">Quotation {snapshot.quotationNumber}</p>
+          {snapshot.journeys.map((journey, index) => (
+            <section key={`${journey.label}-${index}`} className="doc-section">
+              <SectionHeading>{journey.label}</SectionHeading>
+              {snapshot.showFlights && journey.flights.length > 0 ? (
+                <>
+                  <FlightSummary flights={journey.flights} />
+                  <FlightsTable flights={journey.flights} />
+                </>
+              ) : null}
+              <MoneyLines
+                lines={journey.lines}
+                currency={snapshot.currency}
+                totalMinor={journey.totalMinor}
+                vatMinor={journey.vatMinor}
+                vatRateBps={snapshot.vatRateBps}
+                showVat={snapshot.showVat}
+                presentation={journey.presentation}
+                totalLabelOverride="Journey total"
+              />
+            </section>
+          ))}
+          <div className="doc-section">
+            <table className="doc-table doc-money-table">
+              <tbody>
+                <tr className="doc-grand-total">
+                  <td className="font-bold">Total</td>
+                  <td className="text-right font-bold tabular-nums">{format(snapshot.totalMinor)}</td>
+                </tr>
+              </tbody>
+            </table>
+            {snapshot.showVat && snapshot.vatRegistrationNumber ? (
+              <p className="mt-1 text-[11px] text-slate-500">
+                VAT registration number {snapshot.vatRegistrationNumber}. VAT is charged on the
+                service margin only and is included in the total.
+              </p>
+            ) : null}
+          </div>
+        </>
+      ) : (
+        <>
+          <section className="doc-section">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              {snapshot.showOptionLabel !== false ? (
+                <SectionHeading>{snapshot.optionLabel}</SectionHeading>
+              ) : null}
+              <p className="ml-auto text-xs text-slate-500">Quotation {snapshot.quotationNumber}</p>
+            </div>
+            {snapshot.showFlights && snapshot.flights.length > 0 ? (
+              <>
+                <FlightSummary flights={snapshot.flights} />
+                <FlightsTable flights={snapshot.flights} />
+              </>
+            ) : null}
+          </section>
 
-      <div className="doc-section">
-        <MoneyLines
-          lines={snapshot.lines}
-          currency={snapshot.currency}
-          totalMinor={snapshot.totalMinor}
-          vatMinor={snapshot.vatMinor}
-          vatRateBps={snapshot.vatRateBps}
-          showVat={snapshot.showVat}
-          presentation={snapshot.presentation}
-        />
-        {snapshot.showVat && snapshot.vatRegistrationNumber ? (
-          <p className="mt-1 text-[11px] text-slate-500">
-            VAT registration number {snapshot.vatRegistrationNumber}. VAT is charged on the service
-            margin only and is included in the total.
-          </p>
-        ) : null}
-      </div>
+          <div className="doc-section">
+            <MoneyLines
+              lines={snapshot.lines}
+              currency={snapshot.currency}
+              totalMinor={snapshot.totalMinor}
+              vatMinor={snapshot.vatMinor}
+              vatRateBps={snapshot.vatRateBps}
+              showVat={snapshot.showVat}
+              presentation={snapshot.presentation}
+            />
+            {snapshot.showVat && snapshot.vatRegistrationNumber ? (
+              <p className="mt-1 text-[11px] text-slate-500">
+                VAT registration number {snapshot.vatRegistrationNumber}. VAT is charged on the service
+                margin only and is included in the total.
+              </p>
+            ) : null}
+          </div>
+        </>
+      )}
 
       {payments.length > 0 ? (
         <section className="doc-section">

@@ -54,7 +54,7 @@ test("a quotation draft carries internal pricing for an agent", async ({ browser
   await fillDateTime(page, row, 0, "2027-05-04T06:20");
   await fillDateTime(page, row, 1, "2027-05-04T12:35");
   await page.click('button:has-text("+ Add passenger")');
-  const fare = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
+  const fare = page.locator("table").filter({ hasText: "Unit cost (" }).first().locator("tbody tr").first();
   await fare.locator('input[inputmode="decimal"]').first().fill("620.00");
   await page.click('button:has-text("Save draft")');
   await expect(page.getByText("Draft saved")).toBeVisible();

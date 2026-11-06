@@ -4,7 +4,7 @@ import { chooseOption, fillDateTime } from "./select";
 
 /**
  * End-to-end flow:
- * contact → quotation with two options → send → accept → itinerary →
+ * contact → quotation with two journeys → send → accept → itinerary →
  * pro forma → part payment → balance → paid.
  *
  * Uses unique names per run so the suite is repeatable against one database.
@@ -64,7 +64,7 @@ test("link a passenger to the contact", async () => {
   await expect(page.getByText(`${firstName} Traveller`)).toBeVisible({ timeout: 20_000 });
 });
 
-test("create a quotation with two options", async () => {
+test("create a quotation with two journeys", async () => {
   await page.goto("/quotations/new");
   // The option label is "Name — City" when the contact has a city.
   await chooseOption(page, page.locator("#contactId"), `${contactName} — Lilongwe`);
@@ -73,7 +73,7 @@ test("create a quotation with two options", async () => {
   // The editor opens for the new draft.
   await expect(page.getByRole("button", { name: "Save draft" })).toBeVisible();
 
-  // --- Option A: one flight, one fare -------------------------------------
+  // --- Journey 1: one flight, one fare ------------------------------------
   await page.click('button:has-text("+ Add flight")');
   const segmentRow = page.locator("table").filter({ hasText: "Airline" }).first().locator("tbody tr").first();
   await segmentRow.locator("input").nth(0).fill("ET");
@@ -87,8 +87,8 @@ test("create a quotation with two options", async () => {
   const fareRow = page.locator("table").filter({ hasText: "Unit cost (" }).first().locator("tbody tr").first();
   await fareRow.locator('input[inputmode="decimal"]').first().fill("620.00");
 
-  // --- Option B: second option, same shape --------------------------------
-  await page.click('button:has-text("+ Add option")');
+  // --- Journey 2: second journey, same shape ------------------------------
+  await page.click('button:has-text("+ Add journey")');
   await page.click('button:has-text("+ Add flight")');
   const segmentB = page.locator("table").filter({ hasText: "Airline" }).first().locator("tbody tr").first();
   await segmentB.locator("input").nth(0).fill("ET");
@@ -113,19 +113,19 @@ test("create a quotation with two options", async () => {
   expect(quotationUrl).toMatch(/\/quotations\/[a-z0-9]+$/i);
 });
 
-test("send and accept one option", async () => {
+test("send and accept the quotation", async () => {
   await page.goto(quotationUrl);
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.click('button:has-text("Mark sent")');
 
   // The quotation is now locked and offers Accept / Decline.
-  await expect(page.getByRole("button", { name: "Accept Option A" })).toBeVisible({ timeout: 20_000 });
-  await page.click('button:has-text("Accept Option A")');
-  await expect(page.getByText("Accepted Option A").first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("button", { name: "Accept quotation" })).toBeVisible({ timeout: 20_000 });
+  await page.click('button:has-text("Accept quotation")');
+  await expect(page.getByText("Quotation accepted").first()).toBeVisible({ timeout: 20_000 });
 });
 
-test("issue an itinerary from the accepted option", async () => {
+test("issue an itinerary from the accepted quotation", async () => {
   await page.goto(quotationUrl);
   await page.click('button:has-text("Create itinerary")');
   await expect(page).toHaveURL(/\/itineraries\/[a-z0-9]+$/i, { timeout: 20_000 });

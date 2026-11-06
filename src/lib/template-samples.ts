@@ -108,7 +108,7 @@ export const SAMPLE_QUOTATION: QuotationSnapshot = {
   flights: [outbound, connection],
   options: [
     {
-      label: "Option A",
+      label: "Journey 1",
       pnr: "ABC123",
       flights: [outbound, connection],
       lines,
@@ -140,7 +140,7 @@ export const SAMPLE_ITINERARY: ItinerarySnapshot = {
   company,
   contact,
   passengers,
-  optionLabel: "Option A",
+  optionLabel: "Journey 1",
   showOptionLabel: false,
   pnr: "ABC123",
   flights: [outbound, connection],
@@ -161,7 +161,7 @@ export const SAMPLE_PROFORMA: ProformaSnapshot = {
   company,
   contact,
   passengers,
-  optionLabel: "Option A",
+  optionLabel: "Journey 1",
   showOptionLabel: false,
   flights: [outbound, connection],
   showFlights: true,

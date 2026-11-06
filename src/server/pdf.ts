@@ -958,6 +958,7 @@ function moneyTable(
     presentation?: PricePresentation;
     alwaysShowPerPerson?: boolean;
     perPersonCount?: number;
+    totalLabelOverride?: string;
   } = {},
 ): void {
   const format = (value: string) => formatMoney(BigInt(value), currency);
@@ -1011,7 +1012,7 @@ function moneyTable(
     });
   }
 
-  const totalLabel = presentation?.totalLabel ?? "Total";
+  const totalLabel = options.totalLabelOverride ?? presentation?.totalLabel ?? "Total";
   const top = builder.cursor;
   builder.pageRef.drawRectangle({
     x: MARGIN, y: top - 15, width: CONTENT, height: 15, color: builder.palette.tableHeadBg,
@@ -1209,6 +1210,23 @@ export async function renderQuotationPdf(snapshot: QuotationSnapshot): Promise<U
     builder.gap(10);
   }
 
+  if (snapshot.options.length > 1) {
+    const grandTotal =
+      BigInt(snapshot.totalMinor ?? "0") !== 0n
+        ? BigInt(snapshot.totalMinor!)
+        : snapshot.options.reduce((sum, option) => sum + BigInt(option.totalMinor), 0n);
+    builder.ensure(40);
+    builder.rule(COLORS.ink, 1.25);
+    builder.gap(3);
+    builder.at("QUOTATION TOTAL", MARGIN + 4, builder.cursor, { size: 10, font: "bold" });
+    builder.at(formatMoney(grandTotal, snapshot.currency), MARGIN, builder.cursor, {
+      size: 11,
+      font: "bold",
+      right: true,
+    });
+    builder.gap(22);
+  }
+
   builder.ensure(55);
   notesBlock(builder, snapshot.notes, "Important notes");
 
@@ -1240,16 +1258,36 @@ export async function renderItineraryPdf(snapshot: ItinerarySnapshot): Promise<U
     referenceNo: snapshot.referenceNo,
   });
 
-  if (snapshot.showOptionLabel !== false) {
-    builder.paragraph(snapshot.optionLabel, { size: 11, font: "bold", lineHeight: 15 });
-  }
-  if (snapshot.pnr) {
-    builder.paragraph(`Booking reference ${snapshot.pnr}`, { size: 8, color: COLORS.muted, lineHeight: 11 });
-  }
-  if (snapshot.flights.length > 0) {
-    builder.paragraph(flightSummary(snapshot.flights), { size: 8.5, color: COLORS.slate, lineHeight: 12 });
-    builder.gap(4);
-    await drawFlights(builder, snapshot.flights);
+  if (snapshot.journeys && snapshot.journeys.length > 1) {
+    for (const journey of snapshot.journeys) {
+      builder.ensure(50);
+      builder.paragraph(journey.label, { size: 11, font: "bold", lineHeight: 15 });
+      if (journey.pnr) {
+        builder.paragraph(`Booking reference ${journey.pnr}`, {
+          size: 8, color: COLORS.muted, lineHeight: 11,
+        });
+      }
+      if (journey.flights.length > 0) {
+        builder.paragraph(flightSummary(journey.flights), {
+          size: 8.5, color: COLORS.slate, lineHeight: 12,
+        });
+        builder.gap(4);
+        await drawFlights(builder, journey.flights);
+      }
+      builder.gap(10);
+    }
+  } else {
+    if (snapshot.showOptionLabel !== false) {
+      builder.paragraph(snapshot.optionLabel, { size: 11, font: "bold", lineHeight: 15 });
+    }
+    if (snapshot.pnr) {
+      builder.paragraph(`Booking reference ${snapshot.pnr}`, { size: 8, color: COLORS.muted, lineHeight: 11 });
+    }
+    if (snapshot.flights.length > 0) {
+      builder.paragraph(flightSummary(snapshot.flights), { size: 8.5, color: COLORS.slate, lineHeight: 12 });
+      builder.gap(4);
+      await drawFlights(builder, snapshot.flights);
+    }
   }
 
   builder.gap(10);
@@ -1285,23 +1323,56 @@ export async function renderProformaPdf(
     referenceNo: snapshot.referenceNo,
   });
 
-  if (snapshot.showOptionLabel !== false) {
-    builder.paragraph(snapshot.optionLabel, { size: 11, font: "bold", lineHeight: 15 });
-  }
   builder.paragraph(`Quotation ${snapshot.quotationNumber}`, { size: 8, color: COLORS.muted, lineHeight: 11 });
 
-  if (snapshot.showFlights && snapshot.flights.length > 0) {
-    builder.paragraph(flightSummary(snapshot.flights), { size: 8.5, color: COLORS.slate, lineHeight: 12 });
-    builder.gap(4);
-    await drawFlights(builder, snapshot.flights);
-  }
+  if (snapshot.journeys && snapshot.journeys.length > 1) {
+    for (const journey of snapshot.journeys) {
+      builder.ensure(50);
+      builder.paragraph(journey.label, { size: 11, font: "bold", lineHeight: 15 });
+      if (snapshot.showFlights && journey.flights.length > 0) {
+        builder.paragraph(flightSummary(journey.flights), {
+          size: 8.5, color: COLORS.slate, lineHeight: 12,
+        });
+        builder.gap(4);
+        await drawFlights(builder, journey.flights);
+      }
+      moneyTable(builder, journey.lines, snapshot.currency, journey.totalMinor, {
+        vatMinor: journey.vatMinor,
+        vatRateBps: snapshot.vatRateBps,
+        showVat: snapshot.showVat,
+        presentation: journey.presentation,
+        totalLabelOverride: "Journey total",
+      });
+      builder.gap(10);
+    }
+    builder.ensure(34);
+    builder.rule(COLORS.ink, 1.25);
+    builder.gap(3);
+    builder.at("TOTAL", MARGIN + 4, builder.cursor, { size: 10, font: "bold" });
+    builder.at(formatMoney(BigInt(snapshot.totalMinor), snapshot.currency), MARGIN, builder.cursor, {
+      size: 11,
+      font: "bold",
+      right: true,
+    });
+    builder.gap(22);
+  } else {
+    if (snapshot.showOptionLabel !== false) {
+      builder.paragraph(snapshot.optionLabel, { size: 11, font: "bold", lineHeight: 15 });
+    }
 
-  moneyTable(builder, snapshot.lines, snapshot.currency, snapshot.totalMinor, {
-    vatMinor: snapshot.vatMinor,
-    vatRateBps: snapshot.vatRateBps,
-    showVat: snapshot.showVat,
-    presentation: snapshot.presentation,
-  });
+    if (snapshot.showFlights && snapshot.flights.length > 0) {
+      builder.paragraph(flightSummary(snapshot.flights), { size: 8.5, color: COLORS.slate, lineHeight: 12 });
+      builder.gap(4);
+      await drawFlights(builder, snapshot.flights);
+    }
+
+    moneyTable(builder, snapshot.lines, snapshot.currency, snapshot.totalMinor, {
+      vatMinor: snapshot.vatMinor,
+      vatRateBps: snapshot.vatRateBps,
+      showVat: snapshot.showVat,
+      presentation: snapshot.presentation,
+    });
+  }
 
   const paid = BigInt(options.paidMinor ?? "0");
   const payments = options.payments ?? [];

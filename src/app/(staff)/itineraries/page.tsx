@@ -53,7 +53,7 @@ export default async function ItinerariesPage({
       <PageHeader
         eyebrow="Documents"
         title={showSuperseded ? "Superseded itineraries" : "Itineraries"}
-        subtitle="Issued from an accepted quotation option, or created standalone without prices. Re-issuing creates a new number and leaves the earlier one readable."
+        subtitle="Issued from an accepted quotation with every journey, or created standalone without prices. Re-issuing creates a new number and leaves the earlier one readable."
         actions={
           hasCapability(user, "manageDocuments") ? (
             <Link href="/itineraries/new" className="btn-primary">

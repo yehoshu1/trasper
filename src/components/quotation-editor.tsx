@@ -58,7 +58,7 @@ import { StatusBadge } from "@/components/ui";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SelectField } from "@/components/ui/select";
 import {
-  acceptOptionAction,
+  acceptQuotationAction,
   cancelQuotationAction,
   declineQuotationAction,
   deleteQuotationAction,
@@ -297,7 +297,7 @@ function fromEditorOption(option: EditorOption, currency: string, index: number)
 function toEditorOption(draft: DraftOption, quotationCurrency: string): EditorOption {
   return {
     id: draft.id,
-    label: draft.label.trim() || "Option",
+    label: draft.label.trim() || "Journey",
     optionType: draft.optionType,
     pnr: draft.pnr.trim(),
     ticketingDeadline: draft.ticketingDeadline,
@@ -361,10 +361,6 @@ function emptyOption(label: string, currency: string, marginBps: string): DraftO
     services: [],
     taxes: [],
   };
-}
-
-function optionLetter(index: number): string {
-  return index < 26 ? String.fromCharCode(65 + index) : String(index + 1);
 }
 
 export function QuotationEditor({
@@ -631,18 +627,22 @@ export function QuotationEditor({
   }, [saveState, save, canEdit, stale]);
 
   function addOption() {
-    const option = emptyOption(`Option ${optionLetter(options.length)}`, header.currency, defaultMarginBps);
+    const option = emptyOption(
+      `Journey ${options.length + 1}`,
+      header.currency,
+      defaultMarginBps,
+    );
     setOptions((current) => [...current, option]);
     setActiveIndex(options.length);
     markDirty();
   }
 
   function removeOption(index: number) {
-    const label = options[index]?.label ?? "This option";
+    const label = options[index]?.label ?? "This journey";
     setPendingDialog({
-      title: "Remove option?",
+      title: "Remove journey?",
       description: `${label} and its fares, services and taxes will be removed from the draft.`,
-      confirmLabel: "Remove option",
+      confirmLabel: "Remove journey",
       onConfirm: () => {
         setOptions((current) => current.filter((_, optionIndex) => optionIndex !== index));
         setActiveIndex(Math.max(0, index - 1));
@@ -662,7 +662,7 @@ export function QuotationEditor({
       setError(
         passengers.length === 0
           ? "No active passengers yet. Create one under Passengers, then add the fare."
-          : "Every active passenger is already in this option. Add another passenger under Passengers.",
+          : "Every active passenger is already in this journey. Add another passenger under Passengers.",
       );
       return;
     }
@@ -889,14 +889,14 @@ export function QuotationEditor({
     });
   }
 
-  function handleAccept(optionId: string) {
+  function handleAccept() {
     startTransition(async () => {
-      const result = await acceptOptionAction(quotation.id, optionId);
+      const result = await acceptQuotationAction(quotation.id);
       if (result.ok) {
-        setMessage(result.message ?? "Option accepted");
+        setMessage(result.message ?? "Quotation accepted");
         router.refresh();
       } else {
-        setError(result.error ?? "Could not accept the option");
+        setError(result.error ?? "Could not accept the quotation");
       }
     });
   }
@@ -1258,7 +1258,7 @@ export function QuotationEditor({
                 ))}
                 {canEdit ? (
                   <button type="button" onClick={addOption} className="ml-auto mb-1 rounded-md px-2 py-1 text-xs font-semibold text-foreground hover:bg-accent">
-                    + Add option
+                    + Add journey
                   </button>
                 ) : null}
               </div>
@@ -1267,7 +1267,7 @@ export function QuotationEditor({
                 <div className="card-body space-y-6">
                   <div className="grid gap-4 sm:grid-cols-3">
                     <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Option label
+                      Journey label
                       <Input className="mt-1"
                         value={active.label}
                         disabled={!canEdit}
@@ -1275,7 +1275,7 @@ export function QuotationEditor({
                       />
                     </label>
                     <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Option type
+                      Journey type
                       <SelectField
                         className="mt-1"
                         value={active.optionType}
@@ -1289,7 +1289,7 @@ export function QuotationEditor({
                         }))}
                       />
                       <span className="mt-1 block text-[10px] font-normal normal-case text-muted-foreground">
-                        Flight options need segments. Accommodation, tour and other land options do not.
+                        Flight journeys need segments. Accommodation, tour and other land journeys do not.
                       </span>
                     </label>
                     <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -1993,19 +1993,18 @@ export function QuotationEditor({
             {quotation.status === "sent" ? (
               <div className="card card-body space-y-2">
                 <h2 className="text-sm font-semibold text-foreground">Customer reply</h2>
-                <p className="text-xs text-muted-foreground">Accept exactly one option, or decline the quotation.</p>
-                {quotation.options.map((option) =>
-                  option.id ? (
-                    <Button variant="default"
-                      key={option.id}
-                      type="button" className="w-full"
-                      disabled={pending}
-                      onClick={() => handleAccept(option.id!)}
-                    >
-                      Accept {option.label}
-                    </Button>
-                  ) : null,
-                )}
+                <p className="text-xs text-muted-foreground">
+                  Accept the quotation with every journey included, or decline it.
+                </p>
+                <Button
+                  variant="default"
+                  type="button"
+                  className="w-full"
+                  disabled={pending}
+                  onClick={handleAccept}
+                >
+                  Accept quotation
+                </Button>
                 <Button variant="destructive" type="button" className="w-full" disabled={pending} onClick={handleDecline}>
                   Decline quotation
                 </Button>
@@ -2016,7 +2015,8 @@ export function QuotationEditor({
               <div className="card card-body space-y-3">
                 <h2 className="text-sm font-semibold text-foreground">Accepted</h2>
                 <p className="text-xs text-muted-foreground">
-                  The accepted option is ready for an itinerary and pro forma on the quotation page.
+                  Every journey is included in the accepted quotation and ready for an itinerary and
+                  pro forma on the quotation page.
                 </p>
                 {isAdmin ? (
                   <p className="border-t border-border/70 pt-3 text-[11px] text-muted-foreground">

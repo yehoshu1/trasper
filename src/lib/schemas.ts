@@ -263,11 +263,6 @@ export const standaloneItinerarySchema = z
 
 export type StandaloneItineraryInput = z.infer<typeof standaloneItinerarySchema>;
 
-export const acceptOptionSchema = z.object({
-  quotationId: z.string().min(1).max(64),
-  optionId: z.string().min(1).max(64),
-});
-
 export const declineSchema = z.object({
   quotationId: z.string().min(1).max(64),
   reason: optionalText(500),

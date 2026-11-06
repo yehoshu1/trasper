@@ -192,7 +192,7 @@ export default async function CompanySettingsPage({
               <Field
                 label="Quotation validity statement"
                 htmlFor="quotationValidityStatement"
-                hint="Printed under the quotation options and frozen when the quotation is sent."
+                hint="Printed under the quotation journeys and frozen when the quotation is sent."
                 className="sm:col-span-2"
               >
                 <Textarea

@@ -1,4 +1,5 @@
 import type { QuotationSnapshot } from "@/lib/documents";
+import { formatMoney } from "@/lib/money";
 
 import {
   DocumentFrame,
@@ -18,6 +19,11 @@ export function QuotationDocument({ snapshot }: { snapshot: QuotationSnapshot })
     (sum, passenger) => sum + (passenger.unnamed ? Math.max(1, passenger.quantity ?? 1) : 1),
     0,
   );
+  const totalMinor =
+    snapshot.totalMinor ??
+    snapshot.options
+      .reduce((sum, option) => sum + BigInt(option.totalMinor), 0n)
+      .toString();
   return (
     <DocumentFrame
       company={snapshot.company}
@@ -74,6 +80,21 @@ export function QuotationDocument({ snapshot }: { snapshot: QuotationSnapshot })
           </div>
         </section>
       ))}
+
+      {snapshot.options.length > 1 ? (
+        <div className="doc-section">
+          <table className="doc-table doc-money-table">
+            <tbody>
+              <tr className="doc-grand-total">
+                <td className="font-bold">Quotation total</td>
+                <td className="text-right font-bold tabular-nums">
+                  {formatMoney(BigInt(totalMinor), snapshot.currency)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : null}
 
       <div className="doc-section">
         <NotesBlock notes={snapshot.notes} />

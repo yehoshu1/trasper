@@ -469,6 +469,7 @@ export function MoneyLines({
   presentation,
   alwaysShowPerPerson = false,
   perPersonCount,
+  totalLabelOverride,
 }: {
   lines: DocumentLine[];
   currency: string;
@@ -480,6 +481,8 @@ export function MoneyLines({
   /** Quotations show the per-person share alongside the total in every layout. */
   alwaysShowPerPerson?: boolean;
   perPersonCount?: number;
+  /** Used when a pro forma prints several journey sections. */
+  totalLabelOverride?: string;
 }) {
   const format = (value: string) => formatMoney(BigInt(value), currency);
   const derivedPerPerson =
@@ -553,7 +556,7 @@ export function MoneyLines({
               </tr>
             ) : null}
             <tr className="doc-grand-total">
-              <td className="font-bold">{presentation.totalLabel}</td>
+              <td className="font-bold">{totalLabelOverride ?? presentation.totalLabel}</td>
               <td className="text-right font-bold tabular-nums">{format(presentation.totalMinor)}</td>
             </tr>
           </tbody>
@@ -596,7 +599,7 @@ export function MoneyLines({
             </tr>
           ) : null}
           <tr className="doc-grand-total">
-            <td className="font-bold">Total</td>
+            <td className="font-bold">{totalLabelOverride ?? "Total"}</td>
             <td className="text-right font-bold tabular-nums">{format(totalMinor)}</td>
           </tr>
         </tbody>

@@ -83,7 +83,7 @@ async function addOnePricedSegment(page: import("@playwright/test").Page) {
   await fillDateTime(page, segmentRow, 1, "2027-05-10T12:35");
 
   await page.click('button:has-text("+ Add passenger")');
-  const fareRow = page.locator("table").filter({ hasText: "Cost (" }).first().locator("tbody tr").first();
+  const fareRow = page.locator("table").filter({ hasText: "Unit cost (" }).first().locator("tbody tr").first();
   await fareRow.locator('input[inputmode="decimal"]').first().fill("100.00");
 }
 
@@ -168,7 +168,7 @@ test("quotations hide bank details and the pro forma freezes the chosen account"
   await expect(page.getByText("Draft saved")).toBeVisible();
   page.once("dialog", (dialog) => dialog.accept());
   await page.click('button:has-text("Mark sent")');
-  await expect(page.getByRole("button", { name: "Accept Option A" })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("button", { name: "Accept quotation" })).toBeVisible({ timeout: 20_000 });
 
   // The quotation prints prices, but never payment details.
   const quotationPdf = pdfContent(await downloadPdf(page));
@@ -176,8 +176,8 @@ test("quotations hide bank details and the pro forma freezes the chosen account"
   expect(quotationPdf).not.toContain("Payment details");
 
   // Accept the option and issue the pro forma, which does print the account.
-  await page.click('button:has-text("Accept Option A")');
-  await expect(page.getByText("Accepted Option A").first()).toBeVisible({ timeout: 20_000 });
+  await page.click('button:has-text("Accept quotation")');
+  await expect(page.getByText("Quotation accepted").first()).toBeVisible({ timeout: 20_000 });
   await page.click('button:has-text("Create pro forma")');
   await expect(page).toHaveURL(/\/proformas\/[a-z0-9]+$/i, { timeout: 20_000 });
   await expect(page.getByText("Draft pro forma").first()).toBeVisible();

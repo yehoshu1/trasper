@@ -182,6 +182,17 @@ export interface DocumentPayment {
   reversal: boolean;
 }
 
+/** A separately titled journey inside an itinerary or pro forma. */
+export interface DocumentJourney {
+  label: string;
+  pnr?: string;
+  flights: DocumentFlight[];
+  lines: DocumentLine[];
+  presentation?: PricePresentation;
+  totalMinor: string;
+  vatMinor: string;
+}
+
 export interface QuotationSnapshot {
   kind: "quotation";
   number: string;
@@ -213,6 +224,8 @@ export interface QuotationSnapshot {
     markupMinor: string;
     taxesMinor: string;
   }[];
+  /** Sum of every journey total. Older snapshots omit it and are summed live. */
+  totalMinor?: string;
   /** Editable heading above the options; defaults to "QUOTATION". */
   heading?: string;
   notes: string;
@@ -241,6 +254,8 @@ export interface ItinerarySnapshot {
   showOptionLabel?: boolean;
   pnr?: string;
   flights: DocumentFlight[];
+  /** One entry per additive journey on the quotation. */
+  journeys?: DocumentJourney[];
   notes: string;
 }
 
@@ -261,6 +276,8 @@ export interface ProformaSnapshot {
   /** False when the quotation had a single option; the label is then omitted. */
   showOptionLabel?: boolean;
   flights: DocumentFlight[];
+  /** One entry per additive journey on the quotation. */
+  journeys?: DocumentJourney[];
   showFlights: boolean;
   showVat: boolean;
   vatMinor: string;

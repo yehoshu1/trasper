@@ -59,7 +59,7 @@ const FEATURES = [
   {
     icon: Layers3,
     title: "Options without the retyping.",
-    body: "Build several options on one quotation, each with its own flights, travellers and reference. When the client changes their mind, accept another option instead of rebuilding the trip.",
+    body: "Build several additive journeys on one quotation, each with its own flights, travellers and reference. Everything is accepted together and carried into the documents.",
   },
   {
     icon: FileText,
@@ -92,7 +92,7 @@ const VALUE_POINTS = [
   {
     number: "02",
     title: "Hand off cleanly",
-    body: "The accepted option flows into the itinerary and pro forma with the same travellers and references.",
+    body: "The accepted quotation flows into the itinerary and pro forma with every journey, traveller and reference.",
   },
   {
     number: "03",
@@ -341,7 +341,7 @@ export default function LandingPage() {
                 <span>
                   <span className={styles.floatTitle}>
                     <span className={styles.liveDot} />
-                    Option B accepted
+                    Journey 1 accepted
                   </span>
                   <span className={styles.floatMeta}>
                     Itinerary and pro forma
@@ -448,9 +448,9 @@ export default function LandingPage() {
                       <Check aria-hidden />
                     </span>
                     <div>
-                      <p className={styles.recordEventTitle}>Option B accepted</p>
+                      <p className={styles.recordEventTitle}>Journey 1 accepted</p>
                       <p className={styles.recordEventMeta}>
-                        Itinerary and pro forma frozen from the accepted option
+                        Itinerary and pro forma frozen from the accepted quotation
                       </p>
                     </div>
                   </div>

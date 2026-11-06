@@ -36,19 +36,38 @@ export function ItineraryDocument({ snapshot }: { snapshot: ItinerarySnapshot })
         }}
       />
 
-      <section className="doc-section">
-        {snapshot.showOptionLabel !== false ? (
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <SectionHeading>{snapshot.optionLabel}</SectionHeading>
-            {snapshot.pnr ? <p className="text-xs text-slate-600">Booking reference {snapshot.pnr}</p> : null}
+      {snapshot.journeys && snapshot.journeys.length > 1 ? (
+        snapshot.journeys.map((journey, index) => (
+          <div key={`${journey.label}-${index}`} className="doc-section">
+            <SectionHeading>{journey.label}</SectionHeading>
+            {journey.pnr ? (
+              <p className="mb-2 text-xs text-slate-600">Booking reference {journey.pnr}</p>
+            ) : null}
+            {journey.flights.length > 0 ? (
+              <>
+                <FlightSummary flights={journey.flights} />
+                <FlightsTable flights={journey.flights} />
+              </>
+            ) : null}
           </div>
-        ) : snapshot.pnr ? (
-          <p className="mb-2 text-xs text-slate-600">Booking reference {snapshot.pnr}</p>
-        ) : null}
-        {snapshot.flights.length > 0 ? <FlightSummary flights={snapshot.flights} /> : null}
-      </section>
+        ))
+      ) : (
+        <>
+          <section className="doc-section">
+            {snapshot.showOptionLabel !== false ? (
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <SectionHeading>{snapshot.optionLabel}</SectionHeading>
+                {snapshot.pnr ? <p className="text-xs text-slate-600">Booking reference {snapshot.pnr}</p> : null}
+              </div>
+            ) : snapshot.pnr ? (
+              <p className="mb-2 text-xs text-slate-600">Booking reference {snapshot.pnr}</p>
+            ) : null}
+            {snapshot.flights.length > 0 ? <FlightSummary flights={snapshot.flights} /> : null}
+          </section>
 
-      {snapshot.flights.length > 0 ? <FlightsTable flights={snapshot.flights} /> : null}
+          {snapshot.flights.length > 0 ? <FlightsTable flights={snapshot.flights} /> : null}
+        </>
+      )}
 
       <div className="doc-section">
         <NotesBlock title="Travel notes" notes={snapshot.notes} />

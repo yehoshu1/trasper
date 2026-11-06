@@ -30,7 +30,7 @@ range length.
 | Quotations sent | Rows with `sentAt` in the period. |
 | Quotations accepted | First `acceptOption` audit event in the period. |
 | Pro formas issued | Pro formas with an issue date in the period. |
-| Accepted value | Frozen total of the accepted option, by currency. |
+| Accepted value | Frozen total of every journey on the accepted quotation, by currency. |
 | Pro forma value | Pro forma totals issued in the period. |
 | Payments received | Receipts in the period, net of reversals. |
 | Outstanding | Balance at period end for pro formas issued before the end. |
@@ -43,7 +43,7 @@ report warns that some accepted quotations were not valued rather than inventing
 
 - **By customer** — accepted quotation count, accepted value and profit.
 - **By branch** — the same figures attributed to the issuing branch.
-- **By airline** — attributed to the first outbound flight of the accepted option.
+- **By airline** — attributed to the first outbound flight of the first journey.
 - **Period breakdown** — created, sent, accepted, pro formas, accepted value, payments net and
   profit for each bucket.
 

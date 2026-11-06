@@ -1,6 +1,6 @@
 # Trasper
 
-Trasper is a staff-only quotation and pro forma system for travel agencies. Build branded options from a pasted PNR or from scratch, add named passengers or traveller groups, issue an itinerary and a pro forma invoice, then record and reconcile payments. Itineraries can also be created standalone — by hand or from pasted text — when no quotation or pricing is needed.
+Trasper is a staff-only quotation and pro forma system for travel agencies. Build branded journeys from a pasted PNR or from scratch, add named passengers or traveller groups, issue an itinerary and a pro forma invoice, then record and reconcile payments. Itineraries can also be created standalone — by hand or from pasted text — when no quotation or pricing is needed.
 
 Built with Next.js (App Router), TypeScript, Prisma, SQLite, Zod, Tailwind, Luxon and a pure integer pricing engine. Licensed under the [MIT Licence](LICENSE).
 
@@ -52,12 +52,12 @@ Cost, markup, VAT and profit are visible to staff and never sent to the customer
 ## Features
 
 - **Configurable branding.** Manage the agency's name, address, contact details, website, tax ID, footer, logo, picture letterhead and time zone from Settings. Each document can print either the picture letterhead or the typed company details with the logo; the TIN is always printed separately from a picture letterhead. Printed documents use the saved profile.
-- **Quotations with options.** Several fare options per quotation, each with its own optional PNR, flights, named passengers or traveller groups, cost lines, exchange rate, margin and optional taxes. Passing an option to another simply changes the accepted option.
+- **Quotations with additive journeys.** A quotation can contain one or more separately priced journeys, each with its own PNR, flights, named passengers or traveller groups, cost lines, exchange rate, margin and optional taxes. Journey totals add to one quotation total, and accepting the quotation includes every journey.
 - **Quote before or after booking.** Flights can be entered by hand, so a quotation can be priced and sent before a PNR exists. Named passengers and unnamed traveller groups (for example **2 Adults**) are both supported.
 - **PNR conversion.** Amadeus, Sabre and Galileo-style output plus free-form itineraries are parsed deterministically. Unreadable input is reported for manual entry; the parser never guesses. AI conversion is an optional fallback, with the provider key encrypted at rest.
 - **Internal pricing, customer-safe documents.** Money is integer minor units. Cost, markup and VAT live in staff views only, and viewers never receive them. Agencies choose how customers see price: one all-inclusive amount per line (the default), supplier price plus a separate service fee, a fully itemised cost/fee/tax layout, a per-person package price or a single total. Every layout is generated from the same calculation and the rows always add up exactly to the total.
 - **Frozen issued documents.** Sending a quotation locks it and freezes the rate, VAT settings, totals and company snapshot. Itineraries and pro formas are frozen too. Later setting or reference-data changes never alter them.
-- **Quotation-linked or standalone itineraries.** An itinerary can be issued from an accepted quotation option, or created standalone with its own customer, passengers and flights. Standalone itineraries can be built from a pasted PNR or entered flight by flight, and carry no prices, quotation link or pro forma; pro formas still require an accepted quotation option.
+- **Quotation-linked or standalone itineraries.** An itinerary can be issued from an accepted quotation with all its journeys, or created standalone with its own customer, passengers and flights. Standalone itineraries can be built from a pasted PNR or entered flight by flight, and carry no prices, quotation link or pro forma; pro formas still require an accepted quotation.
 - **Print-ready documents.** Five quotation/pro forma templates and a dedicated itinerary layout, shown on screen and rendered into PDFs from the same frozen snapshot. PDFs are generated server-side with `pdf-lib`; no headless browser is needed at runtime.
 - **Append-only payments.** Payments can be reversed but never edited or deleted. Pro forma status is derived: unpaid, part-paid, paid or cancelled.
 - **Role-based access.** Admin, agent, accountant and viewer roles, plus editable custom roles built from capabilities. Viewers never receive cost, markup or profit data from the server.
@@ -128,7 +128,7 @@ Open <http://localhost:3000> to see the product landing page, then choose **Staf
 ### Try it with demo data
 
 ```bash
-node scripts/smoke-quotation.mjs    # one draft quotation with two options
+node scripts/smoke-quotation.mjs    # one draft quotation with two journeys
 node scripts/smoke-documents.mjs    # accepts it, issues an itinerary and part-paid pro forma
 node scripts/create-viewer.mjs      # viewer@example.com for the cost-redaction check
 ```
@@ -188,9 +188,9 @@ Branding, tax, numbering and payment details are managed in the app:
 
 1. **Customers and passengers.** Add a paying contact and link travellers, or import a CSV.
 2. **New quotation.** Choose the customer, branch, currency and dates.
-3. **Build options.** Add flights by hand or paste a PNR, add named passenger fares or traveller groups, set an exchange rate, margin and optional taxes. The editor recalculates as you type.
+3. **Build journeys.** Add flights by hand or paste a PNR, add named passenger fares or traveller groups, set an exchange rate, margin and optional taxes. The editor recalculates as you type.
 4. **Mark sent.** The quotation locks, freezes its totals and becomes the customer-facing document. Changes go through **Revise**, which supersedes the old revision.
-5. **Accept an option.** Issue the itinerary and the pro forma from the accepted option. A standalone itinerary can also be created without a quotation when no price is involved.
+5. **Accept the quotation.** Issue the itinerary and the pro forma with every journey included. A standalone itinerary can also be created without a quotation when no price is involved.
 6. **Record payments.** Status is derived from receipts and reversals; it is never typed.
 
 ### Pricing rules

@@ -43,7 +43,7 @@ document number. A quotation starts as **draft** with one default option.
 No booking is needed at this point. Quoting before the PNR exists is a supported path, not an
 exception.
 
-## 3. Build options
+## 3. Build journeys
 
 Each option is an independent fare proposal with its own:
 
@@ -73,14 +73,14 @@ Sending can require confirmation:
 ## 5. Accept or decline
 
 Only a **sent** quotation can be accepted or declined. Accepting records the chosen option;
-pro formas and linked itineraries are built from that accepted option. A declined or expired
+pro formas and linked itineraries are built from every journey on the accepted quotation. A declined or expired
 quotation cannot produce documents.
 
 ## 6. Issue documents
 
-- **Itinerary** — linked to the accepted quotation option, or standalone with no quotation and no
-  prices.
-- **Pro forma** — requires an accepted quotation option. It copies the frozen total and lines, the
+- **Itinerary** — linked to the accepted quotation and all its journeys, or standalone with no
+  quotation and no prices.
+- **Pro forma** — requires an accepted quotation. It copies every journey's frozen lines and the
   bank details and the terms.
 
 Both freeze their data when issued. Re-issuing an itinerary supersedes the previous copy; a pro forma
