@@ -181,6 +181,15 @@ test("quotations hide bank details and the pro forma freezes the chosen account"
   await page.click('button:has-text("Create pro forma")');
   await expect(page).toHaveURL(/\/proformas\/[a-z0-9]+$/i, { timeout: 20_000 });
   await expect(page.getByText("Draft pro forma").first()).toBeVisible();
+
+  // Saving the draft must run the draft action, not the "Mark sent" action.
+  const draftTerms = `E2E draft terms ${stamp}`;
+  await page.fill("#terms", draftTerms);
+  await page.click('button:has-text("Save draft")');
+  await expect(page.getByText("Saved.").first()).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(page.locator("#terms")).toHaveValue(draftTerms);
+
   await page.click('button:has-text("Mark sent")');
   await page
     .getByRole("alertdialog")

@@ -34,9 +34,13 @@ export function ConfirmButton({
     const form = buttonRef.current?.closest("form");
     if (!form) return;
 
-    // Cover implicit submission (pressing Enter in a text field) as well as
-    // clicks, so a form can never be submitted without the confirmation.
+    // Intercept clicks and implicit submission that choose this button, so its
+    // action always goes through the confirmation dialog. Other submit buttons
+    // in the same form keep their own actions.
     function handleSubmit(event: SubmitEvent) {
+      // Forms can have other submit buttons (for example "Save draft") that
+      // must keep their own action.
+      if (event.submitter !== buttonRef.current) return;
       if (confirmedRef.current) {
         confirmedRef.current = false;
         return;
