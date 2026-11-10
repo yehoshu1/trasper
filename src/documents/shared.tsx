@@ -391,7 +391,9 @@ function FlightsRows({ flight, last }: { flight: DocumentFlight; last: boolean }
         </td>
         <td>
           <p className="font-semibold text-slate-900">{flight.flightNo}</p>
-          {flight.cabin ? <p className="text-[11px] text-slate-600">{flight.cabin}</p> : null}
+          {flight.cabin ? (
+            <p className="text-[11px] text-slate-600">Class: {flight.cabin}</p>
+          ) : null}
           {flight.operatingCarrier ? (
             <p className="text-[10px] text-slate-600">Operated by {flight.operatingCarrier}</p>
           ) : null}

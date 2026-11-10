@@ -49,6 +49,7 @@ const snapshot: QuotationSnapshot = {
           departLocal: "2026-11-10T06:20",
           arriveLocal: "2026-11-10T12:35",
           durationMinutes: 255,
+          cabin: "L",
         },
         {
           airline: "ET",
@@ -63,6 +64,7 @@ const snapshot: QuotationSnapshot = {
           departLocal: "2026-11-17T10:10",
           arriveLocal: "2026-11-17T13:10",
           durationMinutes: 180,
+          cabin: "L",
         },
       ],
       lines: [

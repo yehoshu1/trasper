@@ -886,12 +886,20 @@ async function drawFlights(builder: PdfBuilder, flights: DocumentFlight[]): Prom
       x += FLIGHT_COLUMNS[0];
 
       builder.at(flight.flightNo, x + 4, top - 2, { size: 8.5, font: "bold" });
+      let detailY = top - 13;
+      if (flight.cabin) {
+        builder.at(`Class: ${flight.cabin}`, x + 4, detailY, {
+          size: 6.5,
+          color: COLORS.slate,
+        });
+        detailY -= 8;
+      }
       if (flight.operatingCarrier) {
         builder
           .wrap(`Operated by ${flight.operatingCarrier}`, 6.5, FLIGHT_COLUMNS[1] - 8)
           .slice(0, 2)
           .forEach((line, lineIndex) => {
-            builder.at(line, x + 4, top - 13 - lineIndex * 7, {
+            builder.at(line, x + 4, detailY - lineIndex * 7, {
               size: 6.5,
               color: COLORS.slate,
             });
